@@ -18,13 +18,13 @@ class CollectCustomLayout: UICollectionViewLayout {
         spaceLen = self.collectionView!.frame.width - cellWidth*2
         var cellHeight:CGFloat = CGFloat(Int(cellWidth*1.3))
         var singleHeight:CGFloat = CGFloat(Int(cellWidth*0.35))
-        var cellCount = self.collectionView!.numberOfItemsInSection(0) - 1
+        var cellCount = self.collectionView!.numberOfItemsInSection(0) - 2
         var totalHeight:CGFloat = CGFloat((cellCount + 1)/2)*(cellHeight + spaceLen)
-        if(cellCount % 2 == 0)
-        {
+        if( cellCount % 2 == 0) {
             totalHeight += singleHeight + spaceLen
         }
-        return CGSizeMake(self.collectionView!.frame.width, totalHeight+100)
+        totalHeight += 100
+        return CGSizeMake(self.collectionView!.frame.width, totalHeight)
     }
     
     override func layoutAttributesForElementsInRect(rect: CGRect) -> [AnyObject]? {
@@ -52,34 +52,22 @@ class CollectCustomLayout: UICollectionViewLayout {
         var cellHeight:CGFloat = CGFloat(Int(cellWidth*1.3))
         var singleHeight:CGFloat = CGFloat(Int(cellWidth*0.35))
         
-        println("section is \(indexPath.section)")
-        
-        if indexPath.section == 0 {
-            println("item is \(indexPath.item)")
-            if indexPath.item == 0 {
+        println("indexPath.item is \(indexPath.item)")
+        if(indexPath.item == 0) {
             attribute.frame = CGRectMake(0, 0, self.collectionView!.frame.width, 100)
-            }
+        } else if indexPath.item == 1 {
+            attribute.frame = CGRectMake(0, 100+spaceLen, cellWidth, singleHeight)
         } else {
-            if(indexPath.item == 0)
-            {
-                attribute.frame = CGRectMake(0, 100+spaceLen, cellWidth, singleHeight)
-            }
-            else
-            {
-                var columnIndex:CGFloat = CGFloat(indexPath.item % 2)
-                var rowIndex:CGFloat = CGFloat(indexPath.item / 2)
-                
-                if(columnIndex == 0)
-                {
-                    attribute.frame = CGRectMake(0, 100+spaceLen+singleHeight + spaceLen + (cellHeight + spaceLen)*(rowIndex - 1), cellWidth, cellHeight)
-                }
-                else if(columnIndex == 1)
-                {
-                    attribute.frame = CGRectMake(cellWidth + spaceLen, 100+spaceLen+(cellHeight + spaceLen)*rowIndex, cellWidth, cellHeight)
-                }
+            var columnIndex:CGFloat = CGFloat((indexPath.item+1) % 2)
+            var rowIndex:CGFloat = CGFloat((indexPath.item-1) / 2)
+            println("columnIndex is \(columnIndex)")
+            println("rowIndex is \(rowIndex)")
+            if(columnIndex == 0) {
+                attribute.frame = CGRectMake(0, 100+spaceLen+singleHeight + spaceLen + (cellHeight + spaceLen)*(rowIndex - 1), cellWidth, cellHeight)
+            } else if(columnIndex == 1) {
+                attribute.frame = CGRectMake(cellWidth + spaceLen, 100+spaceLen+(cellHeight + spaceLen)*rowIndex, cellWidth, cellHeight)
             }
         }
-        
         return attribute
     }
     

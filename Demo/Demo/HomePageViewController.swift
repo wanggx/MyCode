@@ -42,15 +42,12 @@ class HomePageViewController : UIViewController,UICollectionViewDataSource,UICol
     }
     
     func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
-        return 2
+        return 1
 
     }
     
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        if section == 0 {
-            return 1
-        }
-        return 9
+        return 8
     }
     
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
@@ -63,6 +60,7 @@ class HomePageViewController : UIViewController,UICollectionViewDataSource,UICol
     }
     
     func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
+        println("clicked item is \(indexPath.item),section is \(indexPath.section) ")
         
     }
     

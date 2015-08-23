@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="7706" systemVersion="14D2134" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" initialViewController="em2-fg-kCQ">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="7706" systemVersion="14D2134" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="em2-fg-kCQ">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="7703"/>
     </dependencies>
@@ -13,7 +13,7 @@
                         <viewControllerLayoutGuide type="bottom" id="Nit-iM-TA9"/>
                     </layoutGuides>
                     <view key="view" contentMode="scaleToFill" id="3gg-ep-JN6">
-                        <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                     </view>
@@ -21,7 +21,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="e9T-8K-TsD" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="891.73333333333335" y="1400.1199999999999"/>
+            <point key="canvasLocation" x="1672" y="1478.9999999999998"/>
         </scene>
         <!--我来做-->
         <scene sceneID="3ef-Jd-vG0">
@@ -32,7 +32,7 @@
                         <viewControllerLayoutGuide type="bottom" id="VAH-Nx-8Xm"/>
                     </layoutGuides>
                     <view key="view" contentMode="scaleToFill" id="7iY-Hf-eK5">
-                        <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                     </view>
@@ -40,7 +40,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="tYN-q5-HMf" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="891.73333333333335" y="653.20000000000005"/>
+            <point key="canvasLocation" x="1576" y="698"/>
         </scene>
         <!--首页-->
         <scene sceneID="atv-mZ-Kyq">
@@ -51,11 +51,11 @@
                         <viewControllerLayoutGuide type="bottom" id="1Sh-br-zoV"/>
                     </layoutGuides>
                     <view key="view" contentMode="scaleToFill" id="cLE-vr-Vxp">
-                        <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="KMy-1m-nEh">
-                                <rect key="frame" x="20" y="72" width="280" height="29"/>
+                                <rect key="frame" x="20" y="72" width="560" height="29"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="28" id="V8c-hQ-ph0"/>
                                 </constraints>
@@ -69,7 +69,7 @@
                                 </connections>
                             </segmentedControl>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="GkE-bh-AFo">
-                                <rect key="frame" x="0.0" y="110" width="320" height="399"/>
+                                <rect key="frame" x="0.0" y="108" width="600" height="443"/>
                                 <color key="backgroundColor" red="0.93725490199999995" green="0.93725490199999995" blue="0.95686274510000002" alpha="1" colorSpace="calibratedRGB"/>
                                 <collectionViewLayout key="collectionViewLayout" id="Nf2-UW-7kC" customClass="CollectCustomLayout" customModule="Demo" customModuleProvider="target"/>
                                 <cells>
@@ -77,11 +77,11 @@
                                         <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
-                                            <rect key="frame" x="0.0" y="0.0" width="378" height="107"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="257" height="107"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                         </view>
-                                        <size key="customSize" width="378" height="107"/>
+                                        <size key="customSize" width="257" height="107"/>
                                     </collectionViewCell>
                                 </cells>
                                 <connections>
@@ -94,8 +94,8 @@
                         <constraints>
                             <constraint firstItem="KMy-1m-nEh" firstAttribute="top" secondItem="xi4-U1-DDy" secondAttribute="bottom" constant="8" id="0q3-Va-zQG"/>
                             <constraint firstItem="KMy-1m-nEh" firstAttribute="leading" secondItem="cLE-vr-Vxp" secondAttribute="leading" constant="20" id="7NM-de-a4z"/>
-                            <constraint firstItem="GkE-bh-AFo" firstAttribute="top" secondItem="KMy-1m-nEh" secondAttribute="bottom" constant="10" id="G32-go-97o"/>
-                            <constraint firstItem="1Sh-br-zoV" firstAttribute="top" secondItem="GkE-bh-AFo" secondAttribute="bottom" constant="10" id="Me3-lm-gZh"/>
+                            <constraint firstItem="GkE-bh-AFo" firstAttribute="top" secondItem="KMy-1m-nEh" secondAttribute="bottom" constant="8" id="G32-go-97o"/>
+                            <constraint firstItem="1Sh-br-zoV" firstAttribute="top" secondItem="GkE-bh-AFo" secondAttribute="bottom" id="Me3-lm-gZh"/>
                             <constraint firstAttribute="trailing" secondItem="KMy-1m-nEh" secondAttribute="trailing" constant="20" id="RQa-uv-dVg"/>
                             <constraint firstAttribute="trailing" secondItem="GkE-bh-AFo" secondAttribute="trailing" id="edy-NS-gy3"/>
                             <constraint firstItem="GkE-bh-AFo" firstAttribute="leading" secondItem="cLE-vr-Vxp" secondAttribute="leading" id="iSW-IC-0dU"/>
@@ -109,7 +109,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="d1W-sK-wAt" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="841" y="13"/>
+            <point key="canvasLocation" x="1576" y="13"/>
         </scene>
         <!--Tab Bar Controller-->
         <scene sceneID="rVu-Dx-RTR">
@@ -129,7 +129,7 @@
                 </tabBarController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="gad-73-dLt" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="21.333333333333332" y="339.85333333333335"/>
+            <point key="canvasLocation" x="40" y="359"/>
         </scene>
         <!--首页-->
         <scene sceneID="PZN-Q5-Xjd">
@@ -148,7 +148,7 @@
                 </navigationController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="ftK-Wv-P1k" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="458.66666666666669" y="26.506666666666668"/>
+            <point key="canvasLocation" x="860" y="28"/>
         </scene>
         <!--X-->
         <scene sceneID="oaw-HD-ofr">
@@ -169,7 +169,7 @@
                 </navigationController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dxa-ZI-b6k" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="458.66666666666669" y="653.20000000000005"/>
+            <point key="canvasLocation" x="860" y="690"/>
         </scene>
         <!--我-->
         <scene sceneID="oVz-Dj-Fbm">
@@ -188,15 +188,10 @@
                 </navigationController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="r0A-TN-chj" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="458.66666666666669" y="1400.1199999999999"/>
+            <point key="canvasLocation" x="860" y="1478.9999999999998"/>
         </scene>
     </scenes>
     <resources>
         <image name="m_new_user.png" width="30" height="30"/>
     </resources>
-    <simulatedMetricsContainer key="defaultSimulatedMetrics">
-        <simulatedStatusBarMetrics key="statusBar"/>
-        <simulatedOrientationMetrics key="orientation"/>
-        <simulatedScreenMetrics key="destination" type="retina4"/>
-    </simulatedMetricsContainer>
 </document>
