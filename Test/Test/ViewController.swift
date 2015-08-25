@@ -15,8 +15,6 @@ class ViewController: UIViewController,UICollectionViewDataSource,UICollectionVi
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
-        collectionView.registerClass(UICollectionViewCell.self, forCellWithReuseIdentifier: "cell")
-        
     }
 
     override func didReceiveMemoryWarning() {
