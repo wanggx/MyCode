@@ -11,20 +11,22 @@ import UIKit
 
 class CollectCustomLayout: UICollectionViewLayout {
     
-    override func collectionViewContentSize() -> CGSize {
-        
-        var spaceLen:CGFloat = 5
-        var cellWidth:CGFloat = CGFloat(Int((self.collectionView!.frame.width - spaceLen)/2))
-        spaceLen = self.collectionView!.frame.width - cellWidth*2
-        var cellHeight:CGFloat = CGFloat(Int(cellWidth*1.3))
-        var singleHeight:CGFloat = CGFloat(Int(cellWidth*0.35))
-        var cellCount = self.collectionView!.numberOfItemsInSection(0) - 2
-        var totalHeight:CGFloat = CGFloat((cellCount + 1)/2)*(cellHeight + spaceLen)
-        if( cellCount % 2 == 0) {
-            totalHeight += singleHeight + spaceLen
+    var collectView:HomePageCollectionView {
+        get {
+            return self.collectionView as! HomePageCollectionView
         }
-        totalHeight += 100
-        return CGSizeMake(self.collectionView!.frame.width, totalHeight)
+    }
+    
+    override func collectionViewContentSize() -> CGSize {
+        var totalHeight:CGFloat = 0
+        var sectionCount = self.collectView.numberOfSections()
+        for i in 0..<sectionCount {
+            var sectionHeight = self.getSectionTotalHeight(i)
+            totalHeight += sectionHeight
+            println("section\(i) height is \(sectionHeight)")
+        }
+        println("totalHeight is \(totalHeight)")
+        return CGSizeMake(self.collectView.frame.width, totalHeight)
     }
     
     override func layoutAttributesForElementsInRect(rect: CGRect) -> [AnyObject]? {
@@ -32,7 +34,7 @@ class CollectCustomLayout: UICollectionViewLayout {
         var attributesArray = [AnyObject]()
         var sectionCount:Int = self.collectionView!.numberOfSections()
         for count in 0..<sectionCount {
-            var cellCount = self.collectionView!.numberOfItemsInSection(count)
+            var cellCount = self.collectView.numberOfItemsInSection(count)
             for i in 0..<cellCount {
                 var indexPath =  NSIndexPath(forItem:i, inSection:count)
                 var attributes =  self.layoutAttributesForItemAtIndexPath(indexPath)
@@ -46,30 +48,83 @@ class CollectCustomLayout: UICollectionViewLayout {
         
         var attribute =  UICollectionViewLayoutAttributes(forCellWithIndexPath:indexPath)
         
-        var spaceLen:CGFloat = 5
-        var cellWidth:CGFloat = CGFloat(Int((self.self.collectionView!.frame.width - spaceLen)/2))
-        spaceLen = self.self.collectionView!.frame.width - cellWidth*2
-        var cellHeight:CGFloat = CGFloat(Int(cellWidth*1.3))
-        var singleHeight:CGFloat = CGFloat(Int(cellWidth*0.35))
+        var index:NSIndexPath = NSIndexPath(forItem: 0, inSection: 1)
+        var otherIndex:NSIndexPath = NSIndexPath(forItem: 1, inSection: 1)
+        var cellWidth = CGFloat(Int((self.collectView.frame.width-self.collectView.spaceForCell(index))/2))
+        var space = self.collectView.frame.width-cellWidth*2
         
-        println("indexPath.item is \(indexPath.item)")
-        if(indexPath.item == 0) {
-            attribute.frame = CGRectMake(0, 0, self.collectionView!.frame.width, 100)
-        } else if indexPath.item == 1 {
-            attribute.frame = CGRectMake(0, 100+spaceLen, cellWidth, singleHeight)
+        if indexPath.section == 0 {
+            attribute.frame = CGRectMake(0, self.getSectionCellStartHeight(indexPath), self.collectView.frame.width, self.collectView.heightForCell(indexPath))
         } else {
-            var columnIndex:CGFloat = CGFloat((indexPath.item+1) % 2)
-            var rowIndex:CGFloat = CGFloat((indexPath.item-1) / 2)
-            println("columnIndex is \(columnIndex)")
-            println("rowIndex is \(rowIndex)")
-            if(columnIndex == 0) {
-                attribute.frame = CGRectMake(0, 100+spaceLen+singleHeight + spaceLen + (cellHeight + spaceLen)*(rowIndex - 1), cellWidth, cellHeight)
-            } else if(columnIndex == 1) {
-                attribute.frame = CGRectMake(cellWidth + spaceLen, 100+spaceLen+(cellHeight + spaceLen)*rowIndex, cellWidth, cellHeight)
+            var firstHeight = self.getSectionTotalHeight(0)
+            var startHeight = firstHeight + self.getSectionCellStartHeight(indexPath)
+            var cellStartWidth = 0
+            if indexPath.item % 2 == 0 {
+                attribute.frame = CGRectMake(0, startHeight, cellWidth, self.collectView.heightForCell(indexPath))
+            } else {
+                attribute.frame = CGRectMake(cellWidth+space, startHeight, cellWidth, self.collectView.heightForCell(indexPath))
             }
         }
         return attribute
     }
+}
+
+extension CollectCustomLayout {
     
+    func getSectionTotalHeight(section:Int)->CGFloat {
+        var totalHeight:CGFloat = 0
+        if section == 0 {
+            var cellCount = self.collectView.numberOfItemsInSection(section)
+            for var i=0;i<cellCount;++i {
+                var indexPath:NSIndexPath = NSIndexPath(forItem: i, inSection: 0)
+                totalHeight += self.collectView.heightForCell(indexPath)
+                totalHeight += self.collectView.spaceForCell(indexPath)
+            }
+            return totalHeight
+        } else if section == 1 {
+            var index:NSIndexPath = NSIndexPath(forItem: 0, inSection: 1)
+            var otherIndex = NSIndexPath(forItem: 1, inSection: 1)
+            
+            var cellWidth = CGFloat(Int((self.collectView.frame.width-self.collectView.spaceForCell(index))/2))
+            var space = self.collectView.frame.width-cellWidth*2
+            
+            var firstHeight:CGFloat = self.collectView.heightForCell(index) + self.collectView.spaceForCell(index)
+            
+            var cellCount = self.collectView.numberOfItemsInSection(section)
+            if cellCount%2 != 0 {
+                totalHeight = firstHeight + (self.collectView.heightForCell(otherIndex) + space)*CGFloat(cellCount/2)
+            } else {
+                totalHeight = (self.collectView.heightForCell(otherIndex) + space)*CGFloat((cellCount+1)/2)
+            }
+        }
+        return totalHeight
+    }
+    
+    func getSectionCellStartHeight(indexPath:NSIndexPath)->CGFloat {
+        var startHeight:CGFloat = 0
+        if indexPath.section == 0 {
+            for i in 0..<indexPath.item {
+                startHeight += self.collectView.heightForCell(indexPath)
+                startHeight += self.collectView.spaceForCell(indexPath)
+            }
+        } else if indexPath.section == 1 {
+            var firstIndex:NSIndexPath = NSIndexPath(forItem: 0, inSection:1)
+            var otherIndex:NSIndexPath = NSIndexPath(forItem: 1, inSection:1)
+            
+            var firstHeight:CGFloat = self.collectView.heightForCell(firstIndex) + self.collectView.spaceForCell(firstIndex)
+            
+            if indexPath.item == 0 {
+                return 0.0
+            } else {
+                if indexPath.item % 2 == 0 {
+                    startHeight = firstHeight + CGFloat(indexPath.item/2-1)*(self.collectView.heightForCell(otherIndex)+self.collectView.spaceForCell(otherIndex))
+                } else {
+                    startHeight = CGFloat(indexPath.item/2)*(self.collectView.heightForCell(otherIndex)+self.collectView.spaceForCell(otherIndex))
+                }
+            }
+        }
+        
+        return startHeight
+    }
 }
 

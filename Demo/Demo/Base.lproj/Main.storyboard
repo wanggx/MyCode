@@ -68,43 +68,28 @@
                                     <action selector="segContorlValueChanged:" destination="KSZ-uN-QOc" eventType="valueChanged" id="Ia8-je-ImF"/>
                                 </connections>
                             </segmentedControl>
-                            <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="GkE-bh-AFo">
+                            <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="YIz-iZ-Ar9">
                                 <rect key="frame" x="0.0" y="108" width="600" height="443"/>
-                                <color key="backgroundColor" red="0.93725490199999995" green="0.93725490199999995" blue="0.95686274510000002" alpha="1" colorSpace="calibratedRGB"/>
-                                <collectionViewLayout key="collectionViewLayout" id="Nf2-UW-7kC" customClass="CollectCustomLayout" customModule="Demo" customModuleProvider="target"/>
-                                <cells>
-                                    <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="cell" id="WVF-O2-Vuu">
-                                        <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
-                                        <autoresizingMask key="autoresizingMask"/>
-                                        <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
-                                            <rect key="frame" x="0.0" y="0.0" width="257" height="107"/>
-                                            <autoresizingMask key="autoresizingMask"/>
-                                            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
-                                        </view>
-                                        <size key="customSize" width="257" height="107"/>
-                                    </collectionViewCell>
-                                </cells>
                                 <connections>
-                                    <outlet property="dataSource" destination="KSZ-uN-QOc" id="pfd-Bc-oOB"/>
-                                    <outlet property="delegate" destination="KSZ-uN-QOc" id="g1b-bC-5hZ"/>
+                                    <outlet property="delegate" destination="KSZ-uN-QOc" id="Y6q-QP-z2H"/>
                                 </connections>
-                            </collectionView>
+                            </scrollView>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
                             <constraint firstItem="KMy-1m-nEh" firstAttribute="top" secondItem="xi4-U1-DDy" secondAttribute="bottom" constant="8" id="0q3-Va-zQG"/>
+                            <constraint firstItem="YIz-iZ-Ar9" firstAttribute="leading" secondItem="cLE-vr-Vxp" secondAttribute="leading" id="25Z-CD-dx1"/>
                             <constraint firstItem="KMy-1m-nEh" firstAttribute="leading" secondItem="cLE-vr-Vxp" secondAttribute="leading" constant="20" id="7NM-de-a4z"/>
-                            <constraint firstItem="GkE-bh-AFo" firstAttribute="top" secondItem="KMy-1m-nEh" secondAttribute="bottom" constant="8" id="G32-go-97o"/>
-                            <constraint firstItem="1Sh-br-zoV" firstAttribute="top" secondItem="GkE-bh-AFo" secondAttribute="bottom" id="Me3-lm-gZh"/>
                             <constraint firstAttribute="trailing" secondItem="KMy-1m-nEh" secondAttribute="trailing" constant="20" id="RQa-uv-dVg"/>
-                            <constraint firstAttribute="trailing" secondItem="GkE-bh-AFo" secondAttribute="trailing" id="edy-NS-gy3"/>
-                            <constraint firstItem="GkE-bh-AFo" firstAttribute="leading" secondItem="cLE-vr-Vxp" secondAttribute="leading" id="iSW-IC-0dU"/>
+                            <constraint firstAttribute="trailing" secondItem="YIz-iZ-Ar9" secondAttribute="trailing" id="Rsc-Er-QPW"/>
+                            <constraint firstItem="1Sh-br-zoV" firstAttribute="top" secondItem="YIz-iZ-Ar9" secondAttribute="bottom" id="pfo-ua-KZp"/>
+                            <constraint firstItem="YIz-iZ-Ar9" firstAttribute="top" secondItem="KMy-1m-nEh" secondAttribute="bottom" constant="8" id="v99-sD-Vyd"/>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="首页" id="Wxy-Kq-xPr"/>
                     <connections>
                         <outlet property="categorySegment" destination="KMy-1m-nEh" id="9fv-fH-MsX"/>
-                        <outlet property="collectionView" destination="GkE-bh-AFo" id="Z9f-Dw-eeC"/>
+                        <outlet property="scrollView" destination="YIz-iZ-Ar9" id="3hL-ER-Lu1"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="d1W-sK-wAt" userLabel="First Responder" sceneMemberID="firstResponder"/>
