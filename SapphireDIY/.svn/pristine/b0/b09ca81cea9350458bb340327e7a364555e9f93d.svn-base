@@ -1,0 +1,187 @@
+//
+//  EFAnimationViewController.swift
+//  SapphireDesign
+//
+//  Created by 波 冯 on 15/9/2.
+//  Copyright (c) 2015年 sapphire. All rights reserved.
+//
+
+import Foundation
+import UIKit
+
+protocol EFItemViewDelegate
+{
+    func didTapped(index:Int)
+}
+
+
+class EFAnimationViewControllerBack:UIViewController,EFItemViewDelegate
+{
+    //init the basic info of the EFAnimationViewController
+    let RADIUS:CGFloat      =  100.0
+    let PHOTONUM:CGFloat    =  5.0
+    let TAGSTART:Int        =  1000
+    let TIME:CGFloat        =  1.5
+    let SCALENUMBER:CGFloat =  1.25
+    
+    var array = [[0,1,2,3,4],[4,0,1,2,3],[3,4,0,1,2],[2,3,4,0,1],[1,2,3,4,0]]
+    var currentTag:Int!
+    
+    var rotationTransform1:[CATransform3D] = []
+    
+    //the view has been init in here
+    override func viewDidLoad()
+    {
+        super.viewDidLoad()
+        self.configViews()
+    }
+    
+    func configViews()
+    {
+        self.view.backgroundColor = UIColor.whiteColor()
+        var dataArray:[String] = ["EFButton1.png","EFButton2.png","EFButton3.png","EFButton4.png","EFButton5.png"]
+        
+        var centerx:CGFloat = self.view.center.x
+        var centery:CGFloat = self.view.center.y - 50
+        
+        for(var i = 0; i < Int(PHOTONUM); i++)
+        {
+            
+            var tmpx:CGFloat = centery + RADIUS * CGFloat(sin(2.0 * M_PI * Double(CGFloat(i)/PHOTONUM)))
+            var tmpy:CGFloat = centery + RADIUS * CGFloat(cos(2.0 * M_PI * Double(CGFloat(i)/PHOTONUM)))
+            
+            
+            var view:EFItemView = EFItemView()
+            view.initWithNormalImage(dataArray[i], _highlighted: "hightlight.png", _tag: TAGSTART+i, _title: "")
+            
+            view.frame = CGRectMake(0, 0, 115, 115)
+            view.center = CGPointMake(tmpx - self.view.frame.width/4,tmpy)
+            view.delegate = self
+            
+            rotationTransform1.append(CATransform3DIdentity)
+            
+            var  Scalenumber:CGFloat = CGFloat(fabs(Double((Double(i) - Double(PHOTONUM)/2.0)/(Double(PHOTONUM)/2.0))))
+            
+            
+            if (Scalenumber < 0.3) {
+                Scalenumber = 0.4;
+            }
+            
+            var rotationTransform:CATransform3D = CATransform3DIdentity
+            rotationTransform = CATransform3DScale (rotationTransform, Scalenumber*SCALENUMBER,Scalenumber*SCALENUMBER, 1)
+            view.layer.transform = rotationTransform
+            self.view.addSubview(view)
+            
+        }
+        
+        self.currentTag = TAGSTART
+        
+    }
+    
+    
+    func getItemViewTag(tag:Int)->Int
+    {
+        if (self.currentTag > tag)
+        {
+            return (self.currentTag - tag)
+            
+        }else
+        {
+            return Int(PHOTONUM) - tag + self.currentTag
+        }
+    }
+    
+    func moveanimation(tag:Int,num:Int)->CAAnimation
+    {
+        //CALayer
+        var view:UIView = self.view.viewWithTag(tag)!
+        var animation:CAKeyframeAnimation = CAKeyframeAnimation()
+        var path:CGMutablePathRef = CGPathCreateMutable()
+        CGPathMoveToPoint(path,nil,view.layer.position.x,view.layer.position.y)
+        
+        var p:Int = self.getItemViewTag(tag)
+        var f:CGFloat = CGFloat((2.0*M_PI) - 2.0*M_PI * Double(Double(p)/Double(PHOTONUM)))
+        var h:CGFloat = CGFloat(Double(f) + 2.0*M_PI * Double(Double(num)/Double(PHOTONUM)))
+        
+        var centerx:CGFloat = self.view.center.x
+        var centery:CGFloat = self.view.center.y - 50
+        
+        var tmpy:CGFloat  =  centery + RADIUS*cos(h)
+        var tmpx:CGFloat  =	 centerx - RADIUS*sin(h)
+        view.center = CGPointMake(tmpx,tmpy)
+        
+        
+        CGPathAddArc(path, nil, self.view.center.x, self.view.center.y - 50,CGFloat(RADIUS), f + CGFloat(M_PI/2), f + CGFloat(M_PI/2) + CGFloat(2.0*M_PI ) * CGFloat(CGFloat(num)/CGFloat(PHOTONUM)), false)
+        
+        animation.path = path
+        
+        animation.duration = Double(TIME)
+        animation.repeatCount = 1
+        animation.calculationMode = "paced"
+        return animation
+    }
+    
+    func setScale(tag:Int,clicktag:Int)->CAAnimation
+    {
+        var i:Int  = array[clicktag - TAGSTART][tag - TAGSTART]
+        var i1:Int = array[self.currentTag  - TAGSTART][tag - TAGSTART]
+        var Scalenumber:CGFloat  = CGFloat(fabs((Double(i) - Double(PHOTONUM)/2)/Double(PHOTONUM)/2)) + CGFloat(0.6)
+        var Scalenumber1:CGFloat = CGFloat(fabs((Double(i1) - Double(PHOTONUM)/2)/Double(PHOTONUM)/2)) + CGFloat(0.6)
+        
+        println("the scalenumber is \(Scalenumber)")
+        
+        if Scalenumber < 0.3{
+            
+            Scalenumber = 0.4
+        }
+        
+        var animation:CABasicAnimation = CABasicAnimation()
+        animation.keyPath  = "transform"
+        animation.duration = Double(TIME)
+        animation.repeatCount = 1
+        
+        
+        var srcm:CATransform3D = CATransform3DScale(rotationTransform1[tag - TAGSTART],Scalenumber1*SCALENUMBER,Scalenumber1*SCALENUMBER, 1.0)
+        
+        var dtmp:CATransform3D = CATransform3DScale(rotationTransform1[tag - TAGSTART],Scalenumber*SCALENUMBER, Scalenumber*SCALENUMBER, 1.0)
+        
+        animation.fromValue = NSValue(CATransform3D: srcm)
+        
+        animation.toValue   = NSValue(CATransform3D: dtmp)
+        
+        animation.autoreverses = false
+        animation.removedOnCompletion = false
+        animation.fillMode = kCAFillModeForwards
+        
+        return animation
+        
+    }
+    
+    //delegate methods
+    func didTapped(index:Int)
+    {
+        
+        if (self.currentTag  == index) {
+            
+            return
+        }
+        
+        var t:Int = self.getItemViewTag(index)
+        
+        for (var i = 0;i < Int(PHOTONUM); i++)
+        {
+            var view:UIView = self.view.viewWithTag(TAGSTART+i)!
+            view.layer.addAnimation(self.moveanimation(TAGSTART + i, num: t), forKey: "position")
+            view.layer.addAnimation(self.setScale(TAGSTART + i, clicktag: index), forKey: "transform")
+            
+            var j:Int = array[index - TAGSTART][i]
+            var Scalenumber:CGFloat = CGFloat(fabs(Double(j) - Double(PHOTONUM)/2.0)/(Double(PHOTONUM)/2.0))
+            
+            if (Scalenumber < 0.3) {
+                Scalenumber = 0.4;
+            }
+            
+        }
+        self.currentTag = index
+    }
+}

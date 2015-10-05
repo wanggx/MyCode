@@ -1,0 +1,8 @@
+platform :ios,'8.0'
+use_frameworks!
+pod 'SwiftyJSON', '~> 2.2.1'
+pod 'Alamofire', '~> 2.0.0-beta.1'
+pod 'ReactiveCocoa', '~> 2.5'
+pod 'XCGLogger', '~> 2.2'
+pod 'AFNetworking-RACExtensions', '~> 0.1.8'
+pod 'AFNetworking', '~> 2.5.4'

@@ -1,0 +1,337 @@
+//
+//  DIYViewController.swift
+//  SapphireDesign
+//
+//  Created by 波 冯 on 15/9/6.
+//  Copyright (c) 2015年 sapphire. All rights reserved.
+//
+
+import UIKit
+import Foundation
+import SpriteKit
+
+class DIYViewController: UIViewController,UIActionSheetDelegate,UIImagePickerControllerDelegate,UINavigationControllerDelegate,BottomMenuFunctionEvent
+{
+
+    /***init basic prototyoe***/
+    //rightSide Menu
+    var isRightSlideVieOpen:Bool = false
+    var rightSideMenuView:RightSideMenuView!
+    var rightSideMenuController:UICollectionViewController = UIStoryboard(name: "DIYView", bundle: nil).instantiateViewControllerWithIdentifier("rightSideMenuViewID") as! UICollectionViewController
+    
+    //spriteKit backGround view
+    var diyScene:DIYScene!
+    var diySceneViewController:UIViewController = UIStoryboard(name: "DIYView", bundle: nil).instantiateViewControllerWithIdentifier("diySceneID") as! UIViewController
+    
+    /*******DIY View Template*******/
+    var diyViewTemplate:DIYViewTemplate!
+   
+    
+    
+    /******Bottom Part*******/
+    var isBottomPopViewOpen:Bool = false
+    //Tool Design Bottom Button
+    var btnFunImage:UIButton!
+    var btnFunText:UIButton!
+    var btnFunLogo:UIButton!
+    var btnFunOrnament:UIButton!
+    //Bottom Menu View
+    var bottomPopViewLogo:BottomPopViewLogo!
+    var bottomPopViewLogoController = UIStoryboard(name: "BottomPopView", bundle: nil).instantiateViewControllerWithIdentifier("viewLogo") as! UICollectionViewController
+    
+    var bottomPopViewText = UIStoryboard(name: "BottomPopView", bundle: nil).instantiateViewControllerWithIdentifier("bottomPopText") as! BottomPopViewText
+    
+    
+    /*********GestureInitPart************/
+    
+    
+    //view did load and appear
+    override func viewDidLoad()
+    {
+        super.viewDidLoad()
+        //addSceneView()
+        addDesignTemplateView()
+        addRigthSideMenuView()
+        addBottomToolButton()
+        
+    }
+       func addDesignTemplateView()
+    {
+        diyViewTemplate = DIYViewTemplate(frame: self.view.frame)
+        diyViewTemplate.menuFunctionDelegate = self
+        self.view.addSubview(diyViewTemplate)
+    }
+
+    @IBAction func FinishDesignAction(sender: UIBarButtonItem) {
+        
+        println("设计已经结束")
+        
+    }
+    
+    
+   
+    
+    func addBottomToolButton()
+    {
+        //set the space distance
+        var btnDis:CGFloat = 20
+        var btnStartX = (self.view.frame.width - btnDis*3 - 40*4)/2 - 12
+        
+        //init the four toolButton
+        btnFunImage = UIButton(frame: CGRectMake(btnStartX, self.view.frame.height - 130, 43, 57))
+        btnFunImage.setImage(UIImage(named: "fun_image.png"), forState: UIControlState.Normal)
+        btnFunImage.setImage(UIImage(named: "fun_image_select.png"), forState: UIControlState.Highlighted)
+        btnFunImage.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+        
+        btnFunImage.tag = 0
+        btnFunImage.addTarget(self, action: Selector("bottomAddImageFunction:"), forControlEvents: UIControlEvents.TouchUpInside)
+        self.view.addSubview(btnFunImage)
+        
+        btnFunText = UIButton(frame: CGRectMake(btnStartX + 70, self.view.frame.height - 130, 40, 57))
+        btnFunText.setImage(UIImage(named: "fun_text.png"), forState: UIControlState.Normal)
+        btnFunText.setImage(UIImage(named: "fun_text_select.png"), forState: UIControlState.Highlighted)
+        btnFunText.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+        //btnFunText.backgroundColor = UIColor.whiteColor()
+        btnFunText.tag = 1
+        btnFunText.addTarget(self, action: Selector("bottomAddTextFunction:"), forControlEvents: UIControlEvents.TouchUpInside)
+        self.view.addSubview(btnFunText)
+        
+        btnFunLogo = UIButton(frame: CGRectMake(btnStartX + 140, self.view.frame.height - 130, 40, 57))
+        btnFunLogo.setImage(UIImage(named: "fun_logo.png"), forState: UIControlState.Normal)
+        btnFunLogo.setImage(UIImage(named: "fun_logo_select.png"), forState: UIControlState.Highlighted)
+        btnFunLogo.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+        //btnFunLogo.backgroundColor = UIColor.whiteColor()
+        btnFunLogo.tag = 2
+        btnFunLogo.addTarget(self, action: Selector("bottomAddLogoFounction:"), forControlEvents: UIControlEvents.TouchUpInside)
+        self.view.addSubview(btnFunLogo)
+        
+
+        btnFunOrnament = UIButton(frame: CGRectMake(btnStartX + 210, self.view.frame.height - 130, 40, 57))
+        btnFunOrnament.setImage(UIImage(named: "fun_ornament.png"), forState: UIControlState.Normal)
+        btnFunOrnament.setImage(UIImage(named: "fun_ornament_select.png"), forState: UIControlState.Highlighted)
+        btnFunOrnament.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+        //btnFunOrnament.backgroundColor = UIColor.whiteColor()
+        btnFunOrnament.tag = 3
+        btnFunOrnament.addTarget(self, action: Selector("sideOpenOrHideFunction:"), forControlEvents: UIControlEvents.TouchUpInside)
+        self.view.addSubview(btnFunOrnament)
+        
+        /*****init the tool Button View*****/
+        //popViewLogo
+        bottomPopViewLogo = bottomPopViewLogoController.collectionView as! BottomPopViewLogo
+        bottomPopViewLogo.frame = CGRectMake(0, self.view.frame.height + 5, self.view.frame.width, 120)
+        bottomPopViewLogo.initMineParam()
+        //bottomPopViewLogo.selectdelegate = self
+        self.view.addSubview(bottomPopViewLogo)
+        
+        //popViewText
+        bottomPopViewText.view.frame = CGRectMake(0, self.view.frame.height + 5, self.view.frame.width, 120)
+        bottomPopViewText.initParam()
+        //bottomPopViewText.delegate = self
+        self.view.addSubview(bottomPopViewText.view)
+
+        
+        
+    }
+    
+    func addRigthSideMenuView()
+    {
+        rightSideMenuView       = rightSideMenuController.collectionView as! RightSideMenuView
+        rightSideMenuView.frame = CGRectMake(self.view.frame.width + 5, 64, 90, self.view.frame.height)
+        rightSideMenuView.setBasicInfo()
+        self.view.addSubview(rightSideMenuView)
+    }
+    
+    //Bottom Button Menu 响应函数
+    func sideOpenOrHideFunction(sender:UIButton)
+    {
+        if(isRightSlideVieOpen == false)
+        {
+            UIView.animateWithDuration(0.3, animations: {
+                
+                self.rightSideMenuView.frame = CGRectMake(self.view.frame.width - 90, 64, 90, self.view.frame.height)
+                
+                }, completion: {_ in
+                    
+            })
+            isRightSlideVieOpen = !isRightSlideVieOpen
+        }else
+        {
+            UIView.animateWithDuration(0.3, animations: {
+                
+                self.rightSideMenuView.frame = CGRectMake(self.view.frame.width + 5, 64, 90, self.view.frame.height)
+                
+                }, completion: {_ in
+            })
+            isRightSlideVieOpen = !isRightSlideVieOpen
+        }
+
+    }
+    func bottomAddImageFunction(sender:UIButton)
+    {
+        if isRightSlideVieOpen == true{
+            return
+        }
+        var sheet:UIActionSheet!
+        if(UIImagePickerController.isSourceTypeAvailable(UIImagePickerControllerSourceType.Camera))
+        {
+            sheet = UIActionSheet(title: "请选择", delegate: self, cancelButtonTitle: nil, destructiveButtonTitle: "取消", otherButtonTitles: "拍照", "在相册中选择")
+        }
+        else
+        {
+            sheet = UIActionSheet(title: "请选择", delegate: self, cancelButtonTitle: nil, destructiveButtonTitle: "取消", otherButtonTitles: "在相册中选择")
+        }
+        sheet.tag = 101
+        sheet.showInView(self.view)
+    }
+    
+    func bottomAddTextFunction(sender:UIButton)
+    {
+        bottomFunctionButtonsFlyDown()
+        isBottomPopViewOpen = !isBottomPopViewOpen
+        println("the bottom is \(isBottomPopViewOpen)")
+        if isBottomPopViewOpen
+            {
+                UIView.animateKeyframesWithDuration(0.2, delay: 0.1, options: UIViewKeyframeAnimationOptions.CalculationModeLinear, animations: {
+                    
+                    
+                    self.bottomPopViewText.view.frame = CGRectMake(0, self.view.frame.height - 160, self.view.frame.width, 120)
+                    
+                    }, completion: {_ in
+                        
+            })
+        }
+    }
+    
+    func bottomAddLogoFounction(sender:UIButton)
+    {
+        bottomFunctionButtonsFlyDown()
+        
+        isBottomPopViewOpen = !isBottomPopViewOpen
+        
+        if isBottomPopViewOpen
+        {
+            UIView.animateKeyframesWithDuration(0.2, delay: 0.1, options: UIViewKeyframeAnimationOptions.CalculationModeLinear, animations: {
+                
+                self.bottomPopViewLogo.frame = CGRectMake(0, self.view.frame.height - 160, self.view.frame.width, 120)
+                
+                }, completion: {_ in
+                    
+            })
+        }
+        println("the isBottomPopViewOpen is \(isBottomPopViewOpen)")
+    }
+    
+    func actionSheet(actionSheet: UIActionSheet, clickedButtonAtIndex buttonIndex: Int) {
+        if(actionSheet.tag == 101)
+        {
+            var sourceType = UIImagePickerControllerSourceType.Camera
+            if(UIImagePickerController.isSourceTypeAvailable(UIImagePickerControllerSourceType.Camera))
+            {
+                switch(buttonIndex) {
+                case 0:
+                    return
+                case 1:
+                    sourceType = UIImagePickerControllerSourceType.Camera
+                    break
+                case 2:
+                    sourceType = UIImagePickerControllerSourceType.PhotoLibrary
+                    break
+                default:
+                    return
+                }
+            }
+            else //模拟器
+            {
+                if(buttonIndex == 0){
+                    return
+                }
+                else {
+                    sourceType = UIImagePickerControllerSourceType.SavedPhotosAlbum
+                }
+            }
+            var imagePickController:UIImagePickerController = UIImagePickerController()
+            imagePickController.title = "选择照片"
+            imagePickController.delegate = self
+            imagePickController.allowsEditing = false
+            imagePickController.sourceType = sourceType
+            self.presentViewController(imagePickController, animated: true, completion: nil)
+        }
+    }
+
+    
+    func bottomFunctionButtonsFlyDown()
+    {
+        UIView.animateWithDuration(0.1, animations: {
+            self.btnFunImage.frame = CGRectMake(self.btnFunImage.frame.origin.x, self.view.frame.height + 5, self.btnFunImage.frame.width, self.btnFunImage.frame.height)
+        })
+        
+        UIView.animateWithDuration(0.3, animations: {
+            self.btnFunText.frame = CGRectMake(self.btnFunText.frame.origin.x, self.view.frame.height + 5, self.btnFunText.frame.width, self.btnFunText.frame.height)
+        })
+        
+        UIView.animateWithDuration(0.5, animations: {
+            self.btnFunLogo.frame = CGRectMake(self.btnFunLogo.frame.origin.x, self.view.frame.height + 5, self.btnFunLogo.frame.width, self.btnFunLogo.frame.height)
+        })
+        
+        UIView.animateWithDuration(0.7, animations: {
+            self.btnFunOrnament.frame = CGRectMake(self.btnFunOrnament.frame.origin.x, self.view.frame.height + 5, self.btnFunOrnament.frame.width, self.btnFunOrnament.frame.height)
+        })
+        
+    }
+    
+    func bottomFunctionButtonFlyUp(index: Int) {
+        
+        if index == 1
+        {
+            if isBottomPopViewOpen == true{
+                
+                UIView.animateWithDuration(0.1, animations: {
+                    
+                        self.bottomPopViewLogo.frame = CGRectMake(0, self.view.frame.height + 5, self.view.frame.width, 0)
+                        self.bottomPopViewText.view.frame = CGRectMake(0, self.view.frame.height + 5, self.view.frame.width, 0)
+                     })
+                
+                UIView.animateKeyframesWithDuration(0.2, delay: 0.1, options: UIViewKeyframeAnimationOptions.CalculationModeLinear, animations: {
+                    //self.bottomMenuView.frame = CGRectMake(30, self.view.frame.height - 50, self.view.frame.width - 60, 35)
+                    self.btnFunImage.frame = CGRectMake(self.btnFunImage.frame.origin.x, self.view.frame.height - 130, self.btnFunImage.frame.width, self.btnFunImage.frame.height)
+                    self.btnFunText.frame = CGRectMake(self.btnFunText.frame.origin.x, self.view.frame.height - 130, self.btnFunText.frame.width, self.btnFunText.frame.height)
+                    self.btnFunLogo.frame = CGRectMake(self.btnFunLogo.frame.origin.x, self.view.frame.height - 130, self.btnFunLogo.frame.width, self.btnFunLogo.frame.height)
+                    self.btnFunOrnament.frame = CGRectMake(self.btnFunOrnament.frame.origin.x, self.view.frame.height - 130, self.btnFunOrnament.frame.width, self.btnFunOrnament.frame.height)
+                    }, completion: {_ in
+                        
+                })
+            }
+            
+        }
+        
+    }
+    
+    func touchSpaceCloseHandle(index:Int)
+    {
+        println("touch sapce close handle button is clicked")
+        println("I got this mes ***************************")
+        bottomFunctionButtonFlyUp(1)
+        if isBottomPopViewOpen == true{
+        isBottomPopViewOpen = !isBottomPopViewOpen
+        }
+        println("the isbottom is \(isBottomPopViewOpen)")
+    }
+    
+    /*************/
+    //备用的函数
+    func addSceneView()
+    {
+        println("this is the make of the scene View")
+        diyScene = DIYScene(size:CGSizeMake(self.view.frame.width, self.view.frame.height))
+        
+        let skView:SKView = diySceneViewController.view as! SKView
+        //        skView.showsFPS = true
+        //        skView.showsNodeCount = true
+        skView.ignoresSiblingOrder = true
+        diyScene.scaleMode = .AspectFill
+        skView.presentScene(diyScene)
+        self.view.addSubview(skView)
+    }
+
+}
+

@@ -1,0 +1,188 @@
+//
+//  SaDirMgr.swift
+//  SapphireRelease
+//
+//  Created by 冯 波 on 15/4/2.
+//  Copyright (c) 2015年 sapphire. All rights reserved.
+//
+
+import Foundation
+
+let PATH_DOCUMENT         = "Documents"
+let PATH_IMAGECACHE       = "imageCache"
+let PATH_HEADVIEWCACHE    = "HeadView"
+let PATH_ADVERTISECACHE   = "Ads"
+let PATH_CACHEDATAINPLIST = "data.plist"
+let PATH_BRAND_TOTAL      = "brandtotal"
+
+class GlobalDir
+{
+    class var documentsDirectory: NSURL {
+        let urls = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)
+        return urls[urls.endIndex-1] as! NSURL
+    }
+    
+    class var cacheDirectory: NSURL {
+        let urls = NSFileManager.defaultManager().URLsForDirectory(.CachesDirectory, inDomains: .UserDomainMask)
+        return urls[urls.endIndex-1] as! NSURL
+    }
+    
+    class var cacheLogDirectory:NSURL {
+        return GlobalDir.cacheDirectory.URLByAppendingPathComponent(SALOG)
+    }
+    
+    class func cacheDataInPlist()->NSURL
+    {
+        return GlobalDir.cacheDirectory.URLByAppendingPathComponent(PATH_CACHEDATAINPLIST)
+    }
+    
+    class var userHeadViewDirectory:String {
+        var Url = NSHomeDirectory().stringByAppendingPathComponent(PATH_DOCUMENT).stringByAppendingPathComponent(PATH_IMAGECACHE).stringByAppendingPathComponent(PATH_HEADVIEWCACHE)
+        //log.info(Url)
+        if createDirectory(Url) == true {
+            return Url
+        }
+        return ""
+    }
+    
+    class var appAdsDirectory:String {
+        var Url = NSHomeDirectory().stringByAppendingPathComponent(PATH_DOCUMENT).stringByAppendingPathComponent(PATH_IMAGECACHE).stringByAppendingPathComponent(PATH_ADVERTISECACHE)
+        //log.info(Url)
+        if createDirectory(Url) == true {
+            return Url
+        }
+        return ""
+    }
+    
+    class var imageCacheUrl:NSURL {
+        var cacheUrl = documentsDirectory.URLByAppendingPathComponent(PATH_IMAGECACHE)
+        createDirectoryByUrl(cacheUrl)
+        return cacheUrl
+    }
+    
+    class func userImageCacheURL(userName:String)->NSURL {
+        var userHeadViewDirectory = documentsDirectory.URLByAppendingPathComponent(PATH_IMAGECACHE).URLByAppendingPathComponent(PATH_HEADVIEWCACHE)
+        
+        var userHeadViewPath = userHeadViewDirectory.URLByAppendingPathComponent(userName + ".png")
+        println(userHeadViewPath)
+        return userHeadViewPath
+    }
+    
+    class func getUserImageCache(userName:String) -> String
+    {
+        var userHeadViewDirectory = GlobalDir.userHeadViewDirectory
+        var userHeadViewPath = userHeadViewDirectory + "/" + userName + ".png"
+        return userHeadViewPath
+    }
+    
+    class func getClothesImageLocalDir(cid:String)->String
+    {
+        var dir = NSHomeDirectory().stringByAppendingPathComponent(PATH_DOCUMENT).stringByAppendingPathComponent(PATH_IMAGECACHE).stringByAppendingPathComponent(cid)
+        //log.info(dir)
+        if createDirectory(dir) == true
+        {
+            return dir+"/"
+        }
+        return ""
+    }
+    
+    class func getClothesImageByIdAndColor(cid:String,color:String)->String {
+        var dir = getClothesImageLocalDir(cid).stringByAppendingPathComponent(color)
+        if createDirectory(dir) == true {
+            return dir+"/"
+        }
+        return ""
+    }
+    
+    class func getClothesDetailImageById(cid:String)->String {
+        var dir = getClothesImageLocalDir(cid).stringByAppendingPathComponent("main")
+        if createDirectory(dir) == true {
+            return dir+"/"
+        }
+        return ""
+    }
+    
+    class func getClothesImageCacheDir(cid:String)->NSURL
+    {
+        var clothesDir:String = GlobalDir.getClothesImageLocalDir(cid)
+        var clothesImageCacheDirectory = documentsDirectory.URLByAppendingPathComponent(PATH_IMAGECACHE).URLByAppendingPathComponent(cid)
+        return clothesImageCacheDirectory
+    }
+    
+    class func getAdvDirString()->String
+    {
+        var dir = NSHomeDirectory().stringByAppendingPathComponent(PATH_DOCUMENT).stringByAppendingPathComponent(PATH_IMAGECACHE).stringByAppendingPathComponent(PATH_ADVERTISECACHE)
+        //log.info(dir)
+        if createDirectory(dir) == true
+        {
+            return dir+"/"
+        }
+        return ""
+    }
+    
+    class func getBrandDirString() -> String
+    {
+        var dir = NSHomeDirectory().stringByAppendingPathComponent(PATH_DOCUMENT).stringByAppendingPathComponent(PATH_IMAGECACHE).stringByAppendingPathComponent(PATH_BRAND_TOTAL)
+        if createDirectory(dir) == true
+        {
+            return dir+"/"
+        }
+        return ""
+    }
+    
+    class func getAdvDirUrl()->NSURL
+    {
+        var clothesDir:String = GlobalDir.getAdvDirString()
+        var clothesImageCacheDirectory = documentsDirectory.URLByAppendingPathComponent(PATH_IMAGECACHE).URLByAppendingPathComponent(PATH_ADVERTISECACHE)
+        return clothesImageCacheDirectory
+    }
+    
+    class func createDirectory(dirPath:String) -> Bool
+    {
+        var tmpDirPath = dirPath
+        var fileManager = NSFileManager.defaultManager()
+        if(!fileManager.fileExistsAtPath(tmpDirPath)) {
+            var flag = fileManager.createDirectoryAtPath(tmpDirPath, withIntermediateDirectories: true, attributes: nil, error: nil)
+            return flag
+        }
+        return true
+    }
+    
+    class func removeStringDir(dir:String)->Bool {
+        return NSFileManager.defaultManager().removeItemAtPath(dir, error: nil)
+    }
+    
+    class func removeUrlDir(dir:NSURL)->Bool {
+        return NSFileManager.defaultManager().removeItemAtURL(dir, error: nil)
+    }
+    
+    //创建目录，通过URL的形式
+    class func createDirectoryByUrl(urlPath:NSURL) ->Bool {
+        
+        var fileManager = NSFileManager.defaultManager()
+        return fileManager.createDirectoryAtURL(urlPath, withIntermediateDirectories: true, attributes: nil, error: nil)
+    }
+    
+    //删除文件
+    class func removeFileByUrl(urlPath:NSURL)->Bool {
+        var fileManager = NSFileManager.defaultManager()
+        return fileManager.removeItemAtURL(urlPath, error: nil)
+    }
+    
+    //判断在某个文件是否存在
+    class func fileExistAtPath(filePath:String)->Bool {
+        var fileManager = NSFileManager.defaultManager()
+        return fileManager.fileExistsAtPath(filePath)
+    }
+    
+    class func isPathExist(path:String)->Bool
+    {
+        var fileManager = NSFileManager.defaultManager()
+        if(!fileManager.fileExistsAtPath(path))
+        {
+            return false
+        }
+        return true
+    }
+
+}

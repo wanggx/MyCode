@@ -1,0 +1,47 @@
+//
+//  UserModel.swift
+//  SapphireDesign
+//
+//  Created by gxwang on 15/9/1.
+//  Copyright (c) 2015年 sapphire. All rights reserved.
+//
+
+import Foundation
+import Alamofire
+import SwiftyJSON
+
+
+
+
+class UserModel {
+    var account:String = ""
+    var password:String = ""
+    
+    func login(account:String,pwd:String,block:((AnyObject)->())?)->Request {
+        
+        log.info("\(GlobalUrl.URL_LOGIN)")
+        var request = Alamofire.request(.GET, GlobalUrl.URL_LOGIN, parameters: ["myUserPhone":account]).responseJSON() {
+            (_,_,data,_) in
+            
+            if data == nil {
+                block?(ERROR_CODE_ERROR_NETWORK)
+                return
+            }
+            
+            var json = JSON(data!)
+            log.info("\(json)")
+            
+            var jsonPwd = json[0]["password"].stringValue
+            log.info("\(jsonPwd)")
+            if pwd != jsonPwd {
+                block?(ERROR_CODE_ERROR_PWD)
+                return
+            }
+            
+            block?(ERROR_CODE_NO_ERROR)
+        }
+        
+        return request
+    }
+    
+}

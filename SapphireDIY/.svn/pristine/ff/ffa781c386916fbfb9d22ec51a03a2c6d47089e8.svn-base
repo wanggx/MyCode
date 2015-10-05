@@ -1,0 +1,199 @@
+//
+//  SaPullToRefreshView.swift
+//  SapphireReleaseAutoLayOut
+//
+//  Created by sapphre001 on 15/7/10.
+//  Copyright (c) 2015年 sapphire. All rights reserved.
+//
+
+import UIKit
+import Foundation
+
+@objc public protocol SaPullToRefreshDelegate: NSObjectProtocol {
+    func pullToRefreshDidTrigger(view: SaPullToRefreshView) -> ()
+    func pullToRefreshIsLoading(view: SaPullToRefreshView) -> Bool
+    optional func pullToRefreshLastUpdated(view: SaPullToRefreshView) -> NSDate
+}
+
+public class SaPullToRefreshView: UIView {
+    
+    public enum RefreshState {
+        case Normal
+        case Pulling
+        case Loading
+    }
+    
+    public var textColor = UIColor(red:0.25, green:0.25, blue:0.25, alpha:1)
+    public var bgColor = UIColor(red:0.9, green:0.9, blue:0.9, alpha:1)//UIColor(red:0, green:0.22, blue:0.35, alpha:1)
+    public var flipAnimatioDutation: CFTimeInterval = 0.18
+    private var titleHeight:CGFloat = 50
+    public var space:CGFloat = 0
+    public var thresholdValue: CGFloat {
+        get {
+            return titleHeight + space
+        }
+    }
+    public var lastUpdatedKey = "RefreshLastUpdated"
+    
+    public var isShowUpdatedTime: Bool = true
+    
+    private var _state: RefreshState = .Normal
+    public var state: RefreshState {
+        get {
+            return _state
+        }
+        set {
+            switch newValue {
+            case .Pulling:
+                statusLabel?.text = "松开立即刷新"
+                CATransaction.begin()
+                CATransaction.setAnimationDuration(flipAnimatioDutation)
+                arrowImage?.transform = CATransform3DMakeRotation(CGFloat(M_PI), 0.0, 0.0, 1.0)
+                CATransaction.commit()
+            case .Normal:
+                statusLabel?.text = "下拉刷新"
+                activityView?.stopAnimating()
+                CATransaction.begin()
+                CATransaction.setValue(kCFBooleanTrue, forKey: kCATransactionDisableActions)
+                arrowImage?.hidden = false
+                arrowImage?.transform = CATransform3DIdentity
+                CATransaction.commit()
+                refreshLastUpdatedDate()
+            case .Loading:
+                statusLabel?.text = "正在刷新..."
+                activityView?.startAnimating()
+                CATransaction.begin()
+                CATransaction.setValue(kCFBooleanTrue, forKey: kCATransactionDisableActions)
+                arrowImage?.hidden = true
+                CATransaction.commit()
+            }
+            _state = newValue
+        }
+    }
+    
+    public var lastUpdatedLabel: UILabel?
+    public var statusLabel: UILabel?
+    public var arrowImage: CALayer?
+    public var activityView: UIActivityIndicatorView?
+    public weak var delegate: SaPullToRefreshDelegate?
+    
+    override public init(frame: CGRect) {
+        super.init(frame: frame)
+        self.autoresizingMask = UIViewAutoresizing.FlexibleWidth
+        self.backgroundColor = bgColor
+        
+        let label: UILabel = UILabel(frame: CGRectMake(0, frame.size.height - 25.0, self.frame.size.width, 20.0))
+        label.autoresizingMask = UIViewAutoresizing.FlexibleWidth
+        label.font = UIFont.systemFontOfSize(12.0)
+        label.textColor = textColor
+        label.backgroundColor = UIColor.clearColor()
+        label.textAlignment = .Center
+        lastUpdatedLabel = label
+        if let value: AnyObject = NSUserDefaults.standardUserDefaults().objectForKey(lastUpdatedKey) {
+            lastUpdatedLabel?.text = value as? String
+        } else {
+            lastUpdatedLabel?.text = nil
+        }
+        self.addSubview(label)
+        
+        let label2: UILabel = UILabel(frame: CGRectMake(0, frame.size.height - 43.0, self.frame.size.width, 20.0))
+        label2.autoresizingMask = UIViewAutoresizing.FlexibleWidth
+        label2.font = UIFont.systemFontOfSize(13.0)
+        label2.textColor = textColor
+        label2.backgroundColor = UIColor.clearColor()
+        label2.textAlignment = .Center
+        statusLabel = label2
+        self.addSubview(label2)
+        
+        let layer: CALayer = CALayer()
+        layer.frame = CGRectMake(25.0, frame.size.height - 35.0, 15.0, 25.0)
+        layer.contentsGravity = kCAGravityResizeAspect
+        layer.contents = UIImage(named: "whiteArrow.png")?.CGImage
+        self.layer.addSublayer(layer)
+        arrowImage = layer
+        
+        let view: UIActivityIndicatorView = UIActivityIndicatorView(activityIndicatorStyle: UIActivityIndicatorViewStyle.Gray)
+        view.frame = CGRectMake(25.0, frame.size.height - 33.0, 20.0, 20.0)
+        self.addSubview(view)
+        activityView = view
+        
+        state = .Normal
+    }
+    
+    required public init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+    }
+    
+    public func refreshLastUpdatedDate() {
+        if isShowUpdatedTime {
+            if let update = delegate?.respondsToSelector("pullToRefreshLastUpdated:") {
+                let date = delegate?.pullToRefreshLastUpdated!(self)
+                let formatter = NSDateFormatter()
+                formatter.AMSymbol = "AM"
+                formatter.PMSymbol = "PM"
+                formatter.dateFormat = "yyyy/MM/dd/ HH:mm:ss"
+                lastUpdatedLabel?.text = "最近一次更新: \(formatter.stringFromDate(date!))"
+                NSUserDefaults.standardUserDefaults().setObject(lastUpdatedLabel?.text, forKey: lastUpdatedKey)
+                NSUserDefaults.standardUserDefaults().synchronize()
+            }
+        }
+    }
+    
+    // MARK:ScrollView Methods
+    
+    public func refreshScrollViewDidScroll(scrollView: UIScrollView) {
+        if state == .Loading {
+            var offset = max(scrollView.contentOffset.y * -1, 0)
+            offset = min(offset, thresholdValue)
+            scrollView.contentInset = UIEdgeInsetsMake(offset, 0.0, 0.0, 0.0)
+        } else if scrollView.dragging {
+            var loading: Bool = false
+            if let load = delegate?.respondsToSelector("pullToRefreshIsLoading:") {
+                loading = delegate!.pullToRefreshIsLoading(self)
+            }
+            if state == .Pulling && scrollView.contentOffset.y > -thresholdValue && scrollView.contentOffset.y < 0.0 && !loading {
+                state = .Normal
+            } else if state == .Normal && scrollView.contentOffset.y < -thresholdValue && !loading {
+                state = .Pulling
+            }
+        }
+    }
+    
+    public func refreshScrollViewDidEndDragging(scrollView: UIScrollView) {
+        var loading: Bool = false
+        if let load = delegate?.respondsToSelector("pullToRefreshIsLoading:") {
+            loading = delegate!.pullToRefreshIsLoading(self)
+        }
+        
+        if (scrollView.contentOffset.y <= -thresholdValue && !loading) {
+            if let load = delegate?.respondsToSelector("pullToRefreshDidTrigger:") {
+                delegate?.pullToRefreshDidTrigger(self)
+            }
+            state = .Loading
+            UIView.beginAnimations(nil, context: nil)
+            UIView.setAnimationDuration(0.4)
+            scrollView.contentInset = UIEdgeInsetsMake(thresholdValue, 0.0, 0.0, 0.0)
+            scrollView.setContentOffset(scrollView.contentOffset, animated: true)
+            UIView.commitAnimations()
+        }
+    }
+    
+    public func refreshScrollViewDataSourceDidFinishedLoading(scrollView: UIScrollView) {
+        UIView.beginAnimations(nil, context: nil)
+        UIView.setAnimationDuration(0.4)
+        scrollView.contentInset = UIEdgeInsetsMake(thresholdValue-50, 0.0, 0.0, 0.0)
+        scrollView.setContentOffset(scrollView.contentOffset, animated: true)
+        UIView.commitAnimations()
+        
+        state = .Normal
+    }
+    
+    deinit {
+        delegate = nil
+        activityView = nil
+        statusLabel = nil
+        arrowImage = nil
+        lastUpdatedLabel = nil
+    }
+}
+

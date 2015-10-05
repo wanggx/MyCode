@@ -1,0 +1,120 @@
+//
+//  DesignViewController.swift
+//  SapphireDesign
+//
+//  Created by 波 冯 on 15/8/22.
+//  Copyright (c) 2015年 sapphire. All rights reserved.
+//
+
+import Foundation
+import UIKit
+
+class DesignViewController : UIViewController,SKSplashDelegate
+{
+
+    //init the basic info of the parameters
+    var efAnimationViewController:EFAnimationViewController = EFAnimationViewController()
+    
+    var splashView:SKSplashView = SKSplashView()
+    
+    var indicatorView:UIActivityIndicatorView = UIActivityIndicatorView()
+    
+    
+    override func viewDidLoad()
+    {
+        super.viewDidLoad()
+        
+        addObserverForEFAnimationViewButton()
+    }
+    
+    func addObserverForEFAnimationViewButton()
+    {
+        NSNotificationCenter.defaultCenter().addObserver(self,
+            selector: "selectViewController:",
+            name: "SelectDesignViewController",
+            object: nil)
+    }
+    
+    func selectViewController(notification: NSNotification)
+    {
+        let theData:NSDictionary = notification.userInfo!
+        let index = theData.objectForKey("EFButtonViewIndex") as! NSString
+        let time: NSTimeInterval = 1.0
+        let delay = dispatch_time(DISPATCH_TIME_NOW,
+            Int64(time * Double(NSEC_PER_SEC)))
+        dispatch_after(delay, dispatch_get_main_queue()) {
+            
+            println("延时一秒钟")
+            self.enterDesignViewController(index as String)
+        }
+        
+    }
+    
+    func enterDesignViewController(indexTag:String)
+    {
+        println("the indexTag is \(indexTag)")
+        
+        var diyViewController:DIYViewController = UIStoryboard(name: "DIYView", bundle: nil).instantiateViewControllerWithIdentifier("DIYViewControllerID") as! DIYViewController
+        
+        
+        if(indexTag == "1001")
+        {
+            diyViewController.title = "Hoodies Guy close"
+            
+            let time: NSTimeInterval = 0.1
+            let delay = dispatch_time(DISPATCH_TIME_NOW,
+                Int64(time * Double(NSEC_PER_SEC)))
+            dispatch_after(delay, dispatch_get_main_queue()) {
+                
+                println("延时一秒钟")
+                self.efAnimationViewController.view.removeFromSuperview()
+                self.navigationController?.pushViewController(diyViewController, animated: true)
+            }
+        }
+    }
+    
+    
+    override func viewWillAppear(animated: Bool) {
+        
+        self.view.addSubview(efAnimationViewController.view)
+        self.addChildViewController(efAnimationViewController)
+        efAnimationViewController.didMoveToParentViewController(self)
+
+    }
+    override func didReceiveMemoryWarning()
+    {
+        super.didReceiveMemoryWarning()
+    }
+    
+    
+    
+    //SKSplashDelegate delegate methods and functions
+
+    func FirstSplashView()
+    {
+        var twitterSplashIcon:SKSplashIcon = SKSplashIcon(image: UIImage(named: "Man.png"), animationType: SKIconAnimationType.Bounce)
+        
+        var twitterSplashColor:UIColor = UIColor(red: 0.25098, green: 0.6, blue: 1.0, alpha: 1.0)
+        
+        self.splashView.delegate = self
+        self.splashView.animationDuration = 2
+        self.splashView.backgroundColor = UIColor.blueColor()
+        self.view.addSubview(self.splashView)
+        splashView.startAnimation()
+
+    }
+    func splashView(splashView: SKSplashView!, didBeginAnimatingWithDuration duration: Float) {
+        
+        println("the delegate method 1 is animation")
+        self.indicatorView.startAnimating()
+    }
+    
+    func splashViewDidEndAnimating(splashView: SKSplashView!) {
+        
+        println("the button has been clicked")
+        self.indicatorView.stopAnimating()
+        
+    }
+    
+
+}

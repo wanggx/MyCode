@@ -1,0 +1,42 @@
+//
+//  ShopCarTableView.swift
+//  SapphireDesign
+//
+//  Created by gxwang on 15/9/15.
+//  Copyright (c) 2015年 sapphire. All rights reserved.
+//
+
+import Foundation
+import UIKit
+
+class ShopCarTableView : UITableView ,UITableViewDataSource,UITableViewDelegate {
+    
+    func initTableView() {
+        self.dataSource = self
+        self.delegate = self
+        
+    }
+    
+    func numberOfSectionsInTableView(tableView: UITableView) -> Int {
+        return 1
+    }
+    
+    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return 10
+    }
+    
+    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+        var cell = tableView.dequeueReusableCellWithIdentifier("ShopCarTableCell") as! ShopCarTableViewCell
+        return cell
+    }
+    
+    func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
+        return 80
+    }
+    
+    
+    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+        tableView.deselectRowAtIndexPath(indexPath, animated: true)
+    }
+    
+}

@@ -1,0 +1,74 @@
+//
+//  HomePageViewController.swift
+//  Demo
+//
+//  Created by gxwang on 15/8/22.
+//  Copyright (c) 2015年 gxwang. All rights reserved.
+//
+
+import Foundation
+import UIKit
+
+class HomePageViewController : UIViewController,pHomePageCollectDelegate,pScrollViewDelegate {
+
+    @IBOutlet weak var categorySegment: UISegmentedControl!
+    
+    var collectView:HomePageCollectionView!
+
+    @IBOutlet weak var scrollView: HomePageScrollView!
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        initScrollView()
+        initCollectionView()
+    }
+    
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        
+        log.info("viewDidLayoutSubviews")
+        
+        scrollView.contentSize = CGSize(width: scrollView.bounds.width*2, height: scrollView.bounds.height)
+        collectView.frame = CGRectMake(0, 0, scrollView.frame.width, scrollView.frame.height)
+        collectView.reloadData()
+    }
+    
+    func initScrollView() {
+        scrollView.pDelegate = self
+        scrollView.initScrollView()
+    }
+    
+    func initCollectionView() {
+        
+        collectView = NSBundle.mainBundle().loadNibNamed("HomePageCollectionView", owner: self, options: nil)[0] as! HomePageCollectionView
+        collectView.dataDelegate = self
+        collectView.initColelctionView()
+        scrollView.addSubview(collectView)
+    }
+    
+    func scrollToPage(index:Int) {
+        var frame = self.scrollView.frame
+        frame.origin.x = self.scrollView.frame.width * CGFloat(index)
+        self.scrollView.scrollRectToVisible(frame, animated: true)
+    }
+    
+    func setSelectIndex(index:Int) {
+        categorySegment.selectedSegmentIndex = index
+    }
+    
+    func setCurrentIndex(index: Int) {
+        println("index is \(index)")
+        scrollToPage(index)
+        setSelectIndex(index)
+    }
+    
+    @IBAction func segContorlValueChanged(sender: AnyObject) {
+        var segControl = sender as!UISegmentedControl
+        scrollToPage(segControl.selectedSegmentIndex)
+    }
+    
+}
+

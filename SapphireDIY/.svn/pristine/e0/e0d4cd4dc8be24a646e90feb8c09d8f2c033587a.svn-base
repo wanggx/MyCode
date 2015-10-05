@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="7706" systemVersion="14D2134" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="7703"/>
+        <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
+    </dependencies>
+    <scenes>
+        <!--登陆-->
+        <scene sceneID="Mu3-ny-bCh">
+            <objects>
+                <viewController storyboardIdentifier="LoginViewControllerID" useStoryboardIdentifierAsRestorationIdentifier="YES" id="HYR-Zw-gf0" customClass="LoginViewController" customModule="SapphireDesign" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="G0o-Se-20z"/>
+                        <viewControllerLayoutGuide type="bottom" id="7Fv-sY-Wtr"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="dgA-Dh-yrl">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <subviews>
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="手机号/账号" minimumFontSize="18" translatesAutoresizingMaskIntoConstraints="NO" id="FIf-gR-Tg2" customClass="MadokaTextField" customModule="SapphireDesign">
+                                <rect key="frame" x="16" y="109" width="568" height="66"/>
+                                <color key="tintColor" name="alternateSelectedControlTextColor" catalog="System" colorSpace="catalog"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="66" id="WCL-3x-nlF"/>
+                                </constraints>
+                                <color key="textColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
+                                <fontDescription key="fontDescription" name="AvenirNext-DemiBold" family="Avenir Next" pointSize="20"/>
+                                <textInputTraits key="textInputTraits"/>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="color" keyPath="placeholderColor">
+                                        <color key="value" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="color" keyPath="borderColor">
+                                        <color key="value" red="0.40000000600000002" green="0.80000001190000003" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                            </textField>
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="密码" minimumFontSize="18" translatesAutoresizingMaskIntoConstraints="NO" id="D12-e4-9BR" customClass="MadokaTextField" customModule="SapphireDesign">
+                                <rect key="frame" x="16" y="183" width="568" height="66"/>
+                                <color key="tintColor" name="alternateSelectedControlTextColor" catalog="System" colorSpace="catalog"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="66" id="Daf-8K-S7i"/>
+                                    <constraint firstAttribute="height" constant="66" id="RQj-Wu-4dG"/>
+                                </constraints>
+                                <color key="textColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
+                                <fontDescription key="fontDescription" name="AvenirNext-DemiBold" family="Avenir Next" pointSize="20"/>
+                                <textInputTraits key="textInputTraits"/>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="color" keyPath="placeholderColor">
+                                        <color key="value" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="color" keyPath="borderColor">
+                                        <color key="value" red="0.40000000600000002" green="0.80000001190000003" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                                <variation key="default">
+                                    <mask key="constraints">
+                                        <exclude reference="Daf-8K-S7i"/>
+                                    </mask>
+                                </variation>
+                            </textField>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="000-pX-Zsw">
+                                <rect key="frame" x="200" y="249" width="200" height="21"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="200" id="Xpr-QG-vgf"/>
+                                    <constraint firstAttribute="width" secondItem="000-pX-Zsw" secondAttribute="height" multiplier="200:21" id="zye-EY-lsd"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="20"/>
+                                <state key="normal" title="Log In">
+                                    <color key="titleColor" red="0.40000000600000002" green="0.80000001190000003" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <action selector="LoginAction:" destination="HYR-Zw-gf0" eventType="touchUpInside" id="TpI-m1-AU4"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="0DU-Ty-e8O">
+                                <rect key="frame" x="-7" y="563" width="180" height="30"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="180" id="fCd-oG-95N"/>
+                                </constraints>
+                                <state key="normal" title="Forget the password?">
+                                    <color key="titleColor" red="0.40000000600000002" green="0.80000001190000003" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Vn0-Nx-JTe">
+                                <rect key="frame" x="491" y="564" width="126" height="28"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="28" id="MFi-h9-byr"/>
+                                    <constraint firstAttribute="width" constant="126" id="QCe-aJ-UT2"/>
+                                </constraints>
+                                <state key="normal" title="Register">
+                                    <color key="titleColor" red="0.40000000600000002" green="0.80000001190000003" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <segue destination="zns-dG-ZRb" kind="show" id="ZwT-jC-aoA"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="0DU-Ty-e8O" firstAttribute="leading" secondItem="dgA-Dh-yrl" secondAttribute="leadingMargin" constant="-23" id="8SO-SW-aK1"/>
+                            <constraint firstItem="Vn0-Nx-JTe" firstAttribute="baseline" secondItem="0DU-Ty-e8O" secondAttribute="baseline" id="BNO-ek-WH9"/>
+                            <constraint firstItem="FIf-gR-Tg2" firstAttribute="centerX" secondItem="dgA-Dh-yrl" secondAttribute="centerX" id="CtG-jS-eGT"/>
+                            <constraint firstItem="D12-e4-9BR" firstAttribute="top" secondItem="G0o-Se-20z" secondAttribute="bottom" constant="119" id="HLi-Qf-0jr"/>
+                            <constraint firstItem="FIf-gR-Tg2" firstAttribute="leading" secondItem="dgA-Dh-yrl" secondAttribute="leadingMargin" id="QIR-tL-uZc"/>
+                            <constraint firstItem="7Fv-sY-Wtr" firstAttribute="top" secondItem="000-pX-Zsw" secondAttribute="bottom" constant="330" id="b3x-ib-qN7"/>
+                            <constraint firstItem="D12-e4-9BR" firstAttribute="trailing" secondItem="FIf-gR-Tg2" secondAttribute="trailing" id="e02-FD-O0K"/>
+                            <constraint firstItem="D12-e4-9BR" firstAttribute="leading" secondItem="FIf-gR-Tg2" secondAttribute="leading" id="ee7-n9-96T"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="Vn0-Nx-JTe" secondAttribute="trailing" constant="-33" id="ekK-l6-R8H"/>
+                            <constraint firstItem="000-pX-Zsw" firstAttribute="top" secondItem="D12-e4-9BR" secondAttribute="bottom" id="iWP-le-oao"/>
+                            <constraint firstItem="7Fv-sY-Wtr" firstAttribute="top" secondItem="0DU-Ty-e8O" secondAttribute="bottom" constant="7" id="pPB-xh-lLF"/>
+                            <constraint firstItem="FIf-gR-Tg2" firstAttribute="top" secondItem="G0o-Se-20z" secondAttribute="bottom" constant="45" id="pgb-zU-Cgb"/>
+                            <constraint firstItem="000-pX-Zsw" firstAttribute="centerX" secondItem="D12-e4-9BR" secondAttribute="centerX" id="zcD-HC-pg7"/>
+                        </constraints>
+                        <variation key="default">
+                            <mask key="constraints">
+                                <exclude reference="b3x-ib-qN7"/>
+                            </mask>
+                        </variation>
+                    </view>
+                    <navigationItem key="navigationItem" title="登陆" id="hip-k0-vBz"/>
+                    <connections>
+                        <outlet property="accountTextField" destination="FIf-gR-Tg2" id="iR6-c0-vv4"/>
+                        <outlet property="loginButton" destination="000-pX-Zsw" id="5XX-Tg-dL3"/>
+                        <outlet property="passwordTextField" destination="D12-e4-9BR" id="ZYh-Im-vEk"/>
+                        <outlet property="userNameTextField" destination="FIf-gR-Tg2" id="05p-x0-QJs"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="dq0-vo-dv7" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1145" y="-637"/>
+        </scene>
+        <!--注册-->
+        <scene sceneID="aUk-B4-ljz">
+            <objects>
+                <viewController id="zns-dG-ZRb" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="Gme-hL-rw4"/>
+                        <viewControllerLayoutGuide type="bottom" id="7WF-5U-hji"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="Xnn-Lc-5US">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="手机号" adjustsFontSizeToFit="NO" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="e5j-cx-5Hd" customClass="HoshiTextField" customModule="SapphireDesign">
+                                <rect key="frame" x="16" y="92" width="568" height="66"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="66" id="VxB-NI-QP6"/>
+                                </constraints>
+                                <color key="textColor" red="0.41568627450000001" green="0.47450980390000003" blue="0.53725490200000003" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <fontDescription key="fontDescription" name="AvenirNext-DemiBold" family="Avenir Next" pointSize="20"/>
+                                <textInputTraits key="textInputTraits"/>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="color" keyPath="placeholderColor">
+                                        <color key="value" red="0.41568627450000001" green="0.47450980390000003" blue="0.53725490200000003" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="color" keyPath="borderActiveColor">
+                                        <color key="value" red="0.2485069717" green="0.72651166629999997" blue="0.91372549020000005" alpha="1" colorSpace="calibratedRGB"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="color" keyPath="borderInactiveColor">
+                                        <color key="value" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                            </textField>
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="密码" adjustsFontSizeToFit="NO" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="iOq-14-3AP" customClass="HoshiTextField" customModule="SapphireDesign">
+                                <rect key="frame" x="16" y="158" width="568" height="66"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="66" id="hl1-8e-abw"/>
+                                </constraints>
+                                <color key="textColor" red="0.41568627450000001" green="0.47450980390000003" blue="0.53725490200000003" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <fontDescription key="fontDescription" name="AvenirNext-DemiBold" family="Avenir Next" pointSize="20"/>
+                                <textInputTraits key="textInputTraits"/>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="color" keyPath="placeholderColor">
+                                        <color key="value" red="0.41568627450000001" green="0.47450980390000003" blue="0.53725490200000003" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="color" keyPath="borderActiveColor">
+                                        <color key="value" red="0.2485069717" green="0.72651166629999997" blue="0.91372549020000005" alpha="1" colorSpace="calibratedRGB"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="color" keyPath="borderInactiveColor">
+                                        <color key="value" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                            </textField>
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="验证码" adjustsFontSizeToFit="NO" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="6Ru-tE-nFR" customClass="HoshiTextField" customModule="SapphireDesign">
+                                <rect key="frame" x="16" y="224" width="568" height="66"/>
+                                <color key="textColor" red="0.41568627450000001" green="0.47450980390000003" blue="0.53725490200000003" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <fontDescription key="fontDescription" name="AvenirNext-DemiBold" family="Avenir Next" pointSize="20"/>
+                                <textInputTraits key="textInputTraits"/>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="color" keyPath="placeholderColor">
+                                        <color key="value" red="0.41568627450000001" green="0.47450980390000003" blue="0.53725490200000003" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="color" keyPath="borderActiveColor">
+                                        <color key="value" red="0.2485069717" green="0.72651166629999997" blue="0.91372549020000005" alpha="1" colorSpace="calibratedRGB"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="color" keyPath="borderInactiveColor">
+                                        <color key="value" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                            </textField>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="iOq-14-3AP" firstAttribute="trailing" secondItem="e5j-cx-5Hd" secondAttribute="trailing" id="02B-BB-z2z"/>
+                            <constraint firstItem="e5j-cx-5Hd" firstAttribute="centerX" secondItem="Xnn-Lc-5US" secondAttribute="centerX" id="3Cw-Sb-dGn"/>
+                            <constraint firstItem="6Ru-tE-nFR" firstAttribute="top" secondItem="iOq-14-3AP" secondAttribute="bottom" id="4P4-5C-Lu9"/>
+                            <constraint firstItem="iOq-14-3AP" firstAttribute="top" secondItem="e5j-cx-5Hd" secondAttribute="bottom" id="4VC-gS-BLK"/>
+                            <constraint firstItem="6Ru-tE-nFR" firstAttribute="leading" secondItem="iOq-14-3AP" secondAttribute="leading" id="CJg-1L-2Fa"/>
+                            <constraint firstItem="6Ru-tE-nFR" firstAttribute="trailing" secondItem="iOq-14-3AP" secondAttribute="trailing" id="Ryw-A3-lnk"/>
+                            <constraint firstItem="7WF-5U-hji" firstAttribute="top" secondItem="6Ru-tE-nFR" secondAttribute="bottom" constant="310" id="W6t-1i-g3i"/>
+                            <constraint firstItem="iOq-14-3AP" firstAttribute="leading" secondItem="e5j-cx-5Hd" secondAttribute="leading" id="ZLw-cC-hJf"/>
+                            <constraint firstItem="e5j-cx-5Hd" firstAttribute="top" secondItem="Gme-hL-rw4" secondAttribute="bottom" constant="28" id="vs9-69-ziU"/>
+                            <constraint firstItem="6Ru-tE-nFR" firstAttribute="height" secondItem="iOq-14-3AP" secondAttribute="height" id="vxP-ew-juA"/>
+                            <constraint firstItem="7WF-5U-hji" firstAttribute="top" secondItem="e5j-cx-5Hd" secondAttribute="bottom" constant="442" id="wXr-cG-10q"/>
+                            <constraint firstItem="e5j-cx-5Hd" firstAttribute="leading" secondItem="Xnn-Lc-5US" secondAttribute="leadingMargin" id="x0G-F1-Euk"/>
+                            <constraint firstItem="iOq-14-3AP" firstAttribute="height" secondItem="e5j-cx-5Hd" secondAttribute="height" id="x4Q-dU-Y9T"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" title="注册" id="Bh7-db-FE6">
+                        <barButtonItem key="rightBarButtonItem" title="完成" style="plain" id="9C3-66-qlL">
+                            <color key="tintColor" red="0.40000000600000002" green="0.80000001190000003" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        </barButtonItem>
+                    </navigationItem>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="RWs-19-TtF" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1925" y="-637"/>
+        </scene>
+        <!--Navigation Controller-->
+        <scene sceneID="sQD-Pf-ION">
+            <objects>
+                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="Ufr-Rh-Dco" sceneMemberID="viewController">
+                    <toolbarItems/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="TeS-U2-r2a">
+                        <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <nil name="viewControllers"/>
+                    <connections>
+                        <segue destination="HYR-Zw-gf0" kind="relationship" relationship="rootViewController" id="bhL-Zd-j2y"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="674-6e-YRA" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="350" y="-637"/>
+        </scene>
+    </scenes>
+</document>

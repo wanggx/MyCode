@@ -1,0 +1,147 @@
+//
+//  GlobalUrl.swift
+//  SapphireDesign
+//
+//  Created by gxwang on 15/9/1.
+//  Copyright (c) 2015年 sapphire. All rights reserved.
+//
+
+import Foundation
+private let host:NSURL = NSURL(string: "http://sapphireinc.imwork.net:31334")!
+//private let host:NSURL = NSURL(string: "http://localhost")!
+
+class GlobalUrl
+{
+    
+    class var URL_LOGIN:NSURL{
+        return host.URLByAppendingPathComponent("sapphireDebug/manager.php/UserController/Search/searchUser")
+    }
+    
+    class var URL_UPDATE_PWD:NSURL {
+        return host.URLByAppendingPathComponent("sapphireDebug/manager.php/UserController/Update/updatePassword")
+    }
+    
+    class var URL_UPDATE_USER_NAME:NSURL {
+        return host.URLByAppendingPathComponent("sapphireDebug/manager.php/UserController/Update/updateUserName")
+    }
+    
+    class var URL_COLOTHES:NSURL {
+        return host.URLByAppendingPathComponent("sapphireDebug/Uploads")
+    }
+    
+    class var URL_GET_RECOMMAND_DATA:NSURL {
+        return host.URLByAppendingPathComponent("sapphireDebug/manager.php/BrandController/Update/recommend")
+    }
+    
+    class var URL_GET_BRAND_DATA:NSURL {
+        return host.URLByAppendingPathComponent("sapphireDebug/manager.php/BrandController/Search/searchByBrand")
+    }
+    
+    class var URL_GET_USER_IMAGE:NSURL {
+        return host.URLByAppendingPathComponent("sapphireDebug/Uploads/")
+    }
+    
+    class var URL_GET_CLOTHES_IMAGE:NSURL {
+        return host.URLByAppendingPathComponent("sapphireDebug/Uploads/")
+    }
+    
+    class var URL_GET_BRAND_IMAGE:NSURL {
+        return host.URLByAppendingPathComponent("sapphireDebug/Uploads/")
+    }
+    
+    class var URL_GET_MARKET_DATA:NSURL {
+        return host.URLByAppendingPathComponent("sapphireDebug/manager.php/CostumeController/Search/searchAllInfo")
+    }
+    
+    class var URL_GET_ADVERTISE:NSURL {
+        return host.URLByAppendingPathComponent("sapphireDebug/Uploads/Advertisement")
+    }
+    
+    class var URL_GET_COLLECT_DATA:NSURL {
+        return host.URLByAppendingPathComponent("sapphireDebug/manager.php/BrandController/Search/searchOnesFavor")
+    }
+    
+    class var URL_GET_SHOPCAR:NSURL {
+        return host.URLByAppendingPathComponent("")
+    }
+    
+    class var URL_GET_TSHIRT_DATA:NSURL {
+        return host.URLByAppendingPathComponent("sapphireDebug/manager.php/BrandController/Update/TShirt")
+    }
+    
+    class var URL_POST_COLLECT_DATA:NSURL {
+        return host.URLByAppendingPathComponent("sapphireDebug/manager.php/BrandController/Update/insertFavor")
+    }
+    
+    class var URL_DELETE_COLLECT_DATA:NSURL {
+        return host.URLByAppendingPathComponent("sapphireDebug/manager.php/BrandController/Update/deleteFavor")
+    }
+    
+    class var URL_SEND_SMS:NSURL {
+        return host.URLByAppendingPathComponent("sapphireDebug/manager.php/UserController/SendSMS/handle/myUserPhone")
+    }
+    
+    class var URL_SEND_SMS_FIND:NSURL {
+        return host.URLByAppendingPathComponent("sapphireDebug/manager.php/UserController/SendSMS/verify/myUserPhone")
+    }
+    
+    class var URL_REGIST_USER:NSURL {
+        return host.URLByAppendingPathComponent("sapphireDebug/manager.php/UserController/Insert/register")
+    }
+    
+    class var URL_USER_FIND_PASSWORD:NSURL {
+        return host.URLByAppendingPathComponent("sapphireDebug/manager.php/UserController/Update/updatePassword")
+    }
+    
+    class var URL_GET_ADDRESS_DATA:NSURL {
+        return host.URLByAppendingPathComponent("sapphireDebug/manager.php/UserController/Search/searchReceiverInfo")
+    }
+    
+    class var URL_INSERT_ADDRESS:NSURL {
+        return host.URLByAppendingPathComponent("sapphireDebug/manager.php/UserController/Insert/insertReceiverInfo")
+    }
+    
+    class var URL_DELETE_ADDRESS:NSURL {
+        return host.URLByAppendingPathComponent("sapphireDebug/manager.php/UserController/Update/deleteReceiverInfo")
+    }
+    
+    class var URL_INSERT_ORDER_DATA:NSURL {
+        return host.URLByAppendingPathComponent("sapphireDebug/manager.php/OrderController/Insert/createOrder")
+    }
+    
+    class var URL_GET_ORDER_DATA:NSURL {
+        return host.URLByAppendingPathComponent("sapphireDebug/manager.php/OrderController/Search/searchOnesOrder")
+    }
+    
+    class var URL_UPDATE_ORDER_STATE:NSURL {
+        return host.URLByAppendingPathComponent("sapphireDebug/manager.php/OrderController/Update/updateStatus")
+    }
+    
+    class var URL_DELETE_ORDER:NSURL {
+        return host.URLByAppendingPathComponent("sapphireDebug/manager.php/OrderController/Update/cancelOrder")
+    }
+    
+    class var URL_GET_CLOTHES_DETAIL:NSURL {
+        return host.URLByAppendingPathComponent("sapphireDebug/manager.php/BrandController/Search/searchCostumeBrand")
+    }
+    
+    class var URL_GET_ALL_BRAND:NSURL {
+        return host.URLByAppendingPathComponent("sapphireDebug/manager.php/BrandController/Update/todayBrand")
+    }
+    
+    class var URL_POST_FEEDBACK:NSURL {
+        return host.URLByAppendingPathComponent("sapphireDebug/manager.php/UserController/Insert/insertFeedback")
+    }
+    
+    class func getUpLoadUserImageUrl(name:String)->NSURL {
+        let tmpStr = "sapphireDebug/manager.php/UserController/Upload/uploadHeadImage"
+        //tmpStr += ("?myUserPhone=" + name)"
+        return host.URLByAppendingPathComponent(tmpStr)
+    }
+    
+    class func getBrandDataUrl(brandName:String)->NSURL {
+        var str = "sapphireDebug/manager.php/BrandController/Search/searchByBrand"
+        str += "?myBrandName=" + brandName
+        return host.URLByAppendingPathComponent(str)
+    }
+}
