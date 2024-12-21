@@ -1,16 +1,30 @@
-import pandas as pd
-import tushare as ts
-import numpy as np
-from sqlalchemy import create_engine
-from stock.stockutil import savePdStockData
+import time
+from moduledir.stockutil import *
 
 ts.set_token('3252a9af155128787f44d053c563d6b156f03e80f0254899e8668ecc')
 
 pro = ts.pro_api()
 
+downloadStockList()
+
 stock_pd = pd.read_csv('stock.csv', header=0, index_col=0)
 
-savePdStockData(stock_pd, '20241212')
+
+
+for date in pd.date_range('12/15/2024', periods=6):
+    date_str = date.strftime('%Y%m%d')
+    print("begin " + date_str)
+    savePdStockData(stock_pd, date_str)
+    mergeDailyData()
+    time.sleep(2)
+    print("end " + date_str)
+
+
+
+
+# savePdStockData(stock_pd, '20241210')
+#
+# mergeDailyData()
 
 # engine = create_engine('mysql+pymysql://wgx_mysql:8Dm4PQU2pp6!C3y@rm-bp1eqw5j01245gr6jao.mysql.rds.aliyuncs.com:3306/stock')
 
