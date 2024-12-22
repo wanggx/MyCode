@@ -111,11 +111,15 @@ df = pd.DataFrame(np.random.randn(5, 4), index=s, columns=list('ABCD'))
 df.to_parquet("test.parquet")
 # print(df.shift(2))
 # print(df.describe())
+
+def aggtest(a):
+    return np.mean(a) * 2
+
 # print(df.agg(lambda x: np.mean(x) * 2))
 #
 # print(df.transform(lambda x: abs(x) * 10))
-
-# print(df.groupby(['A','B']).sum())
+print(df)
+print(df.groupby(['A','B']).agg(aggtest))
 # # df = df.cumsum()
 # plt.figure(figsize = (10,10))
 # df['E'] = df['D'] * 2
@@ -133,21 +137,13 @@ df.to_parquet("test.parquet")
 
 # print(df)
 
-pdf = df.shift(1)['C']
+# pdf = df.shift(1)['C']
+#
+# df['P'] = pdf
+#
+# df['Signal'] = 0
+# df.loc[(df['C'] > df['P']) | (df['C'] > df['D']), 'Signal'] = 1
 
-df['P'] = pdf
-
-df['Signal'] = 0
-df.loc[(df['C'] > df['P']) | (df['C'] > df['D']), 'Signal'] = 1
-# print(df.loc[df['Signal'] > 0]['Signal'])
-
-from sqlalchemy import create_engine
-
-engine = create_engine('mysql+pymysql://wgx_mysql:8Dm4PQU2pp6!C3y@rm-bp1eqw5j01245gr6jao.mysql.rds.aliyuncs.com:3306/stock')
-
-print(df)
-
-df.to_sql('test', con=engine, if_exists='replace', index=False)
 
 
 
