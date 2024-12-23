@@ -97,7 +97,54 @@ s = pd.date_range("20200101", periods=5)
 
 r = np.random.randn(5, 4)
 
-df = pd.DataFrame(np.random.randn(5, 4), index=s, columns=list('ABCD'))
+df1 = pd.DataFrame(np.random.randn(5, 4), index=s, columns=list('ABCD'))
+
+df1['NAME'] = 'A'
+
+df2 = pd.DataFrame(np.random.randn(5, 4), index=s, columns=list('ABCD'))
+
+df2['NAME'] = 'B'
+
+T = pd.concat([df2, df1])
+
+print(T)
+
+# def line(e):
+#     length = len(e)
+#     print(length)
+#     print(e)
+#     x = np.arange(length)
+#     slope, _ = np.polyfit(x, e.values, 1)
+#     return slope
+#
+# print(T.groupby('NAME')['C'].agg(line))
+#
+# print(T.groupby('NAME').head(3)['C'].rolling(2).apply(lambda x: np.sum(x)))
+
+# def line(e):
+#     length = len(e)
+#     print(length)
+#     print(e)
+#     x = np.arange(length)
+#     slope, _ = np.polyfit(x, e.values, 1)
+#     return slope
+#
+# print(T.groupby('NAME').agg(line))
+
+def str_test(x):
+    print(x)
+    print(str(x.values))
+    ab = str(x['A']) + "|" + str(x['B'])
+    print(ab)
+    return ab
+
+def axis_test(x):
+    # print(x)
+    # print(str(x.values))
+    ab = np.sum(x.values)
+    return ab
+
+print(T[['A','B']].apply(axis_test, axis=1))
 
 # print(df['20200101':'20200102':'20200103'])
 
@@ -107,8 +154,8 @@ df = pd.DataFrame(np.random.randn(5, 4), index=s, columns=list('ABCD'))
 
 # s1 = pd.Series([1,2,3,4,5,6], pd.date_range("20200101", periods=6))
 
-# print(df)
-df.to_parquet("test.parquet")
+#print(df)
+# df.to_parquet("test.parquet")
 # print(df.shift(2))
 # print(df.describe())
 
@@ -121,6 +168,10 @@ def aggtest(a):
 print(df)
 print(df.groupby(['A','B']).agg(aggtest))
 # # df = df.cumsum()
+# print(df.head())
+# print(df.groupby(['A','B']).sum())
+# print(df.cumsum())
+
 # plt.figure(figsize = (10,10))
 # df['E'] = df['D'] * 2
 # df.plot()
@@ -143,6 +194,30 @@ print(df.groupby(['A','B']).agg(aggtest))
 #
 # df['Signal'] = 0
 # df.loc[(df['C'] > df['P']) | (df['C'] > df['D']), 'Signal'] = 1
+# # print(df.loc[df['Signal'] > 0]['Signal'])
+# df['MA2'] = df['D'].rolling(2).mean()
+#
+# print(df)
+
+# print(df)
+#
+# rolling_trend = df['A'].rolling(2)
+#
+# def printroll(x):
+#     print(x)
+#     return 1
+#
+# rolling_trend.apply(printroll)
+
+# pdf = df.shift(1)['C']
+#
+# df['P'] = pdf
+#
+# df['Signal'] = 0
+# df.loc[(df['C'] > df['P']) | (df['C'] > df['D']), 'Signal'] = 1
+
+
+
 
 
 
