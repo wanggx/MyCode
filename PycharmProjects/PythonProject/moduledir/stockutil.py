@@ -59,7 +59,7 @@ def getStockData(ts_code, start_date, end_date):
         stock_sql = "select * from stock_daily  where ts_code = \'" + ts_code + "\'"
     else:
         stock_sql = ('select * from stock_daily where ts_code in ' +
-                     '(select ts_code from stock where ts_code not like \'688%%\' and ts_code not like \'30%%\')')
+                     '(select ts_code from stock where ts_code not like \'688%%\' and ts_code not like \'30%%\' and ts_code not like \'%%BJ\')')
     stock_df = pd.read_sql(stock_sql, con=engine)
     return stock_df
 

@@ -7,4 +7,4 @@ end_date = "2023-01-01"
 
 data = yf.download(symbol, start=start_date, end=end_date)
 
-data.to_csv("stock.csv")
+data.to_csv("stockf.csv")

@@ -10,14 +10,14 @@ def decroator_func(original_func):
     return wrapper
 
 
-#@decroator_func
+@decroator_func
 def module_test(module):
     print(module + " module test")
     print(threading.current_thread().name)
 
 
-module_func = decroator_func(module_test)
+#module_func = decroator_func(module_test)
 
-module_func('decorator')
+module_test('decorator')
 
 

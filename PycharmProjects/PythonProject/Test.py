@@ -1,6 +1,7 @@
 import sys
 import os
 import time
+from datetime import datetime
 
 import numpy as np
 from numpy.ma.core import reshape
@@ -107,7 +108,33 @@ df2['NAME'] = 'B'
 
 T = pd.concat([df2, df1])
 
-print(T)
+# T['W'] =
+# T['M'] = T.index.weekday
+# T['Y'] = T.index.year
+#
+# datetime.now().
+#
+# print(year, month_number, week_number)
+
+# def week_high(x):
+#     return x.max()
+#
+# def week_low(x):
+#     return x.min()
+#
+# ret = T.groupby(['NAME', 'Y', 'M']).agg({'B': week_high, 'C': week_low})
+#
+# print(T)
+# print(ret)
+#
+# print(T.index)
+#
+# T.set_index('A', inplace=True)
+# T.sort_index(inplace=True)
+#
+# print(T)
+#
+# print(T.index)
 
 # def line(e):
 #     length = len(e)
@@ -121,30 +148,40 @@ print(T)
 #
 # print(T.groupby('NAME').head(3)['C'].rolling(2).apply(lambda x: np.sum(x)))
 
+
+
 # def line(e):
 #     length = len(e)
-#     print(length)
-#     print(e)
+#     # print(length)
+#     # print(e)
 #     x = np.arange(length)
 #     slope, _ = np.polyfit(x, e.values, 1)
 #     return slope
 #
-# print(T.groupby('NAME').agg(line))
+# T['E'] = T.groupby('NAME').shift(1)['A']
+#
+# print(T.groupby('NAME').tail(1))
 
-def str_test(x):
-    print(x)
-    print(str(x.values))
-    ab = str(x['A']) + "|" + str(x['B'])
-    print(ab)
-    return ab
+# print(T)
 
-def axis_test(x):
-    # print(x)
-    # print(str(x.values))
-    ab = np.sum(x.values)
-    return ab
+# print(T.groupby('NAME').agg(col1=('A', line), col2=('A', line)))
 
-print(T[['A','B']].apply(axis_test, axis=1))
+# print(T.groupby('NAME').agg({'A': line, 'B': [line, 'max']}))
+
+# def str_test(x):
+#     print(x)
+#     print(str(x.values))
+#     ab = str(x['A']) + "|" + str(x['B'])
+#     print(ab)
+#     return ab
+#
+# def axis_test(x):
+#     # print(x)
+#     # print(str(x.values))
+#     ab = np.sum(x.values)
+#     return ab
+#
+# print(T[['A','B']].apply(axis_test, axis=1))
 
 # print(df['20200101':'20200102':'20200103'])
 
@@ -159,14 +196,14 @@ print(T[['A','B']].apply(axis_test, axis=1))
 # print(df.shift(2))
 # print(df.describe())
 
-def aggtest(a):
-    return np.mean(a) * 2
+# def aggtest(a):
+#     return np.mean(a) * 2
 
 # print(df.agg(lambda x: np.mean(x) * 2))
 #
 # print(df.transform(lambda x: abs(x) * 10))
-print(df)
-print(df.groupby(['A','B']).agg(aggtest))
+# print(df)
+# print(df.groupby(['A','B']).agg(aggtest))
 # # df = df.cumsum()
 # print(df.head())
 # print(df.groupby(['A','B']).sum())
