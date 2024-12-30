@@ -52,6 +52,13 @@ def downloadStockList():
     stock_df = pd.read_sql_table('stock', con = engine)
     stock_df.to_csv('stock.csv')
 
+def getStockList():
+    engine = create_engine('mysql+pymysql://' + mysql_user + ':' + mysql_pass + '@' + mysql_url + '/' + mysql_db)
+    stock_df = pd.read_sql_table('stock', con=engine)
+    return stock_df[(stock_df['ts_code'].str.startswith('30') == False) &
+                    (stock_df['ts_code'].str.startswith('68') == False) &
+                    (stock_df['ts_code'].str.endswith('BJ') == False) &
+                    (stock_df['name'].str.contains('ST') == False)]
 
 def getStockData(ts_code, start_date, end_date):
     engine = create_engine('mysql+pymysql://' + mysql_user + ':' + mysql_pass + '@' + mysql_url + '/' + mysql_db)
