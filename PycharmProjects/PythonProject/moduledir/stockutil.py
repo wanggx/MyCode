@@ -3,6 +3,7 @@
 import pandas as pd
 import tushare as ts
 from sqlalchemy import create_engine, text
+from sqlalchemy.dialects.mysql import insert
 
 ts.set_token('3252a9af155128787f44d053c563d6b156f03e80f0254899e8668ecc')
 
@@ -79,3 +80,16 @@ def getStockTestData(ts_code, start_date, end_date):
                      '(select ts_code from stock where ts_code not like \'688%%\' and ts_code not like \'30%%\')')
     stock_df = pd.read_sql(stock_sql, con=engine)
     return stock_df
+
+def saveWeekData(week_df):
+    engine = create_engine('mysql+pymysql://' + mysql_user + ':' + mysql_pass + '@' + mysql_url + '/' + mysql_db)
+    week_df.to_sql('stock_week_temp', con=engine, if_exists='replace', index=False)
+    sql = text("insert into stock_week select t.* from stock_week t left join stock_daily d on" +
+               " t.ts_code = d.ts_code and t.trade_date = d.trade_date where d.ts_code is null")
+    with engine.connect() as conn:
+        conn.execute(sql)
+
+def saveMonthData(month_df):
+    engine = create_engine('mysql+pymysql://' + mysql_user + ':' + mysql_pass + '@' + mysql_url + '/' + mysql_db)
+    month_df.to_sql('stock_month', con=engine, if_exists='replace', index=False)
+
