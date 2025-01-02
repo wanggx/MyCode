@@ -9,7 +9,7 @@ date = pd.to_datetime('20241116').date()
 print(friday(date))
 print(last_day_of_monday(date))
 
-stock_pd = getStockTestData(None, None, None)
+stock_pd = getStockData(None, '20241228', '20241231')
 
 def fridayline(datestr):
     date = pd.to_datetime(datestr).date()
@@ -55,5 +55,7 @@ def processMonthDf(stock_df):
     month_df = month_df.reindex(columns=['ts_code', 'trade_date', 'close', 'open', 'high', 'low', 'pre_close', 'change' , 'pct_chg', 'vol', 'amount'])
     saveMonthData(month_df)
 
-processWeekDf(stock_pd)
+print(stock_pd)
+
+# processWeekDf(stock_pd)
 # processMonthDf(stock_pd)

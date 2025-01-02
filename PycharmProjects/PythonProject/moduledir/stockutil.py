@@ -65,9 +65,13 @@ def getStockData(ts_code, start_date, end_date):
     engine = create_engine('mysql+pymysql://' + mysql_user + ':' + mysql_pass + '@' + mysql_url + '/' + mysql_db)
     if ts_code is not None:
         stock_sql = "select * from stock_daily  where ts_code = \'" + ts_code + "\'"
+        if start_date is not None and end_date is not None:
+            stock_sql = stock_sql + " and trade_date >= \'" + start_date + "\' and trade_date <= \'" + end_date + "\'"
     else:
         stock_sql = ('select * from stock_daily where ts_code in ' +
                      '(select ts_code from stock where ts_code not like \'688%%\' and ts_code not like \'30%%\' and ts_code not like \'%%BJ\' and name not like \'%%ST%%\')')
+        if start_date is not None and end_date is not None:
+            stock_sql = stock_sql + " and trade_date >= \'" + start_date + "\' and trade_date <= \'" + end_date + "\'"
     stock_df = pd.read_sql(stock_sql, con=engine)
     return stock_df
 
@@ -75,9 +79,13 @@ def getStockTestData(ts_code, start_date, end_date):
     engine = create_engine('mysql+pymysql://' + mysql_user + ':' + mysql_pass + '@' + mysql_url + '/' + mysql_db)
     if ts_code is not None:
         stock_sql = "select * from stock_daily_test  where ts_code = \'" + ts_code + "\'"
+        if start_date is not None and end_date is not None:
+            stock_sql = stock_sql + " and trade_date >= \'" + start_date + "\' and trade_date <= \'" + end_date + "\'"
     else:
         stock_sql = ('select * from stock_daily_test where ts_code in ' +
                      '(select ts_code from stock where ts_code not like \'688%%\' and ts_code not like \'30%%\')')
+        if start_date is not None and end_date is not None:
+            stock_sql = stock_sql + " and trade_date >= \'" + start_date + "\' and trade_date <= \'" + end_date + "\'"
     stock_df = pd.read_sql(stock_sql, con=engine)
     return stock_df
 
