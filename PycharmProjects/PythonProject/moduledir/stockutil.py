@@ -84,12 +84,17 @@ def getStockTestData(ts_code, start_date, end_date):
 def saveWeekData(week_df):
     engine = create_engine('mysql+pymysql://' + mysql_user + ':' + mysql_pass + '@' + mysql_url + '/' + mysql_db)
     week_df.to_sql('stock_week_temp', con=engine, if_exists='replace', index=False)
-    sql = text("insert into stock_week select t.* from stock_week t left join stock_daily d on" +
-               " t.ts_code = d.ts_code and t.trade_date = d.trade_date where d.ts_code is null")
+    sql = text("delete w from stock_week w join stock_week_temp t on w.ts_code = t.ts_code and w.trade_date = t.trade_date")
     with engine.connect() as conn:
         conn.execute(sql)
+    week_df.to_sql('stock_week', con=engine, if_exists='append', index=False)
 
 def saveMonthData(month_df):
     engine = create_engine('mysql+pymysql://' + mysql_user + ':' + mysql_pass + '@' + mysql_url + '/' + mysql_db)
-    month_df.to_sql('stock_month', con=engine, if_exists='replace', index=False)
+    month_df.to_sql('stock_month_temp', con=engine, if_exists='replace', index=False)
+    sql = text(
+        "delete w from stock_month w join stock_month_temp t on w.ts_code = t.ts_code and w.trade_date = t.trade_date")
+    with engine.connect() as conn:
+        conn.execute(sql)
+    month_df.to_sql('stock_month', con=engine, if_exists='append', index=False)
 
