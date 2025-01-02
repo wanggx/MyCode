@@ -93,7 +93,7 @@ def saveMonthData(month_df):
     engine = create_engine('mysql+pymysql://' + mysql_user + ':' + mysql_pass + '@' + mysql_url + '/' + mysql_db)
     month_df.to_sql('stock_month_temp', con=engine, if_exists='replace', index=False)
     sql = text(
-        "delete w from stock_month w join stock_month_temp t on w.ts_code = t.ts_code and w.trade_date = t.trade_date")
+        "delete m from stock_month m join stock_month_temp t on m.ts_code = t.ts_code and m.trade_date = t.trade_date")
     with engine.connect() as conn:
         conn.execute(sql)
     month_df.to_sql('stock_month', con=engine, if_exists='append', index=False)
