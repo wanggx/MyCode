@@ -23,8 +23,10 @@ jobs:
           port: ${{ secrets.SSH_PORT || 22 }}  # 如未设置，默认 22
           script: |
             cd /data/         # 替换为你服务器上项目的路径
-            ./clone.sh
+            rm -fr MyCode 
+            git clone git clone git@github.com:wanggx/MyCode.git
             ls -l
             cd MyCode/PycharmProjects/
+            ls -l
             chmod +x test.sh
             ./test.sh
