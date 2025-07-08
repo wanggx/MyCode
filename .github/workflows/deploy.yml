@@ -22,5 +22,9 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}  # 如未设置，默认 22
           script: |
-            cd /data/test         # 替换为你服务器上项目的路径
+            cd /data/         # 替换为你服务器上项目的路径
+            ./clone.sh
+            ls -l
+            cd MyCode/PycharmProjects/
+            chmod +x test.sh
             ./test.sh
