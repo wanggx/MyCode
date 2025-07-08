@@ -8,7 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # environment: production  # 如果你使用了环境 Secrets，必须指定
+    environment: AliyunECS  # 如果你使用了环境 Secrets，必须指定
 
     steps:
       - name: Checkout code
