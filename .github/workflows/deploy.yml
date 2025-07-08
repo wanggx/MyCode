@@ -3,7 +3,7 @@ name: Auto Deploy on Push
 on:
   push:
     branches:
-      - master  # 监听 main 分支推送
+      - stock  # 监听 main 分支推送
 
 jobs:
   deploy:
@@ -24,7 +24,7 @@ jobs:
           script: |
             cd /data/         # 替换为你服务器上项目的路径
             rm -fr MyCode 
-            git clone git@github.com:wanggx/MyCode.git
+            git clone -b stock git@github.com:wanggx/MyCode.git
             ls -l
             cd MyCode/PycharmProjects/
             ls -l
