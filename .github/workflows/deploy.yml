@@ -1,0 +1,26 @@
+name: Auto Deploy on Push
+
+on:
+  push:
+    branches:
+      - main  # 监听 main 分支推送
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # environment: production  # 如果你使用了环境 Secrets，必须指定
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}  # 如未设置，默认 22
+          script: |
+            cd /data/test         # 替换为你服务器上项目的路径
+            ./test.sh
