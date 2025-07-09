@@ -5,7 +5,7 @@ APP_NAME="my_stock_app"
 # Python应用入口文件
 # 修改 MAIN_PY 为基于 start.sh 所在目录的相对路径
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-MAIN_PY="$SCRIPT_DIR/../main.py"
+MAIN_PY="$SCRIPT_DIR/../stock/main.py"
 # 日志输出文件
 LOG_FILE="${APP_NAME}.log"
 
