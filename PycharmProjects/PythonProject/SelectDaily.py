@@ -8,15 +8,18 @@ from moduledir.dateutil import date_equal
 from moduledir.stockutil import getStockData
 from moduledir.stockutil import getStockTestData
 print(datetime.now())
-stock_daily_df = getStockData(None, None, None)
+stock_daily_df = getStockData(None, '20250501', '20250710')
 print(datetime.now())
 
 def polyline3(df):
-    dailys = df.tail(3)
-    x = np.arange(len(dailys))
-    y = dailys.values
-    slope, _ = np.polyfit(x, y, 1)
-    return slope
+    try:
+        dailys = df.tail(3)
+        x = np.arange(len(dailys))
+        y = dailys.values
+        slope, _ = np.polyfit(x, y, 1)
+        return slope
+    except AttributeError as e:
+        print(df)
 
 def polyline5(df):
     dailys = df.tail(5)
@@ -128,6 +131,7 @@ def selectTrend():
 def litterSun():
     close_polyline_df = stock_daily_df[['ts_code', 'trade_date', 'high', 'open', 'close', 'low', 'vol']].groupby(
         ['ts_code']).tail(60)
+    close_polyline_df[['ts_code', 'trade_date', 'close']].to_csv('close.csv', index=False)
     stock_polyline_df = close_polyline_df.groupby(['ts_code']).apply(polylineslope, include_groups=False)
 
     select_df = stock_polyline_df[((stock_polyline_df['out_date'] == False)
