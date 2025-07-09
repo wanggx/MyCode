@@ -18,11 +18,13 @@ jobs:
         uses: garygrossgarten/github-action-scp@release
         with:
           local: './'
-          remote: '/data/test'
+          remote: '/data/MyCode'
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           privateKey: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}  # 如未设置，默认 22
+          rmRemote:  true
+          dotfiles: 'true'
           recursive: true
 
       - name: Deploy via SSH
@@ -33,11 +35,9 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}  # 如未设置，默认 22
           script: |
-            cd /data/         # 替换为你服务器上项目的路径
-            rm -fr MyCode 
-            git clone -b stock git@github.com:wanggx/MyCode.git
+            cd /data/MyCode         # 替换为你服务器上项目的路径
             ls -l
-            cd MyCode/bin
+            cd bin
             ls -l
             chmod +x stop.sh start.sh
             ./stop.sh
