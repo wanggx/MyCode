@@ -35,6 +35,8 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}  # 如未设置，默认 22
           script: |
+            cd /data
+            git clone -b stock https://github.com/xiaoye97/MyCode.git mycode
             cd /data/MyCode         # 替换为你服务器上项目的路径
             ls -l
             cd bin
