@@ -9,9 +9,9 @@ ts.set_token('3252a9af155128787f44d053c563d6b156f03e80f0254899e8668ecc')
 
 pro = ts.pro_api()
 
-mysql_user = 'wgx_mysql'
+mysql_user = 'root'
 mysql_pass = '8Dm4PQU2pp6!C3y'
-mysql_url = 'rm-bp1eqw5j01245gr6jao.mysql.rds.aliyuncs.com:3306'
+mysql_url = 'rm-bp160jkc22y874i30to.mysql.rds.aliyuncs.com:3306'
 mysql_db = 'stock'
 
 def saveStockDailyData(ts_codes, replace, daily_date):
