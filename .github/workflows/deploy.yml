@@ -38,6 +38,7 @@ jobs:
             cd /data
             if [ -d "MyCode" ]; then
               cd MyCode
+              git checkout .
               git pull -r
             else
               git clone -b stock git@github.com:wanggx/MyCode.git MyCode
