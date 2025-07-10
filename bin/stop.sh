@@ -11,33 +11,37 @@ echo -e "${GREEN}🛑 正在停止 Vue + Python 项目...${NC}"
 
 # 停止后端服务
 stop_backend() {
-    if [ -f .backend_pid ]; then
-        PID=$(cat .backend_pid)
+    PID_FILE="$PROJECT_ROOT/.backend_pid"
+
+    if [ -f "$PID_FILE" ]; then
+        PID=$(cat "$PID_FILE")
         if ps -p $PID > /dev/null; then
             echo "Stopping backend with PID: $PID"
             kill $PID
         else
             echo "Backend process with PID $PID not found. Removing stale PID file."
         fi
-        rm -f .backend_pid
+        rm -f "$PID_FILE"
     else
-        echo "No backend PID file found, skipping backend stop."
+        echo "No backend PID file found at $PID_FILE, skipping backend stop."
     fi
 }
 
 # 停止前端服务
 stop_frontend() {
-    if [ -f .frontend_pid ]; then
-        PID=$(cat .frontend_pid)
+    PID_FILE="$PROJECT_ROOT/.frontend_pid"
+
+    if [ -f "$PID_FILE" ]; then
+        PID=$(cat "$PID_FILE")
         if ps -p $PID > /dev/null; then
             echo "Stopping frontend with PID: $PID"
             kill $PID
         else
             echo "Frontend process with PID $PID not found. Removing stale PID file."
         fi
-        rm -f .frontend_pid
+        rm -f "$PID_FILE"
     else
-        echo "No frontend PID file found, skipping frontend stop."
+        echo "No frontend PID file found at $PID_FILE, skipping frontend stop."
     fi
 }
 

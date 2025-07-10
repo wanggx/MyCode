@@ -28,7 +28,7 @@ start_backend() {
     # 启动应用并记录日志
     nohup python3.11 "$MAIN_PY" > "$LOG_FILE" 2>&1 &
     echo "$APP_NAME started with PID: $!"
-    echo $! > .backend_pid
+    echo $! > "$PROJECT_ROOT/.backend_pid"
 }
 
 
@@ -40,13 +40,13 @@ start_frontend() {
     # 启动前端服务并记录 PID
     npm run serve > frontend.log 2>&1 &
     FRONTEND_PID=$!
-    echo $FRONTEND_PID > .frontend_pid
+    echo $FRONTEND_PID > "$PROJECT_ROOT/.frontend_pid"
     echo "Vue frontend started with PID: $FRONTEND_PID"
 }
 
 # 清理旧的进程记录
 clean_up() {
-    rm -f .backend_pid .frontend_pid
+    rm -f "$PROJECT_ROOT/.backend_pid" "$PROJECT_ROOT/.frontend_pid"
 }
 
 # 执行清理和启动
