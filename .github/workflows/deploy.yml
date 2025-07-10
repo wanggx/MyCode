@@ -14,18 +14,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Copy folder content recursively to remote
-        uses: garygrossgarten/github-action-scp@release
-        with:
-          local: './'
-          remote: '/data/MyCode'
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          privateKey: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}  # 如未设置，默认 22
-          rmRemote:  true
-          dotfiles: 'true'
-          recursive: true
+#      - name: Copy folder content recursively to remote
+#        uses: garygrossgarten/github-action-scp@release
+#        with:
+#          local: './'
+#          remote: '/data/MyCode'
+#          host: ${{ secrets.SSH_HOST }}
+#          username: ${{ secrets.SSH_USER }}
+#          privateKey: ${{ secrets.SSH_PRIVATE_KEY }}
+#          port: ${{ secrets.SSH_PORT || 22 }}  # 如未设置，默认 22
+#          rmRemote:  true
+#          dotfiles: 'true'
+#          recursive: true
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -36,7 +36,7 @@ jobs:
           port: ${{ secrets.SSH_PORT || 22 }}  # 如未设置，默认 22
           script: |
             cd /data
-            git clone -b stock https://github.com/xiaoye97/MyCode.git mycode
+            git clone -b stock https://github.com/xiaoye97/MyCode.git MyCode
             cd /data/MyCode         # 替换为你服务器上项目的路径
             ls -l
             cd bin
