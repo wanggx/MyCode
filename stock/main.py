@@ -54,4 +54,4 @@ if __name__ == '__main__':
     scheduler_thread.daemon = True  # 设置为守护线程，主程序结束时自动退出
     scheduler_thread.start()
 
-    app.run(debug=False, host='0.0.0.0', port=80)
+    app.run(debug=False, host='0.0.0.0', port=8080)

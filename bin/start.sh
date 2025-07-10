@@ -26,7 +26,7 @@ start_backend() {
     fi
 
     # 启动应用并记录日志
-    nohup python3 "$MAIN_PY" > "$LOG_FILE" 2>&1 &
+    nohup python3.11 "$MAIN_PY" > "$LOG_FILE" 2>&1 &
     echo "$APP_NAME started with PID: $!"
     echo $! > .backend_pid
 }
