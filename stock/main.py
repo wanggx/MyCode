@@ -3,7 +3,7 @@ import time
 import threading
 from flask import Flask, jsonify
 import schedule
-from stock import download_daily
+from download_daily import download_daily
 
 
 def job():
@@ -13,7 +13,7 @@ def startScheduler():
 
     # 每10秒运行一次任务
     schedule.every(10).seconds.do(job)
-    schedule.every().day.at("16:30").do(download_daily.download_daily)
+    schedule.every().day.at("16:30").do(download_daily)
 
     while True:
         schedule.run_pending()
