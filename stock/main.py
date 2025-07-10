@@ -5,9 +5,12 @@ from flask import Flask, jsonify
 import schedule
 from download_daily import download_daily
 
+# 导入并初始化 logger
+from utils.logger import setup_logger
+logger = setup_logger()
 
 def job():
-    print("定时任务已执行")
+    logger.info("定时任务已执行")
 
 def startScheduler():
 
