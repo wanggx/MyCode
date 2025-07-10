@@ -36,7 +36,12 @@ jobs:
           port: ${{ secrets.SSH_PORT || 22 }}  # 如未设置，默认 22
           script: |
             cd /data
-            git clone -b stock https://github.com/xiaoye97/MyCode.git MyCode
+            if [ -d "MyCode" ]; then
+              cd MyCode
+              git pull -r
+            else
+              git clone -b stock https://github.com/xiaoye97/MyCode.git MyCode
+            fi
             cd /data/MyCode         # 替换为你服务器上项目的路径
             ls -l
             cd bin
