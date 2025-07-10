@@ -9,7 +9,7 @@ def setup_logger():
         os.makedirs(log_dir)
 
     # 日志格式
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s')
 
     # 主 logger
     logger = logging.getLogger('myapp')
