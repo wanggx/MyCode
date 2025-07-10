@@ -1,19 +1,48 @@
 #!/bin/bash
 
-# 应用名称
-APP_NAME="my_stock_app"
-# Python应用入口文件
-# 修改 MAIN_PY 为基于 stop.sh 所在目录的相对路径
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+# 获取脚本所在目录的上层目录作为项目根目录
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-MAIN_PY="$SCRIPT_DIR/../stock/main.py"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-# 查找进程ID
-PID=$(ps -ef | grep "$MAIN_PY" | grep -v "grep" | awk '{print $2}')
+echo -e "${GREEN}🛑 正在停止 Vue + Python 项目...${NC}"
 
-if [ -z "$PID" ]; then
-  echo "$APP_NAME is not running."
-else
-  # 杀掉进程
-  kill "$PID"
-  echo "$APP_NAME stopped (PID: $PID)"
-fi
+# 停止后端服务
+stop_backend() {
+    if [ -f .backend_pid ]; then
+        PID=$(cat .backend_pid)
+        if ps -p $PID > /dev/null; then
+            echo "Stopping backend with PID: $PID"
+            kill $PID
+        else
+            echo "Backend process with PID $PID not found. Removing stale PID file."
+        fi
+        rm -f .backend_pid
+    else
+        echo "No backend PID file found, skipping backend stop."
+    fi
+}
+
+# 停止前端服务
+stop_frontend() {
+    if [ -f .frontend_pid ]; then
+        PID=$(cat .frontend_pid)
+        if ps -p $PID > /dev/null; then
+            echo "Stopping frontend with PID: $PID"
+            kill $PID
+        else
+            echo "Frontend process with PID $PID not found. Removing stale PID file."
+        fi
+        rm -f .frontend_pid
+    else
+        echo "No frontend PID file found, skipping frontend stop."
+    fi
+}
+
+# 执行停止流程
+stop_backend
+stop_frontend
+
+echo -e "${GREEN}✅ 服务已停止！${NC}"
