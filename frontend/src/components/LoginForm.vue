@@ -31,17 +31,28 @@ export default {
   methods: {
     async submitLogin() {
       try {
-        const response = await axios.post('/api/login', {
+        const response = await axios.post('/api/user/login', {
           username: this.username,
           password: this.password
         });
 
         // 登录成功处理逻辑，例如跳转页面或保存 token
-        alert('登录成功');
-        console.log('Response:', response.data);
-        this.error = '';
+        if (response.data.message === '登录成功') {
+          // 保存token到localStorage
+          localStorage.setItem('token', response.data.data.token);
+          localStorage.setItem('user', JSON.stringify(response.data.data.user));
+          
+          alert('登录成功');
+          console.log('Response:', response.data);
+          this.error = '';
+          
+          // 可以在这里添加路由跳转
+          // this.$router.push('/dashboard');
+        } else {
+          this.error = response.data.error || '登录失败';
+        }
       } catch (err) {
-        this.error = '登录失败，请检查用户名和密码';
+        this.error = err.response?.data?.error || '登录失败，请检查用户名和密码';
         console.error(err);
       }
     }

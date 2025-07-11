@@ -37,13 +37,19 @@ export default {
         return
       }
       try {
-        await axios.post('/api/register', {
+        const response = await axios.post('/api/user/register', {
           username: this.form.username,
           password: this.form.password
         })
-        this.$router.push('/login')
+        
+        if (response.data.message === '注册成功') {
+          this.$message.success('注册成功，请登录');
+          this.$router.push('/login')
+        } else {
+          this.error = response.data.error || '注册失败';
+        }
       } catch (e) {
-        this.error = '注册失败，请重试'
+        this.error = e.response?.data?.error || '注册失败，请重试'
       }
     }
   }

@@ -1,3 +1,4 @@
+import logging
 import pymysql
 import hashlib
 import jwt
@@ -5,6 +6,8 @@ import datetime
 from flask import Flask, request, jsonify
 from functools import wraps
 from backend.db_config import DB_CONFIG, JWT_SECRET
+
+logger = logging.getLogger('myapp')
 
 def get_db_connection():
     """获取数据库连接"""
@@ -114,6 +117,7 @@ def register_user(username, password, email=None):
         connection.close()
 
 def login_user(username, password):
+    logger.info("用户登录, user:" + username + " password:" + password)
     """用户登录"""
     connection = get_db_connection()
     if not connection:
@@ -131,6 +135,7 @@ def login_user(username, password):
         
         user = cursor.fetchone()
         if not user:
+            logger.info("用户名或密码错误, user:" + username + " password:" + password)
             return False, "用户名或密码错误", None
         
         # 生成token

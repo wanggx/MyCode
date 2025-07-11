@@ -68,13 +68,19 @@ export default {
         return
       }
       try {
-        await axios.post('/api/register', {
+        const response = await axios.post('/api/user/register', {
           username: this.registerForm.username,
           password: this.registerForm.password
         })
-        this.activeTab = 'login'
+        
+        if (response.data.message === '注册成功') {
+          this.$message.success('注册成功，请登录');
+          this.activeTab = 'login'
+        } else {
+          this.registerError = response.data.error || '注册失败';
+        }
       } catch (e) {
-        this.registerError = (e.response && e.response.data && e.response.data.message) || '注册失败，请重试'
+        this.registerError = e.response?.data?.error || '注册失败，请重试'
       }
     }
   }

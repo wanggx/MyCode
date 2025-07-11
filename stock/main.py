@@ -5,9 +5,14 @@ from flask import Flask, jsonify
 import schedule
 from flask_cors import CORS
 
+from download_daily import download_daily
+
 # 导入用户和股票模块
 from backend.user import create_user_routes, test_database_connection
 from backend.stock_list import create_stock_routes
+
+from utils.logger import setup_logger
+logger = setup_logger()
 
 # 创建 Flask 应用实例
 app = Flask(__name__)
@@ -49,12 +54,13 @@ def health_check():
 
 def job():
     """定时任务"""
-    print(f"定时任务已执行: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    logger.info(f"定时任务已执行: {time.strftime('%Y-%m-%d %H:%M:%S')}")
 
 def startScheduler():
     """启动调度器"""
     # 每10秒运行一次任务
     schedule.every(10).seconds.do(job)
+    schedule.every().day.at("16:30").do(download_daily)
     
     while True:
         schedule.run_pending()
