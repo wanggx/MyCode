@@ -1,7 +1,7 @@
 <template>
   <el-container class="main-layout">
     <el-aside width="200px" class="main-aside">
-      <el-menu :default-active="activeMenu" @select="onMenuSelect" router>
+      <el-menu :default-active="activeMenu" @select="onMenuSelect">
         <el-menu-item v-for="item in menus" :key="item.key" :index="item.key">
           <span>{{ item.title }}</span>
         </el-menu-item>
@@ -15,28 +15,11 @@
         </div>
       </el-header>
       <el-main class="main-content">
-        <div v-if="activeMenu === 'info'">
-          <el-descriptions :title="'用户信息'" :column="1">
-            <el-descriptions-item label="用户名">{{ user ? user.username : '' }}</el-descriptions-item>
-            <el-descriptions-item label="邮箱">{{ user ? (user.email || '未设置') : '' }}</el-descriptions-item>
-            <el-descriptions-item label="角色">{{ user ? (user.role || '普通用户') : '' }}</el-descriptions-item>
-          </el-descriptions>
-        </div>
-        <div v-else-if="activeMenu === 'table'">
-          <div class="table-wrapper">
-            <el-table :data="tableData" style="width: 100%">
-              <el-table-column prop="date" label="日期" width="180" />
-              <el-table-column prop="name" label="姓名" width="180" />
-              <el-table-column prop="address" label="地址" />
-            </el-table>
-          </div>
-        </div>
-        <div v-else-if="activeMenu === 'about'">
-          <el-card>
-            <h3>关于本系统</h3>
-            <p>这是一个基于 Vue3 + Element Plus 的前端 mock 演示系统。</p>
-          </el-card>
-        </div>
+        <transition name="fade" mode="out-in">
+          <UserInfo v-if="activeMenu === 'userinfo'" :key="'userinfo'" />
+          <ChartView v-else-if="activeMenu === 'chart'" :key="'chart'" />
+          <DataTable v-else-if="activeMenu === 'table'" :key="'table'" />
+        </transition>
       </el-main>
     </el-container>
   </el-container>
@@ -44,21 +27,25 @@
 
 <script>
 import { mapGetters, mapActions } from 'vuex'
+import UserInfo from './UserInfo.vue'
+import ChartView from './ChartView.vue'
+import DataTable from './DataTable.vue'
+
 export default {
   name: 'MainLayout',
+  components: {
+    UserInfo,
+    ChartView,
+    DataTable
+  },
   data() {
     return {
       menus: [
-        { key: 'info', title: '用户信息' },
-        { key: 'table', title: '数据表格' },
-        { key: 'about', title: '关于' }
+        { key: 'userinfo', title: '用户信息' },
+        { key: 'chart', title: '数据图表' },
+        { key: 'table', title: '数据表格' }
       ],
-      activeMenu: 'info',
-      tableData: [
-        { date: '2023-06-01', name: '张三', address: '上海市' },
-        { date: '2023-06-02', name: '李四', address: '北京市' },
-        { date: '2023-06-03', name: '王五', address: '广州市' }
-      ]
+      activeMenu: 'userinfo'
     }
   },
   computed: {
@@ -126,12 +113,16 @@ export default {
   margin-left: 0;
 }
 .main-content {
-  padding: 32px 24px;
-  overflow: auto;
+  padding: 0;
+  overflow: hidden;
   min-width: 0;
+  position: relative;
 }
-.table-wrapper {
-  min-width: 0;
-  overflow-x: auto;
+/* 切换动画 */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
 }
 </style> 

@@ -4,6 +4,7 @@ import RegisterPage from '../views/Register.vue'
 import DataTablePage from '../views/DataTable.vue'
 import ChartViewPage from '../views/ChartView.vue'
 import MainLayout from '../views/MainLayout.vue'
+import UserInfoPage from '../views/UserInfo.vue'
 
 // 请确保 ../views/Login.vue、Register.vue、UserInfo.vue、DataTable.vue、ChartView.vue 文件已创建
 const routes = [
@@ -11,6 +12,7 @@ const routes = [
   { path: '/login', component: LoginPage },
   { path: '/register', component: RegisterPage },
   { path: '/user', component: MainLayout, meta: { requiresAuth: true } },
+  { path: '/userinfo', component: UserInfoPage, meta: { requiresAuth: true } },
   { path: '/table', component: DataTablePage, meta: { requiresAuth: true } },
   { path: '/chart', component: ChartViewPage, meta: { requiresAuth: true } },
 ]
