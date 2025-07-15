@@ -47,6 +47,7 @@ def mergeDailyData():
                " t.ts_code = d.ts_code and t.trade_date = d.trade_date where d.ts_code is null")
     with engine.connect() as conn:
         conn.execute(sql)
+        conn.commit()
 
 def downloadStockList():
     engine = create_engine('mysql+pymysql://' + mysql_user + ':' + mysql_pass + '@' + mysql_url + '/' + mysql_db)
