@@ -6,8 +6,10 @@
 
 - 用户注册和登录（JWT认证）
 - 用户信息管理
-- 股票数据列表（Mock数据）
-- 股票搜索和筛选
+- 股票数据列表（MySQL数据库查询）
+- 股票搜索和筛选（支持关键词、地域、行业）
+- 分页查询支持
+- 地域和行业列表获取
 - 市场概览统计
 - MySQL数据库存储
 
@@ -18,9 +20,15 @@ stock/
 ├── main.py              # 主程序入口
 └── backend/
     ├── user.py              # 用户登录接口
-    ├── stock_list.py        # 股票数据接口
+    ├── stock_list.py        # 股票数据查询接口
+    ├── dbutil.py            # 数据库工具模块
     ├── db_config.py         # 数据库配置文件
-    ├── init_database.sql    # 数据库初始化脚本
+    ├── init_stock_table.sql # 股票表初始化脚本
+    ├── init_stock_db.py     # 数据库初始化Python脚本（模块化）
+    ├── init_stock_db_standalone.py # 数据库初始化Python脚本（独立）
+    ├── test_stock_api.py    # API测试脚本
+    ├── test_dbutil.py       # 数据库工具测试脚本（模块化）
+    ├── test_dbutil_standalone.py # 数据库工具测试脚本（独立）
     ├── requirements.txt     # Python依赖
     └── README.md           # 项目说明
 ```
@@ -50,15 +58,23 @@ DB_CONFIG = {
 
 ### 3. 初始化数据库
 
-**重要**: 请先手动执行SQL文件初始化数据库
+**重要**: 请先初始化数据库表和数据
 
 ```bash
-# 方法1: 使用mysql命令行
-mysql -h rm-bp160jkc22y874i30to.mysql.rds.aliyuncs.com -P 3306 -u root -p8Dm4PQU2pp6!C3y < init_database.sql
+# 方法1: 使用独立Python脚本自动初始化（推荐）
+cd stock/backend
+python init_stock_db_standalone.py
 
-# 方法2: 在MySQL客户端中执行
+# 方法2: 使用模块化Python脚本（需要正确设置Python路径）
+cd stock/backend
+python init_stock_db.py
+
+# 方法3: 手动执行SQL文件
+mysql -h rm-bp160jkc22y874i30to.mysql.rds.aliyuncs.com -P 3306 -u root -p8Dm4PQU2pp6!C3y < init_stock_table.sql
+
+# 方法4: 在MySQL客户端中执行
 mysql -h rm-bp160jkc22y874i30to.mysql.rds.aliyuncs.com -P 3306 -u root -p8Dm4PQU2pp6!C3y
-source init_database.sql;
+source init_stock_table.sql;
 ```
 
 ## 运行服务
@@ -122,11 +138,44 @@ python main.py
 - **Headers**: `Authorization: Bearer <token>`
 - **查询参数**:
   - `page`: 页码（默认1）
-  - `page_size`: 每页数量（默认10）
-  - `keyword`: 搜索关键词
-  - `sector`: 行业筛选
-  - `sort_by`: 排序字段（code/price/change_percent/volume/market_cap）
-  - `sort_order`: 排序方向（asc/desc）
+  - `page_size`: 每页数量（默认10，最大100）
+  - `keyword`: 搜索关键词（支持ts_code、symbol、name模糊搜索）
+  - `area`: 地域筛选
+  - `industry`: 行业筛选
+- **响应示例**:
+```json
+{
+  "message": "获取成功",
+  "data": {
+    "stocks": [
+      {
+        "ts_code": "000001.SZ",
+        "symbol": "1",
+        "name": "平安银行",
+        "area": "深圳",
+        "industry": "银行",
+        "cnspell": "PAYH",
+        "market": "主板",
+        "list_date": "19910403",
+        "act_name": "中国平安保险(集团)股份有限公司",
+        "act_ent_type": "民营企业"
+      }
+    ],
+    "total": 10,
+    "page": 1,
+    "page_size": 10,
+    "total_pages": 1
+  }
+}
+```
+
+#### 2. 获取地域列表
+- **URL**: `GET /api/stocks/areas`
+- **Headers**: `Authorization: Bearer <token>`
+
+#### 3. 获取行业列表
+- **URL**: `GET /api/stocks/industries`
+- **Headers**: `Authorization: Bearer <token>`
 
 #### 2. 获取股票详情
 - **URL**: `GET /api/stocks/<code>`

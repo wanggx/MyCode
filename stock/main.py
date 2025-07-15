@@ -59,7 +59,7 @@ def job():
 def startScheduler():
     """启动调度器"""
     # 每10秒运行一次任务
-    schedule.every(10).seconds.do(job)
+    # schedule.every(10).seconds.do(job)
     schedule.every().day.at("16:30").do(download_daily)
     
     while True:

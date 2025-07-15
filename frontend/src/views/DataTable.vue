@@ -6,11 +6,14 @@
         <el-input v-model="searchForm.name" placeholder="名称" class="search-input" clearable />
         <el-button type="primary" @click="handleSearch">查询</el-button>
       </div>
-      <el-table :data="tableData" style="width: 100%" stripe v-loading="loading">
-        <el-table-column prop="code" label="股票代码" width="120" />
-        <el-table-column prop="name" label="名称" width="160" />
-        <el-table-column prop="region" label="上市地区" width="120" />
-        <el-table-column prop="industry" label="行业" />
+      <el-table :data="tableData" style="width: 100%" stripe border v-loading="loading">
+        <el-table-column prop="ts_code" label="TS代码" width="120" />
+        <el-table-column prop="symbol" label="股票代码" width="120" />
+        <el-table-column prop="name" label="股票名称" width="160" />
+        <el-table-column prop="area" label="地域" width="120" />
+        <el-table-column prop="industry" label="行业" width="120" />
+        <el-table-column prop="market" label="市场" width="100" />
+        <el-table-column prop="list_date" label="上市日期" width="120" />
       </el-table>
       <div class="pagination-bar">
         <el-pagination
@@ -49,33 +52,35 @@ export default {
       this.loading = true
       try {
         const params = {
-          code: this.searchForm.code,
-          name: this.searchForm.name,
+          keyword: this.searchForm.code || this.searchForm.name,
           page: this.page,
           page_size: this.pageSize
         }
         const res = await axios.get('/api/stocks', { params })
-        // 判断data是否为数组，否则用mock数据
-        if (Array.isArray(res.data.data)) {
-          this.tableData = res.data.data
+        
+        // 检查响应数据结构
+        if (res.data && res.data.data && res.data.data.stocks) {
+          this.tableData = res.data.data.stocks
+          this.total = res.data.data.total
         } else {
-          // mock数据
+          // 使用mock数据作为后备
           this.tableData = [
-            { code: '600000', name: '浦发银行', region: '上海', industry: '银行' },
-            { code: '000001', name: '平安银行', region: '深圳', industry: '银行' },
-            { code: '600519', name: '贵州茅台', region: '上海', industry: '白酒' },
-            { code: '300750', name: '宁德时代', region: '深圳', industry: '新能源' }
+            { ts_code: '000001.SZ', symbol: '1', name: '平安银行', area: '深圳', industry: '银行', market: '主板', list_date: '19910403' },
+            { ts_code: '000002.SZ', symbol: '2', name: '万科A', area: '深圳', industry: '房地产', market: '主板', list_date: '19910129' },
+            { ts_code: '600519.SH', symbol: '600519', name: '贵州茅台', area: '贵州', industry: '白酒', market: '主板', list_date: '20010827' },
+            { ts_code: '002594.SZ', symbol: '2594', name: '比亚迪', area: '深圳', industry: '汽车', market: '中小板', list_date: '20110630' }
           ]
+          this.total = this.tableData.length
         }
-        this.total = res.data.total || this.tableData.length
       } catch (e) {
+        console.error('获取数据失败:', e)
         this.$message.error('获取数据失败')
-        // mock数据
+        // 使用mock数据作为后备
         this.tableData = [
-          { code: '600000', name: '浦发银行', region: '上海', industry: '银行' },
-          { code: '000001', name: '平安银行', region: '深圳', industry: '银行' },
-          { code: '600519', name: '贵州茅台', region: '上海', industry: '白酒' },
-          { code: '300750', name: '宁德时代', region: '深圳', industry: '新能源' }
+          { ts_code: '000001.SZ', symbol: '1', name: '平安银行', area: '深圳', industry: '银行', market: '主板', list_date: '19910403' },
+          { ts_code: '000002.SZ', symbol: '2', name: '万科A', area: '深圳', industry: '房地产', market: '主板', list_date: '19910129' },
+          { ts_code: '600519.SH', symbol: '600519', name: '贵州茅台', area: '贵州', industry: '白酒', market: '主板', list_date: '20010827' },
+          { ts_code: '002594.SZ', symbol: '2594', name: '比亚迪', area: '深圳', industry: '汽车', market: '中小板', list_date: '20110630' }
         ]
         this.total = this.tableData.length
       } finally {
@@ -104,14 +109,20 @@ export default {
   min-height: 100vh;
 }
 .stock-table-card {
-  max-width: 900px;
+  width: 100%;
   margin: 0 auto;
+  padding: 0;
+  box-sizing: border-box;
+}
+::v-deep .el-card__body {
+  padding: 0;
 }
 .search-bar {
   display: flex;
   gap: 16px;
   align-items: center;
   margin-bottom: 18px;
+  padding: 16px 16px 0 16px;
 }
 .search-input {
   width: 180px;
@@ -119,5 +130,6 @@ export default {
 .pagination-bar {
   margin-top: 18px;
   text-align: right;
+  padding: 0 16px 16px 16px;
 }
 </style> 
