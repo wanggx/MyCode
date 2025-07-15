@@ -10,6 +10,7 @@ from download_daily import download_daily
 # 导入用户和股票模块
 from backend.user import create_user_routes, test_database_connection
 from backend.stock_list import create_stock_routes
+from backend.stock_select import create_stock_select_routes
 
 from utils.logger import setup_logger
 logger = setup_logger()
@@ -21,6 +22,7 @@ CORS(app)  # 允许跨域请求
 # 注册用户和股票路由
 create_user_routes(app)
 create_stock_routes(app)
+create_stock_select_routes(app)
 
 # 定义路由和对应的处理函数
 @app.route('/hello', methods=['GET'])

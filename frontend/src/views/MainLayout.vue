@@ -22,6 +22,7 @@
             <UserInfo v-if="activeMenu === 'userinfo'" :key="'userinfo'" />
             <ChartView v-else-if="activeMenu === 'chart'" :key="'chart'" />
             <DataTable v-else-if="activeMenu === 'table'" :key="'table'" />
+            <StockSelect v-else-if="activeMenu === 'stockselect'" :key="'stockselect'" />
           </transition>
         </div>
       </div>
@@ -34,20 +35,23 @@ import { mapGetters, mapActions } from 'vuex'
 import UserInfo from './UserInfo.vue'
 import ChartView from './ChartView.vue'
 import DataTable from './DataTable.vue'
+import StockSelect from './StockSelect.vue'
 
 export default {
   name: 'MainLayout',
   components: {
     UserInfo,
     ChartView,
-    DataTable
+    DataTable,
+    StockSelect
   },
   data() {
     return {
       menus: [
         { key: 'userinfo', title: '用户信息' },
         { key: 'chart', title: '数据图表' },
-        { key: 'table', title: '数据表格' }
+        { key: 'table', title: '数据表格' },
+        { key: 'stockselect', title: '选股列表' }
       ],
       activeMenu: 'userinfo'
     }
