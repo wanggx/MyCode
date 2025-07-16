@@ -6,15 +6,19 @@
         <el-input v-model="searchForm.name" placeholder="名称" class="search-input" clearable />
         <el-button type="primary" @click="handleSearch">查询</el-button>
       </div>
-      <el-table :data="tableData" style="width: 100%" stripe border v-loading="loading">
-        <el-table-column prop="ts_code" label="TS代码" width="120" />
-        <el-table-column prop="symbol" label="股票代码" width="120" />
-        <el-table-column prop="name" label="股票名称" width="160" />
-        <el-table-column prop="area" label="地域" width="120" />
-        <el-table-column prop="industry" label="行业" width="120" />
-        <el-table-column prop="market" label="市场" width="100" />
-        <el-table-column prop="list_date" label="上市日期" width="120" />
-      </el-table>
+      <div class="table-wrapper">
+        <el-table :data="tableData" stripe border v-loading="loading"
+          style="margin-top: 0; min-width: 900px; max-width: 1200px; width: auto;"
+          header-cell-class-name="left-align-header" cell-class-name="left-align-cell">
+          <el-table-column prop="ts_code" label="TS代码" width="120" align="left" header-align="left" />
+          <el-table-column prop="symbol" label="股票代码" width="120" align="left" header-align="left" />
+          <el-table-column prop="name" label="股票名称" width="160" align="left" header-align="left" />
+          <el-table-column prop="area" label="地域" width="120" align="left" header-align="left" />
+          <el-table-column prop="industry" label="行业" width="120" align="left" header-align="left" />
+          <el-table-column prop="market" label="市场" width="100" align="left" header-align="left" />
+          <el-table-column prop="list_date" label="上市日期" width="120" align="left" header-align="left" />
+        </el-table>
+      </div>
       <div class="pagination-bar">
         <el-pagination
           background
@@ -113,6 +117,17 @@ export default {
   margin: 0 auto;
   padding: 0;
   box-sizing: border-box;
+}
+.table-wrapper {
+  text-align: left;
+  margin-left: 0;
+  padding-left: 16px;
+}
+.left-align-header {
+  text-align: left !important;
+}
+.left-align-cell {
+  text-align: left !important;
 }
 ::v-deep .el-card__body {
   padding: 0;

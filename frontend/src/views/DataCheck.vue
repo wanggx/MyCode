@@ -13,10 +13,14 @@
           <el-button type="success" :disabled="!addStartDate || !addEndDate" @click="handleAdd" style="margin-left: 8px;">补录</el-button>
         </div>
       </div>
-      <el-table :data="tableData" style="width: 100%; margin-top: 18px;" border stripe>
-        <el-table-column prop="trade_date" label="日期" width="160" />
-        <el-table-column prop="cnt" label="数据条数" width="120" />
-      </el-table>
+      <div class="table-wrapper">
+        <el-table :data="tableData" border stripe
+          header-cell-class-name="left-align-header" cell-class-name="left-align-cell"
+          style="margin-top: 18px; min-width: 400px; max-width: 500px;">
+          <el-table-column prop="trade_date" label="日期" width="160" align="left" header-align="left" />
+          <el-table-column prop="cnt" label="数据条数" width="120" align="left" header-align="left" />
+        </el-table>
+      </div>
       <div class="pagination-bar">
         <el-pagination
           background
@@ -34,13 +38,29 @@
 <script>
 import axios from '@/config/axios'
 
+function getTodayStr() {
+  const d = new Date()
+  const y = d.getFullYear()
+  const m = (d.getMonth() + 1).toString().padStart(2, '0')
+  const day = d.getDate().toString().padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+function get30DaysAgoStr() {
+  const d = new Date()
+  d.setDate(d.getDate() - 29)
+  const y = d.getFullYear()
+  const m = (d.getMonth() + 1).toString().padStart(2, '0')
+  const day = d.getDate().toString().padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
 export default {
   name: 'DataCheck',
   data() {
     return {
       searchForm: {
-        startDate: '',
-        endDate: ''
+        startDate: get30DaysAgoStr(),
+        endDate: getTodayStr()
       },
       addStartDate: '',
       addEndDate: '',
@@ -113,6 +133,9 @@ export default {
         this.$message.error('补录失败')
       }
     }
+  },
+  mounted() {
+    this.fetchData()
   }
 }
 </script>
@@ -133,5 +156,16 @@ export default {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+.left-align-header {
+  text-align: left !important;
+}
+.left-align-cell {
+  text-align: left !important;
+}
+.table-wrapper {
+  text-align: left;
+  margin-left: 0;
+  /* 控制表格宽度和左对齐 */
 }
 </style> 
