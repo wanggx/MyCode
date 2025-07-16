@@ -93,6 +93,10 @@ const fetchData = async () => {
     if (res.data && res.data.data) {
       tableData.value = res.data.data.items
       total.value = res.data.data.total
+    } else if (res.data && res.data.error && res.data.error.includes('正在选股中')) {
+      ElMessage.info(res.data.error)
+      tableData.value = []
+      total.value = 0
     } else {
       tableData.value = []
       total.value = 0

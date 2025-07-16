@@ -1,9 +1,11 @@
 
-
+import logging
 import pandas as pd
 import tushare as ts
 from sqlalchemy import create_engine, text
 from sqlalchemy.dialects.mysql import insert
+
+logger = logging.getLogger('myapp')
 
 ts.set_token('3252a9af155128787f44d053c563d6b156f03e80f0254899e8668ecc')
 
@@ -73,6 +75,7 @@ def getStockData(ts_code, start_date, end_date):
                      '(select ts_code from stock where ts_code not like \'688%%\' and ts_code not like \'30%%\' and ts_code not like \'%%BJ\' and name not like \'%%ST%%\')')
         if start_date is not None and end_date is not None:
             stock_sql = stock_sql + " and trade_date >= \'" + start_date + "\' and trade_date <= \'" + end_date + "\'"
+    logger.info("取数SQL:" + stock_sql)
     stock_df = pd.read_sql(stock_sql, con=engine)
     return stock_df
 
