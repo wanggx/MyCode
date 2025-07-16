@@ -2,7 +2,8 @@ from flask import Blueprint, request, jsonify
 from .dbutil import get_db_connection
 from datetime import datetime, timedelta
 import re
-
+from backend.data.daily import download_daily_data
+import threading
 bp = Blueprint('stock_check', __name__)
 
 @bp.route('/api/stock/check', methods=['GET'])
@@ -69,27 +70,14 @@ def stock_daily_add():
             return jsonify({'success': False, 'message': '补录区间不能超过一个月'})
     except Exception:
         return jsonify({'success': False, 'message': '日期格式错误'})
-    conn = get_db_connection()
-    try:
-        with conn.cursor() as cursor:
-            cur_dt = start_dt
-            inserted = 0
-            skipped = 0
-            while cur_dt <= end_dt:
-                trade_date = cur_dt.strftime('%Y%m%d')
-                cursor.execute("SELECT COUNT(1) FROM stock_daily WHERE trade_date=%s", (trade_date,))
-                if cursor.fetchone()[0] == 0:
-                    cursor.execute("INSERT INTO stock_daily (trade_date) VALUES (%s)", (trade_date,))
-                    inserted += 1
-                else:
-                    skipped += 1
-                cur_dt += timedelta(days=1)
-            conn.commit()
-        return jsonify({'success': True, 'inserted': inserted, 'skipped': skipped})
-    except Exception as e:
-        return jsonify({'success': False, 'message': str(e)})
-    finally:
-        conn.close()
+
+    # 异步调用下载数据
+    def async_download():
+        from backend.data.daily import download_daily_data
+        download_daily_data(start_date, end_date)
+    threading.Thread(target=async_download, daemon=True).start()
+
+    return jsonify({'success': True, 'message': '补录任务已提交，正在后台处理'})
 
 def create_stock_check_routes(app):
     app.register_blueprint(bp) 

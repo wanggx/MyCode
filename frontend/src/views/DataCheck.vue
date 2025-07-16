@@ -105,7 +105,7 @@ export default {
       try {
         const res = await axios.post('/api/stock/daily/add', { start_date, end_date })
         if (res.data && res.data.success) {
-          this.$message.success('补录成功')
+          this.$message.success(res.data && res.data.message ? res.data.message : '补录成功')
         } else {
           this.$message.error(res.data && res.data.message ? res.data.message : '补录失败')
         }
