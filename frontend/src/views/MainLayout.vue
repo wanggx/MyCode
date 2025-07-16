@@ -19,10 +19,9 @@
         </el-menu>
         <div class="main-view-content">
           <transition name="fade" mode="out-in">
-            <UserInfo v-if="activeMenu === 'userinfo'" :key="'userinfo'" />
-            <ChartView v-else-if="activeMenu === 'chart'" :key="'chart'" />
-            <DataTable v-else-if="activeMenu === 'table'" :key="'table'" />
+            <DataTable v-if="activeMenu === 'table'" :key="'table'" />
             <StockSelect v-else-if="activeMenu === 'stockselect'" :key="'stockselect'" />
+            <DataCheck v-else-if="activeMenu === 'datacheck'" :key="'datacheck'" />
           </transition>
         </div>
       </div>
@@ -32,28 +31,25 @@
 
 <script>
 import { mapGetters, mapActions } from 'vuex'
-import UserInfo from './UserInfo.vue'
-import ChartView from './ChartView.vue'
 import DataTable from './DataTable.vue'
 import StockSelect from './StockSelect.vue'
+import DataCheck from './DataCheck.vue'
 
 export default {
   name: 'MainLayout',
   components: {
-    UserInfo,
-    ChartView,
     DataTable,
-    StockSelect
+    StockSelect,
+    DataCheck
   },
   data() {
     return {
       menus: [
-        { key: 'userinfo', title: '用户信息' },
-        { key: 'chart', title: '数据图表' },
-        { key: 'table', title: '数据表格' },
-        { key: 'stockselect', title: '选股列表' }
+        { key: 'table', title: '股票列表' },
+        { key: 'stockselect', title: '选股列表' },
+        { key: 'datacheck', title: '数据补录' }
       ],
-      activeMenu: 'userinfo'
+      activeMenu: 'table'
     }
   },
   computed: {
