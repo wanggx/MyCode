@@ -97,6 +97,10 @@ def selectVolMagnify(date_str, n):
     date_str: 结束日期（字符串，格式如'20250710'）
     n: 向前推的天数
     """
+    import time
+    start_time = time.time()
+    # 发送开始选股消息
+    sendMsg(f"开始{date_str}的选股")
     # 计算startDate
     end_date = datetime.strptime(date_str, '%Y%m%d')
     start_date = end_date - timedelta(days=n-1)
@@ -116,6 +120,9 @@ def selectVolMagnify(date_str, n):
     print(select_df.head(10))
     select_df.drop(columns=['out_date']).to_csv('vol.csv', index=True)
     sendGroupFile('vol.csv')
+    # 发送结束选股消息
+    elapsed = int(time.time() - start_time)
+    sendMsg(f"结束{date_str}的选股，耗时{elapsed}s")
 
 def selectTrend():
     stock_daily_df = getStockData(None, '20250501', '20250710')

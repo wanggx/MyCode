@@ -1,2 +1,0 @@
-
-echo 'do anything'
