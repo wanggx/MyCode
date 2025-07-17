@@ -11,14 +11,11 @@ from moduledir.stockutil import getStockData
 logger = logging.getLogger('myapp')
 
 def polyline3(df):
-    try:
-        dailys = df.tail(3)
-        x = np.arange(len(dailys))
-        y = dailys.values
-        slope, _ = np.polyfit(x, y, 1)
-        return slope
-    except AttributeError as e:
-        print(df)
+    dailys = df.tail(3)
+    x = np.arange(len(dailys))
+    y = dailys.values
+    slope, _ = np.polyfit(x, y, 1)
+    return slope
 
 def polyline5(df):
     dailys = df.tail(5)
@@ -67,30 +64,36 @@ def volmagnify(df):
     return 0
 
 def polylineslope(df):
+    if df is None or len(df) == 0:
+        print('polylineslope: 输入df为空')
+        return None
+    try:
+        df.sort_values(by=['trade_date'], inplace=True, ascending=True)
+        slope_series = df['close'].agg({
+            'slope3': polyline3,
+            'slope5': polyline5,
+            'slope10': polyline10,
+            'slope20': polyline20,
+            'slope30': polyline30,
+            'slope60': polyline60,
+        })
+        vol_magnify = df['vol'].tail(20).agg(volmagnify)
+        slope_series['vol_magnify'] = vol_magnify
 
-    df.sort_values(by=['trade_date'], inplace=True, ascending=True)
-    slope_series = df['close'].agg({
-        'slope3': polyline3,
-        'slope5': polyline5,
-        'slope10': polyline10,
-        'slope20': polyline20,
-        'slope30': polyline30,
-        'slope60': polyline60,
-    })
-    vol_magnify = df['vol'].tail(20).agg(volmagnify)
-    slope_series['vol_magnify'] = vol_magnify
+        slope_series['out_date'] = False
 
-    slope_series['out_date'] = False
+        lastday = df.tail(1).reset_index(drop=False)
+        sun = lastday.at[0, 'open'] < lastday.at[0, 'close']
+        latest_trade_date = lastday.at[0, 'trade_date']
+        if not date_equal(latest_trade_date, datetime.now()):
+            slope_series['out_date'] = True
 
-    lastday = df.tail(1).reset_index(drop=False)
-    sun = lastday.at[0, 'open'] < lastday.at[0, 'close']
-    latest_trade_date = lastday.at[0, 'trade_date']
-    if not date_equal(latest_trade_date, datetime.now()):
-        slope_series['out_date'] = True
+        slope_series['sun'] = sun
 
-    slope_series['sun'] = sun
-
-    return slope_series
+        return slope_series
+    except Exception as e:
+        print(f'polylineslope异常: {e}')
+        return None
 
 def selectVolMagnify(date_str, n):
     """
@@ -111,13 +114,11 @@ def selectVolMagnify(date_str, n):
     stock_polyline_df = close_polyline_df.groupby(['ts_code']).apply(polylineslope, include_groups=False)
 
     select_df = stock_polyline_df[(stock_polyline_df['vol_magnify'] > 0)
-                                  & (stock_polyline_df['out_date'] == False)
+                                #   & (stock_polyline_df['out_date'] == False)
                                   & (stock_polyline_df['sun'])
                                   & (stock_polyline_df['slope60'] > 0)
                                   & (stock_polyline_df['slope30'] > 0)
                                   & (stock_polyline_df['slope20'] > 0)]
-
-    print(select_df.head(10))
     select_df.drop(columns=['out_date']).to_csv('vol.csv', index=True)
     sendGroupFile('vol.csv')
     # 发送结束选股消息
