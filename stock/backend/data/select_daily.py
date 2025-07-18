@@ -6,7 +6,7 @@ import pandas as pd
 from sqlalchemy import false
 
 from moduledir.dateutil import date_equal
-from moduledir.stockutil import getStockData
+from moduledir.stockutil import getStockData, getStockList, saveStockSelect
 
 logger = logging.getLogger('myapp')
 
@@ -111,15 +111,31 @@ def selectVolMagnify(date_str, n):
     stock_daily_df = getStockData(None, start_str, date_str)
 
     close_polyline_df = stock_daily_df[['ts_code', 'trade_date', 'high', 'open', 'close', 'low', 'vol']].groupby(['ts_code']).tail(60)
-    stock_polyline_df = close_polyline_df.groupby(['ts_code']).apply(polylineslope, include_groups=False)
-
+    stock_polyline_df = close_polyline_df.groupby(['ts_code']).apply(polylineslope, include_groups=False).reset_index()
+    print(stock_polyline_df.head(2))
     select_df = stock_polyline_df[(stock_polyline_df['vol_magnify'] > 0)
                                 #   & (stock_polyline_df['out_date'] == False)
                                   & (stock_polyline_df['sun'])
                                   & (stock_polyline_df['slope60'] > 0)
                                   & (stock_polyline_df['slope30'] > 0)
                                   & (stock_polyline_df['slope20'] > 0)]
-    select_df.drop(columns=['out_date']).to_csv('vol.csv', index=True)
+    print(select_df.columns)
+    select_df.insert(0, 'select_date', date_str)
+    select_df.rename(columns={'slope3': 'trend3',
+                              'slope5': 'trend5',
+                              'slope10': 'trend10',
+                              'slope20': 'trend20',
+                              'slope30': 'trend30',
+                              'vol_magnify': 'vol'}, inplace=True)
+    print(select_df.columns)
+    stock_df = getStockList()
+    join_df = pd.merge(select_df, stock_df[['ts_code', 'name']], on='ts_code', how='left')
+    print(join_df.columns)
+    final_df = join_df[['select_date', 'ts_code', 'name', 'vol', 'trend3', 'trend5', 'trend10', 'trend20', 'trend30']]
+    final_df.to_csv('vol.csv', index=True)
+
+    saveStockSelect(final_df)
+
     sendGroupFile('vol.csv')
     # 发送结束选股消息
     elapsed = int(time.time() - start_time)

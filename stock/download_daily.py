@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime
 from moduledir.stockutil import *
+from backend.data.select_daily import selectVolMagnify
 
 logger = logging.getLogger('myapp')
 
@@ -13,3 +14,5 @@ def download_daily():
     savePdStockData(stock_pd, current_date)
     mergeDailyData()
     logger.info(("end " + current_date))
+
+    selectVolMagnify(current_date, 100)
