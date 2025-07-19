@@ -27,7 +27,17 @@
           header-cell-class-name="left-align-header" cell-class-name="left-align-cell"
         >
           <el-table-column prop="select_date" label="选股日期" width="110" align="left" header-align="left" />
-          <el-table-column prop="ts_code" label="股票代码" width="120" align="left" header-align="left" />
+          <el-table-column prop="ts_code" label="股票代码" width="120" align="left" header-align="left">
+            <template #default="scope">
+              <a
+                :href="`https://stockpage.10jqka.com.cn/${getCodePrefix(scope.row.ts_code)}`"
+                target="_blank"
+                class="stock-link"
+              >
+                {{ scope.row.ts_code }}
+              </a>
+            </template>
+          </el-table-column>
           <el-table-column prop="name" label="股票名称" width="120" align="left" header-align="left" />
           <el-table-column prop="vol" label="成交放量" width="100" align="left" header-align="left" />
           <el-table-column prop="trend3" label="3日趋势" width="100" align="left" header-align="left" />
@@ -55,6 +65,11 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
+
+const getCodePrefix = (tsCode) => {
+  if (!tsCode || !tsCode.includes('.')) return tsCode
+  return tsCode.split('.')[0]
+}
 
 // 获取今天日期字符串
 const getToday = () => {
