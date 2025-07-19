@@ -231,6 +231,60 @@ def create_user_routes(app):
             }), 200
         else:
             return jsonify({'error': '获取用户信息失败'}), 500
+
+    @app.route('/api/user/change-password', methods=['POST'])
+    @require_auth
+    def change_password():
+        """修改密码"""
+        try:
+            data = request.get_json()
+            old_password = data.get('old_password')
+            new_password = data.get('new_password')
+            
+            if not old_password or not new_password:
+                return jsonify({'error': '原密码和新密码不能为空'}), 400
+            
+            if len(new_password) < 6:
+                return jsonify({'error': '新密码长度不能少于6位'}), 400
+            
+            user_id = request.user['user_id']
+            
+            # 验证原密码
+            connection = get_db_connection()
+            if not connection:
+                return jsonify({'error': '数据库连接失败'}), 500
+            
+            try:
+                cursor = connection.cursor(pymysql.cursors.DictCursor)
+                hashed_old_password = hash_password(old_password)
+                
+                # 检查原密码是否正确
+                cursor.execute(
+                    "SELECT id FROM users WHERE id = %s AND password = %s",
+                    (user_id, hashed_old_password)
+                )
+                
+                if not cursor.fetchone():
+                    return jsonify({'error': '原密码错误'}), 400
+                
+                # 更新新密码
+                hashed_new_password = hash_password(new_password)
+                cursor.execute(
+                    "UPDATE users SET password = %s WHERE id = %s",
+                    (hashed_new_password, user_id)
+                )
+                connection.commit()
+                
+                return jsonify({
+                    'success': True,
+                    'message': '密码修改成功'
+                }), 200
+                
+            finally:
+                connection.close()
+                
+        except Exception as e:
+            return jsonify({'error': f'修改密码失败: {str(e)}'}), 500
     
 
 

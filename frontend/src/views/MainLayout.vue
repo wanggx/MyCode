@@ -7,8 +7,18 @@
       </div>
       <div class="header-right">
         <a href="http://tushare.pro/" target="_blank" class="tushare-link">Tushare官网</a>
-        <span class="account">{{ user ? user.username : '' }}</span>
-        <el-button class="logout-btn" type="danger" size="small" @click="handleLogout">退出</el-button>
+        <el-dropdown @command="handleCommand" trigger="click">
+          <span class="account-dropdown">
+            {{ user ? user.username : '' }}
+            <el-icon class="el-icon--right"><arrow-down /></el-icon>
+          </span>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="changePassword">修改密码</el-dropdown-item>
+              <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </div>
     </el-header>
     <el-main class="main-content-vertical">
@@ -28,15 +38,38 @@
         </div>
       </div>
     </el-main>
+
+    <!-- 修改密码对话框 -->
+    <el-dialog v-model="passwordDialogVisible" title="修改密码" width="400px" :close-on-click-modal="false">
+      <el-form :model="passwordForm" :rules="passwordRules" ref="passwordFormRef" label-width="100px">
+        <el-form-item label="原密码" prop="oldPassword">
+          <el-input v-model="passwordForm.oldPassword" type="password" placeholder="请输入原密码" show-password />
+        </el-form-item>
+        <el-form-item label="新密码" prop="newPassword">
+          <el-input v-model="passwordForm.newPassword" type="password" placeholder="请输入新密码" show-password />
+        </el-form-item>
+        <el-form-item label="确认密码" prop="confirmPassword">
+          <el-input v-model="passwordForm.confirmPassword" type="password" placeholder="请再次输入新密码" show-password />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="passwordDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleChangePassword" :loading="changePasswordLoading">确认</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </el-container>
 </template>
 
 <script>
 import { mapGetters, mapActions } from 'vuex'
+import { ArrowDown } from '@element-plus/icons-vue'
 import DataTable from './DataTable.vue'
 import StockSelect from './StockSelect.vue'
 import DataCheck from './DataCheck.vue'
 import SystemSettings from './SystemSettings.vue'
+import axios from '@/config/axios'
 
 export default {
   name: 'MainLayout',
@@ -44,9 +77,17 @@ export default {
     DataTable,
     StockSelect,
     DataCheck,
-    SystemSettings
+    SystemSettings,
+    ArrowDown
   },
   data() {
+    const validateConfirmPassword = (rule, value, callback) => {
+      if (value !== this.passwordForm.newPassword) {
+        callback(new Error('两次输入密码不一致'))
+      } else {
+        callback()
+      }
+    }
     return {
       menus: [
         { key: 'table', title: '股票列表' },
@@ -54,7 +95,27 @@ export default {
         { key: 'datacheck', title: '数据补录' },
         { key: 'settings', title: '系统设置' }
       ],
-      activeMenu: 'table'
+      activeMenu: 'table',
+      passwordDialogVisible: false,
+      changePasswordLoading: false,
+      passwordForm: {
+        oldPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      },
+      passwordRules: {
+        oldPassword: [
+          { required: true, message: '请输入原密码', trigger: 'blur' }
+        ],
+        newPassword: [
+          { required: true, message: '请输入新密码', trigger: 'blur' },
+          { min: 6, message: '密码长度不能少于6位', trigger: 'blur' }
+        ],
+        confirmPassword: [
+          { required: true, message: '请确认新密码', trigger: 'blur' },
+          { validator: validateConfirmPassword, trigger: 'blur' }
+        ]
+      }
     }
   },
   computed: {
@@ -68,6 +129,48 @@ export default {
     },
     onMenuSelect(key) {
       this.activeMenu = key
+    },
+    handleCommand(command) {
+      if (command === 'logout') {
+        this.handleLogout()
+      } else if (command === 'changePassword') {
+        this.passwordDialogVisible = true
+      }
+    },
+    async handleChangePassword() {
+      try {
+        await this.$refs.passwordFormRef.validate()
+        this.changePasswordLoading = true
+        
+        const res = await axios.post('/api/user/change-password', {
+          old_password: this.passwordForm.oldPassword,
+          new_password: this.passwordForm.newPassword
+        })
+        
+        if (res.data && res.data.success) {
+          this.$message.success('密码修改成功')
+          this.passwordDialogVisible = false
+          this.resetPasswordForm()
+        } else {
+          this.$message.error(res.data.message || '密码修改失败')
+        }
+      } catch (e) {
+        if (e.response && e.response.data && e.response.data.error) {
+          this.$message.error(e.response.data.error)
+        } else {
+          this.$message.error('密码修改失败')
+        }
+      } finally {
+        this.changePasswordLoading = false
+      }
+    },
+    resetPasswordForm() {
+      this.passwordForm = {
+        oldPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      }
+      this.$refs.passwordFormRef.resetFields()
     }
   },
   mounted() {
@@ -117,15 +220,17 @@ export default {
   align-items: center;
   gap: 8px;
 }
-.account {
+.account-dropdown {
   font-size: 14px;
   color: #409eff;
   font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
-.logout-btn {
-  height: 28px;
-  padding: 0 12px;
-  font-size: 13px;
+.account-dropdown:hover {
+  color: #66b1ff;
 }
 .main-content-vertical {
   flex: 1;
@@ -166,4 +271,9 @@ export default {
   text-decoration: underline;
 }
 
-</style> 
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+</style>
