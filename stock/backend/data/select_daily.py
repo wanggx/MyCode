@@ -111,7 +111,13 @@ def selectVolMagnify(date_str, n):
     stock_daily_df = getStockData(None, start_str, date_str)
 
     close_polyline_df = stock_daily_df[['ts_code', 'trade_date', 'high', 'open', 'close', 'low', 'vol']].groupby(['ts_code']).tail(60)
-    stock_polyline_df = close_polyline_df.groupby(['ts_code']).apply(polylineslope, include_groups=False).reset_index()
+    stock_polyline_df = (close_polyline_df.groupby(['ts_code'])
+                         .filter(lambda x: x['trade_date'].max() == date_str)
+                         .groupby(['ts_code'])
+                         .apply(polylineslope, include_groups=False).reset_index())
+    if stock_polyline_df is None or len(stock_polyline_df) == 0:
+        sendMsg(f"{date_str}没有选中任何股票")
+        return None
     print(stock_polyline_df.head(2))
     select_df = stock_polyline_df[(stock_polyline_df['vol_magnify'] > 0)
                                 #   & (stock_polyline_df['out_date'] == False)
