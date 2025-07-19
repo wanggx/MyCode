@@ -6,6 +6,7 @@
         <span class="logo-title">平台</span>
       </div>
       <div class="header-right">
+        <a href="http://tushare.pro/" target="_blank" class="tushare-link">Tushare官网</a>
         <span class="account">{{ user ? user.username : '' }}</span>
         <el-button class="logout-btn" type="danger" size="small" @click="handleLogout">退出</el-button>
       </div>
@@ -22,6 +23,7 @@
             <DataTable v-if="activeMenu === 'table'" :key="'table'" />
             <StockSelect v-else-if="activeMenu === 'stockselect'" :key="'stockselect'" />
             <DataCheck v-else-if="activeMenu === 'datacheck'" :key="'datacheck'" />
+            <SystemSettings v-else-if="activeMenu === 'settings'" :key="'settings'" />
           </transition>
         </div>
       </div>
@@ -34,20 +36,23 @@ import { mapGetters, mapActions } from 'vuex'
 import DataTable from './DataTable.vue'
 import StockSelect from './StockSelect.vue'
 import DataCheck from './DataCheck.vue'
+import SystemSettings from './SystemSettings.vue'
 
 export default {
   name: 'MainLayout',
   components: {
     DataTable,
     StockSelect,
-    DataCheck
+    DataCheck,
+    SystemSettings
   },
   data() {
     return {
       menus: [
         { key: 'table', title: '股票列表' },
         { key: 'stockselect', title: '选股列表' },
-        { key: 'datacheck', title: '数据补录' }
+        { key: 'datacheck', title: '数据补录' },
+        { key: 'settings', title: '系统设置' }
       ],
       activeMenu: 'table'
     }
@@ -150,4 +155,15 @@ export default {
 .fade-enter-from, .fade-leave-to {
   opacity: 0;
 }
+
+.tushare-link {
+  font-size: 14px;
+  color: #409eff;
+  text-decoration: none;
+  margin-right: 8px;
+}
+.tushare-link:hover {
+  text-decoration: underline;
+}
+
 </style> 
