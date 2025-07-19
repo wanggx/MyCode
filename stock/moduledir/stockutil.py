@@ -16,6 +16,11 @@ mysql_pass = '8Dm4PQU2pp6!C3y'
 mysql_url = 'rm-bp160jkc22y874i30to.mysql.rds.aliyuncs.com:3306'
 mysql_db = 'stock'
 
+def refreshStockList():
+    data = pro.stock_basic(exchange='', list_status='L')
+    engine = create_engine('mysql+pymysql://' + mysql_user + ':' + mysql_pass + '@' + mysql_url + '/' + mysql_db)
+    data.to_sql('stock', con=engine, if_exists='replace', index=False)
+
 def saveStockSelect(df):
     engine = create_engine('mysql+pymysql://' + mysql_user + ':' + mysql_pass + '@' + mysql_url + '/' + mysql_db)
     df.to_sql('stock_select', con=engine, if_exists='append', index=False)

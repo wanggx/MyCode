@@ -2,9 +2,14 @@
   <div class="stock-table-page">
     <el-card class="stock-table-card">
       <div class="search-bar">
-        <el-input v-model="searchForm.code" placeholder="股票代码" class="search-input" clearable />
-        <el-input v-model="searchForm.name" placeholder="名称" class="search-input" clearable />
-        <el-button type="primary" @click="handleSearch">查询</el-button>
+        <div class="search-left">
+          <el-input v-model="searchForm.code" placeholder="股票代码" class="search-input" clearable />
+          <el-input v-model="searchForm.name" placeholder="名称" class="search-input" clearable />
+          <el-button type="primary" @click="handleSearch">查询</el-button>
+        </div>
+        <div class="search-right">
+          <el-button type="success" @click="handleSync" :loading="syncLoading">同步Tushare列表</el-button>
+        </div>
       </div>
       <div class="table-wrapper">
         <el-table :data="tableData" stripe border v-loading="loading"
@@ -48,7 +53,8 @@ export default {
       total: 0,
       page: 1,
       pageSize: 10,
-      loading: false
+      loading: false,
+      syncLoading: false
     }
   },
   methods: {
@@ -91,6 +97,26 @@ export default {
         this.loading = false
       }
     },
+    async handleSync() {
+      this.syncLoading = true
+      try {
+        const res = await axios.post('/api/stocks/sync')
+
+        // 判断接口返回的 res.data 是否有 success 字段并为 true
+        if (res.data && res.data.success) {
+          this.$message.success('同步成功')
+          this.fetchData() // 可选：同步后刷新表格数据
+        } else {
+          const message = res.data.message || '同步失败'
+          this.$message.error(message)
+        }
+      } catch (e) {
+        console.error('同步失败:', e)
+        this.$message.error('同步失败')
+      } finally {
+        this.syncLoading = false
+      }
+    },
     handleSearch() {
       this.page = 1
       this.fetchData()
@@ -118,6 +144,24 @@ export default {
   padding: 0;
   box-sizing: border-box;
 }
+.search-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 16px 0 16px;
+}
+.search-left {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.search-right {
+  display: flex;
+  align-items: center;
+}
+.search-input {
+  width: 180px;
+}
 .table-wrapper {
   text-align: left;
   margin-left: 0;
@@ -131,16 +175,6 @@ export default {
 }
 ::v-deep .el-card__body {
   padding: 0;
-}
-.search-bar {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  margin-bottom: 18px;
-  padding: 16px 16px 0 16px;
-}
-.search-input {
-  width: 180px;
 }
 .pagination-bar {
   margin-top: 18px;

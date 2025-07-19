@@ -198,4 +198,24 @@ def create_stock_routes(app):
                 'data': industries
             }), 200
         except Exception as e:
-            return jsonify({'error': f'获取行业列表失败: {str(e)}'}), 500 
+            return jsonify({'error': f'获取行业列表失败: {str(e)}'}), 500
+
+    def sync_stocks():
+        """
+        同步股票数据（mock 实现）
+        """
+        try:
+            from moduledir.stockutil import refreshStockList
+            refreshStockList()
+            # TODO: 这里可以添加实际的同步逻辑，例如调用 Tushare API 并更新数据库
+            return {"success": True, "message": "同步成功"}, 200
+        except Exception as e:
+            return {"success": False, "message": f"同步失败: {str(e)}"}, 500
+
+
+    @app.route('/api/stocks/sync', methods=['POST'])
+    @require_auth
+    def sync_stocks_route():
+        """同步股票数据接口"""
+        result, status_code = sync_stocks()
+        return jsonify(result), status_code
