@@ -191,6 +191,44 @@ def litterSun():
 
     sendGroupFile('litter.csv')
 
+def mockSelect(ts_code, date_str, n):
+    """
+    ts_code: 股票代码，仅处理该股票
+    date_str: 结束日期（字符串，格式如'20250710'）
+    n: 向前推的天数
+    返回：最终DataFrame
+    """
+    from datetime import datetime, timedelta
+    end_date = datetime.strptime(date_str, '%Y%m%d')
+    start_date = end_date - timedelta(days=n-1)
+    start_str = start_date.strftime('%Y%m%d')
+    stock_daily_df = getStockData(ts_code, start_str, date_str)
+    if stock_daily_df is None or len(stock_daily_df) == 0:
+        return None
+    close_polyline_df = stock_daily_df[['ts_code', 'trade_date', 'high', 'open', 'close', 'pre_close', 'low', 'vol']].groupby(['ts_code']).tail(60)
+    stock_polyline_df = (close_polyline_df.groupby(['ts_code'])
+                         .filter(lambda x: x['trade_date'].max() == date_str)
+                         .groupby(['ts_code'])
+                         .apply(polylineslope, include_groups=False).reset_index())
+    if stock_polyline_df is None or len(stock_polyline_df) == 0:
+        return None
+    select_df = stock_polyline_df[(stock_polyline_df['vol_magnify'] > 0)
+                                  & (stock_polyline_df['slope60'] > 0)
+                                  & (stock_polyline_df['slope30'] > 0)
+                                  & (stock_polyline_df['slope20'] > 0)]
+    select_df.insert(0, 'select_date', date_str)
+    select_df.rename(columns={'slope3': 'trend3',
+                              'slope5': 'trend5',
+                              'slope10': 'trend10',
+                              'slope20': 'trend20',
+                              'slope30': 'trend30',
+                              'vol_magnify': 'vol'}, inplace=True)
+    from moduledir.stockutil import getStockList
+    stock_df = getStockList()
+    join_df = pd.merge(select_df, stock_df[['ts_code', 'name']], on='ts_code', how='left')
+    final_df = join_df[['select_date', 'ts_code', 'name', 'vol', 'trend3', 'trend5', 'trend10', 'trend20', 'trend30']].round(3)
+    return final_df
+
 
 
 

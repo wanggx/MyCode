@@ -117,3 +117,23 @@ def create_stock_select_routes(app):
             }), 200
         except Exception as e:
             return jsonify({'error': f'获取选股列表失败: {str(e)}'}), 500 
+
+    @app.route('/api/stock/select/mock', methods=['POST'])
+    @require_auth
+    def stock_select_mock():
+        """Mock选股接口，返回指定ts_code的选股结果（DataFrame转json文本）"""
+        try:
+            import json
+            from backend.data.select_daily import mockSelect
+            ts_code = request.json.get('ts_code')
+            date_str = request.json.get('date_str')
+            n = int(request.json.get('n', 100))
+            if not ts_code or not date_str:
+                return jsonify({'error': '参数ts_code和date_str必填'}), 400
+            df = mockSelect(ts_code, date_str, n)
+            if df is None or len(df) == 0:
+                return jsonify({'result': '无数据'}), 200
+            result_json = df.to_json(orient='records', force_ascii=False)
+            return jsonify({'result': result_json}), 200
+        except Exception as e:
+            return jsonify({'error': f'Mock选股失败: {str(e)}'}), 500 
