@@ -49,7 +49,7 @@ def polylineslope(df):
             'slope60': lambda x: polyline(x, 60),
         })
 
-        slope_series['low_shadow'] = df.tail(1).agg(has_low_shadow)
+        slope_series['low_shadow'] = has_low_shadow(df.tail(1))
 
         vol_magnify = df['vol'].tail(20).agg(volmagnify)
         slope_series['vol_magnify'] = vol_magnify
@@ -84,7 +84,7 @@ def selectVolMagnify(date_str, n):
     start_str = start_date.strftime('%Y%m%d')
     stock_daily_df = getStockData(None, start_str, date_str)
 
-    close_polyline_df = stock_daily_df[['ts_code', 'trade_date', 'high', 'open', 'close', 'low', 'vol']].groupby(['ts_code']).tail(60)
+    close_polyline_df = stock_daily_df[['ts_code', 'trade_date', 'high', 'open', 'close', 'pre_close', 'low', 'vol']].groupby(['ts_code']).tail(60)
     stock_polyline_df = (close_polyline_df.groupby(['ts_code'])
                          .filter(lambda x: x['trade_date'].max() == date_str)
                          .groupby(['ts_code'])
