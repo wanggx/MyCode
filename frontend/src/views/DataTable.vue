@@ -15,7 +15,11 @@
         <el-table :data="tableData" stripe border v-loading="loading"
           style="margin-top: 0; min-width: 900px; max-width: 1200px; width: auto;"
           header-cell-class-name="left-align-header" cell-class-name="left-align-cell">
-          <el-table-column prop="ts_code" label="TS代码" width="120" align="left" header-align="left" />
+          <el-table-column prop="ts_code" label="TS代码" width="120" align="left" header-align="left">
+            <template #default="scope">
+              <el-link type="primary" @click="openStockDialog(scope.row.ts_code)">{{ scope.row.ts_code }}</el-link>
+            </template>
+          </el-table-column>
           <el-table-column prop="symbol" label="股票代码" width="120" align="left" header-align="left" />
           <el-table-column prop="name" label="股票名称" width="160" align="left" header-align="left" />
           <el-table-column prop="area" label="地域" width="120" align="left" header-align="left" />
@@ -35,6 +39,39 @@
         />
       </div>
     </el-card>
+    <el-dialog
+      v-model="stockDialogVisible"
+      width="900px"
+      :before-close="closeStockDialog"
+      title="近60天日线数据"
+      append-to-body>
+      <template #title>
+        <span>近60天日线数据 - {{ stockDialogTsCode }}</span>
+        <el-button style="float:right;" icon="el-icon-close" @click="closeStockDialog" circle plain></el-button>
+      </template>
+      <el-table :data="stockDialogData" stripe border v-loading="stockDialogLoading" style="margin-top: 0; min-width: 800px;">
+        <el-table-column prop="ts_code" label="TS代码" width="120" />
+        <el-table-column prop="trade_date" label="交易日期" width="120" />
+        <el-table-column prop="open" label="开盘价" width="100" />
+        <el-table-column prop="high" label="最高价" width="100" />
+        <el-table-column prop="low" label="最低价" width="100" />
+        <el-table-column prop="close" label="收盘价" width="100" />
+        <el-table-column prop="pre_close" label="昨收" width="100" />
+        <el-table-column prop="change" label="涨跌额" width="100" />
+        <el-table-column prop="pct_chg" label="涨跌幅%" width="100" />
+        <el-table-column prop="vol" label="成交量" width="120" />
+      </el-table>
+      <div class="pagination-bar">
+        <el-pagination
+          background
+          layout="prev, pager, next, jumper, ->, total"
+          :total="stockDialogTotal"
+          :page-size="stockDialogPageSize"
+          v-model:current-page="stockDialogPage"
+          @current-change="handleStockDialogPageChange"
+        />
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -54,7 +91,16 @@ export default {
       page: 1,
       pageSize: 10,
       loading: false,
-      syncLoading: false
+      syncLoading: false,
+      stockDialogVisible: false,
+      stockDialogTsCode: '',
+      stockDialogData: [],
+      stockDialogTotal: 0,
+      stockDialogPage: 1,
+      stockDialogPageSize: 10,
+      stockDialogLoading: false,
+      stockDialogStartDate: '',
+      stockDialogEndDate: '',
     }
   },
   methods: {
@@ -124,7 +170,54 @@ export default {
     handlePageChange(val) {
       this.page = val
       this.fetchData()
-    }
+    },
+    openStockDialog(ts_code) {
+      // 近60天，endDate为今天，startDate为60天前
+      const today = new Date();
+      const endDate = today.toISOString().slice(0, 10).replace(/-/g, '');
+      const start = new Date(today.getTime() - 59 * 24 * 60 * 60 * 1000);
+      const startDate = start.toISOString().slice(0, 10).replace(/-/g, '');
+      this.stockDialogTsCode = ts_code;
+      this.stockDialogStartDate = startDate;
+      this.stockDialogEndDate = endDate;
+      this.stockDialogPage = 1;
+      this.stockDialogVisible = true;
+      this.fetchStockDialogData();
+    },
+    async fetchStockDialogData() {
+      this.stockDialogLoading = true;
+      try {
+        const res = await axios.get('/api/stock/data', {
+          params: {
+            ts_code: this.stockDialogTsCode,
+            startDate: this.stockDialogStartDate,
+            endDate: this.stockDialogEndDate,
+            page: this.stockDialogPage,
+            page_size: this.stockDialogPageSize
+          }
+        });
+        if (res.data && res.data.data) {
+          this.stockDialogData = res.data.data.items;
+          this.stockDialogTotal = res.data.data.total;
+        } else {
+          this.stockDialogData = [];
+          this.stockDialogTotal = 0;
+        }
+      } catch (e) {
+        this.$message.error('获取日线数据失败');
+        this.stockDialogData = [];
+        this.stockDialogTotal = 0;
+      } finally {
+        this.stockDialogLoading = false;
+      }
+    },
+    handleStockDialogPageChange(val) {
+      this.stockDialogPage = val;
+      this.fetchStockDialogData();
+    },
+    closeStockDialog() {
+      this.stockDialogVisible = false;
+    },
   },
   mounted() {
     this.fetchData()
