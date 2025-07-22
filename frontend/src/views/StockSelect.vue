@@ -137,7 +137,7 @@ onMounted(() => {
 
 <style scoped>
 .stock-select-view {
-  padding: 16px;
+  padding: 0px;
 }
 .filter-bar {
   display: flex;

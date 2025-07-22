@@ -236,6 +236,7 @@ export default {
   flex: 1;
   padding: 0;
   background: #f8f9fa;
+  height: 100%;
 }
 .menu-content-wrapper {
   display: flex;
@@ -245,13 +246,13 @@ export default {
 .main-menu-vertical {
   width: 180px;
   min-width: 120px;
-  background: #fff;
+  background: #fff !important;
   border-right: 1px solid #e4e7ed;
   height: 100%;
 }
 .main-view-content {
   flex: 1;
-  padding: 24px;
+  padding: 3px;
   min-width: 0;
 }
 .fade-enter-active, .fade-leave-active {

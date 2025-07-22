@@ -1,11 +1,7 @@
 <template>
   <div class="system-settings-page">
     <el-card class="settings-card">
-      <template #header>
-        <div class="card-header">
-          <span>系统设置</span>
-        </div>
-      </template>
+
       <el-tabs v-model="activeTab">
         <el-tab-pane label="关于系统" name="about">
           <el-form :model="settingsForm" label-width="120px" class="settings-form">
@@ -54,6 +50,9 @@
             </el-form-item>
           </el-form>
         </el-tab-pane>
+        <el-tab-pane label="规则配置" name="rule">
+          <RuleSetting />
+        </el-tab-pane>
       </el-tabs>
     </el-card>
   </div>
@@ -61,6 +60,7 @@
 
 <script>
 import axios from '@/config/axios'
+import RuleSetting from './RuleSetting.vue'
 
 function getTodayStr() {
   const d = new Date();
@@ -72,6 +72,7 @@ function getTodayStr() {
 
 export default {
   name: 'SystemSettings',
+  components: { RuleSetting },
   data() {
     const todayStr = getTodayStr();
     console.log('data初始化 mockDateStr:', todayStr);
@@ -160,13 +161,14 @@ export default {
 
 <style scoped>
 .system-settings-page {
-  padding: 24px;
+  padding: 0px;
   background: #f5f5f5;
   min-height: 100vh;
 }
 .settings-card {
-  max-width: 800px;
-  margin: 0 auto;
+  width: 100%;
+  margin: 0;
+  box-sizing: border-box;
 }
 .card-header {
   display: flex;
@@ -187,6 +189,6 @@ export default {
 }
 .mock-form {
   margin-top: 20px;
-  max-width: 600px;
+  width: 100%;
 }
 </style> 

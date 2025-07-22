@@ -227,7 +227,7 @@ export default {
 
 <style scoped>
 .stock-table-page {
-  padding: 24px;
+  padding: 0px;
   background: #f5f5f5;
   min-height: 100vh;
 }
