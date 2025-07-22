@@ -10,43 +10,8 @@ from moduledir.stockutil import getStockData, getStockList, saveStockSelect
 
 logger = logging.getLogger('myapp')
 
-def polyline3(df):
-    dailys = df.tail(3)
-    x = np.arange(len(dailys))
-    y = dailys.values
-    slope, _ = np.polyfit(x, y, 1)
-    return slope
-
-def polyline5(df):
-    dailys = df.tail(5)
-    x = np.arange(len(dailys))
-    y = dailys.values
-    slope, _ = np.polyfit(x, y, 1)
-    return slope
-
-def polyline10(df):
-    dailys = df.tail(10)
-    x = np.arange(len(dailys))
-    y = dailys.values
-    slope, _ = np.polyfit(x, y, 1)
-    return slope
-
-def polyline20(df):
-    dailys = df.tail(20)
-    x = np.arange(len(dailys))
-    y = dailys.values
-    slope, _ = np.polyfit(x, y, 1)
-    return slope
-
-def polyline30(df):
-    dailys = df.tail(30)
-    x = np.arange(len(dailys))
-    y = dailys.values
-    slope, _ = np.polyfit(x, y, 1)
-    return slope
-
-def polyline60(df):
-    dailys = df.tail(60)
+def polyline(df, n):
+    dailys = df.tail(n)
     x = np.arange(len(dailys))
     y = dailys.values
     slope, _ = np.polyfit(x, y, 1)
@@ -63,6 +28,12 @@ def volmagnify(df):
         return latest / mean
     return 0
 
+def has_low_shadow(df):
+    df['drop_pct'] = (df['low'] - df['pre_close']) / df['pre_close'] * 100
+    # 筛选符合条件的行：翻红且最低价跌幅 >= 5%
+    df['low_shadow'] = (df['close'] > df['open']) & (df['drop_pct'] <= -5.0)
+    return df['low_shadow'].values[0]
+
 def polylineslope(df):
     if df is None or len(df) == 0:
         print('polylineslope: 输入df为空')
@@ -70,13 +41,16 @@ def polylineslope(df):
     try:
         df.sort_values(by=['trade_date'], inplace=True, ascending=True)
         slope_series = df['close'].agg({
-            'slope3': polyline3,
-            'slope5': polyline5,
-            'slope10': polyline10,
-            'slope20': polyline20,
-            'slope30': polyline30,
-            'slope60': polyline60,
+            'slope3': lambda x: polyline(x, 3),
+            'slope5': lambda x: polyline(x, 5),
+            'slope10': lambda x: polyline(x, 10),
+            'slope20': lambda x: polyline(x, 20),
+            'slope30': lambda x: polyline(x, 30),
+            'slope60': lambda x: polyline(x, 60),
         })
+
+        slope_series['low_shadow'] = df.tail(1).agg(has_low_shadow)
+
         vol_magnify = df['vol'].tail(20).agg(volmagnify)
         slope_series['vol_magnify'] = vol_magnify
 
@@ -146,6 +120,43 @@ def selectVolMagnify(date_str, n):
     # 发送结束选股消息
     elapsed = int(time.time() - start_time)
     sendMsg(f"结束{date_str}的选股，耗时{elapsed}s")
+
+def selectLowTrendLowShadow(date_str, n):
+    """
+    date_str: 结束日期（字符串，格式如'20250710'）
+    n: 向前推的天数
+    """
+    import time
+    start_time = time.time()
+    # 发送开始选股消息
+    sendMsg(f"开始下影线{date_str}的选股")
+    # 计算startDate
+    end_date = datetime.strptime(date_str, '%Y%m%d')
+    start_date = end_date - timedelta(days=n-1)
+    start_str = start_date.strftime('%Y%m%d')
+    stock_daily_df = getStockData(None, start_str, date_str)
+
+    close_polyline_df = stock_daily_df[['ts_code', 'trade_date', 'high', 'open', 'pre_close', 'close', 'low', 'vol']].groupby(['ts_code']).tail(60)
+    stock_polyline_df = (close_polyline_df.groupby(['ts_code'])
+                         .filter(lambda x: x['trade_date'].max() == date_str)
+                         .groupby(['ts_code'])
+                         .apply(polylineslope, include_groups=False).reset_index())
+    if stock_polyline_df is None or len(stock_polyline_df) == 0:
+        sendMsg(f"{date_str}没有选中任何股票")
+        return None
+    print(stock_polyline_df.head(2))
+    select_df = stock_polyline_df[(stock_polyline_df['sun'])
+                                  & (stock_polyline_df['low_shadow'])
+                                  & (stock_polyline_df['slope60'] < 0)
+                                  & (stock_polyline_df['slope30'] < 0)
+                                  & (stock_polyline_df['slope20'] < 0)]
+
+    select_df.to_csv('lowshadow.csv', index=True)
+    sendGroupFile('lowshadow.csv')
+    # 发送结束选股消息
+    elapsed = int(time.time() - start_time)
+    sendMsg(f"结束下影线{date_str}的选股，耗时{elapsed}s")
+
 
 def selectTrend():
     stock_daily_df = getStockData(None, '20250501', '20250710')

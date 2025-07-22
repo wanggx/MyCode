@@ -7,9 +7,8 @@
 from flask import request, jsonify
 from backend.user import require_auth
 from backend.dbutil import get_db_connection
-import threading
-from backend.data.select_daily import selectVolMagnify
 import datetime
+
 
 def get_stock_select_from_db(page=1, page_size=10, select_date=None):
     """从数据库获取选股列表"""
@@ -97,13 +96,18 @@ def create_stock_select_routes(app):
             if result and result.get('total', 0) == 0 and select_date:
                 import threading
                 from backend.data.select_daily import selectVolMagnify
+                from backend.data.select_daily import selectLowTrendLowShadow
                 # 格式化select_date为yyyyMMdd
                 try:
                     date_obj = datetime.datetime.strptime(select_date, '%Y-%m-%d')
                     select_date_str = date_obj.strftime('%Y%m%d')
                 except Exception:
                     select_date_str = select_date  # 如果已是yyyyMMdd则直接用
-                threading.Thread(target=selectVolMagnify, args=(select_date_str, 100), daemon=True).start()
+
+                def async_select(date_str, n):
+                    selectVolMagnify(date_str, n)
+                    selectLowTrendLowShadow(date_str, n)
+                threading.Thread(target=async_select, args=(select_date_str, 100), daemon=True).start()
                 return jsonify({'error': '当前没有查到数据，正在选股中，请稍后查询', 'total': 0}), 200
             if error:
                 return jsonify({'error': error}), 500
