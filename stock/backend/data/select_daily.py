@@ -212,21 +212,12 @@ def mockSelect(ts_code, date_str, n):
                          .apply(polylineslope, include_groups=False).reset_index())
     if stock_polyline_df is None or len(stock_polyline_df) == 0:
         return None
-    select_df = stock_polyline_df[(stock_polyline_df['vol_magnify'] > 0)
-                                  & (stock_polyline_df['slope60'] > 0)
-                                  & (stock_polyline_df['slope30'] > 0)
-                                  & (stock_polyline_df['slope20'] > 0)]
+    select_df = stock_polyline_df
     select_df.insert(0, 'select_date', date_str)
-    select_df.rename(columns={'slope3': 'trend3',
-                              'slope5': 'trend5',
-                              'slope10': 'trend10',
-                              'slope20': 'trend20',
-                              'slope30': 'trend30',
-                              'vol_magnify': 'vol'}, inplace=True)
     from moduledir.stockutil import getStockList
     stock_df = getStockList()
     join_df = pd.merge(select_df, stock_df[['ts_code', 'name']], on='ts_code', how='left')
-    final_df = join_df[['select_date', 'ts_code', 'name', 'vol', 'trend3', 'trend5', 'trend10', 'trend20', 'trend30']].round(3)
+    final_df = join_df.round(3)
     return final_df
 
 

@@ -42,7 +42,6 @@
               <el-date-picker
                 v-model="mockDateStr"
                 type="date"
-                value-format="yyyy-MM-dd"
                 placeholder="选择日期"
                 style="width: 200px;"
               />
@@ -63,18 +62,18 @@
 <script>
 import axios from '@/config/axios'
 
-function getTodayYMD() {
-  const today = new Date();
-  const yyyy = today.getFullYear();
-  const mm = String(today.getMonth() + 1).padStart(2, '0');
-  const dd = String(today.getDate()).padStart(2, '0');
-  return `${yyyy}${mm}${dd}`;
+function getTodayStr() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = (d.getMonth() + 1).toString().padStart(2, '0');
+  const day = d.getDate().toString().padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 export default {
   name: 'SystemSettings',
   data() {
-    const todayStr = getTodayYMD();
+    const todayStr = getTodayStr();
     console.log('data初始化 mockDateStr:', todayStr);
     return {
       activeTab: 'about',
@@ -91,6 +90,42 @@ export default {
     }
   },
   methods: {
+    getTodayStr,
+    formatDate(date) {
+      if (!date) return '';
+      if (typeof date === 'string' && date.length === 8) return date;
+      const d = new Date(date);
+      const y = d.getFullYear();
+      const m = (d.getMonth() + 1).toString().padStart(2, '0');
+      const day = d.getDate().toString().padStart(2, '0');
+      return `${y}${m}${day}`;
+    },
+    async handleMockRequest() {
+      if (!this.mockTsCode || !this.mockDateStr) {
+        this.$message.warning('请填写股票代码和日期')
+        return
+      }
+      this.mockLoading = true
+      this.mockResult = ''
+      try {
+        console.log('mockDateStr:', this.mockDateStr)
+        const res = await axios.post(this.mockApiUrl, {
+          ts_code: this.mockTsCode,
+          date_str: this.formatDate(this.mockDateStr)
+        })
+        if (res.data && res.data.result) {
+          this.mockResult = res.data.result
+        } else if (res.data && res.data.error) {
+          this.mockResult = res.data.error
+        } else {
+          this.mockResult = JSON.stringify(res.data)
+        }
+      } catch (e) {
+        this.mockResult = '请求失败: ' + e
+      } finally {
+        this.mockLoading = false
+      }
+    },
     async handleSyncData() {
       this.syncLoading = true
       try {
@@ -106,32 +141,6 @@ export default {
         this.$message.error('同步失败')
       } finally {
         this.syncLoading = false
-      }
-    },
-    async handleMockRequest() {
-      if (!this.mockTsCode || !this.mockDateStr) {
-        this.$message.warning('请填写股票代码和日期')
-        return
-      }
-      this.mockLoading = true
-      this.mockResult = ''
-      try {
-        console.log('mockDateStr:', this.mockDateStr)
-        const res = await axios.post(this.mockApiUrl, {
-          ts_code: this.mockTsCode,
-          date_str: this.mockDateStr
-        })
-        if (res.data && res.data.result) {
-          this.mockResult = res.data.result
-        } else if (res.data && res.data.error) {
-          this.mockResult = res.data.error
-        } else {
-          this.mockResult = JSON.stringify(res.data)
-        }
-      } catch (e) {
-        this.mockResult = '请求失败: ' + e
-      } finally {
-        this.mockLoading = false
       }
     }
   },
