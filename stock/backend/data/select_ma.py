@@ -46,7 +46,7 @@ def selectMa(date_str, n):
     end_date = datetime.strptime(date_str, '%Y%m%d')
     start_date = end_date - timedelta(days=n-1)
     start_str = start_date.strftime('%Y%m%d')
-    stock_daily_df = getStockData('001317.SZ', start_str, date_str)
+    stock_daily_df = getStockData(None, start_str, date_str)
 
     close_ma_df = stock_daily_df[['ts_code', 'trade_date', 'high', 'open', 'close', 'low']].groupby(['ts_code']).tail(60)
     stock_ma_df = (close_ma_df.groupby(['ts_code'])
