@@ -3,12 +3,15 @@
 """
 选股列表查询接口
 """
-
+import threading
 from flask import request, jsonify
 from backend.user import require_auth
 from backend.dbutil import get_db_connection
 import datetime
 
+# 添加一个全局变量来跟踪正在执行的选股任务
+_running_select_tasks = set()
+_running_tasks_lock = threading.Lock()
 
 def get_stock_select_from_db(page=1, page_size=10, select_date=None):
     """从数据库获取选股列表"""
@@ -82,7 +85,7 @@ def create_stock_select_routes(app):
     @app.route('/api/stock_select', methods=['GET'])
     @require_auth
     def get_stock_select():
-        """获取选股列表 - 支持分页和日期筛选"""
+                """获取选股列表 - 支持分页和日期筛选"""
         try:
             page = int(request.args.get('page', 1))
             page_size = int(request.args.get('page_size', 10))
@@ -94,7 +97,6 @@ def create_stock_select_routes(app):
             result, error = get_stock_select_from_db(page, page_size, select_date)
             # 新增逻辑：如果查到数据为0，且有select_date，异步触发选股
             if result and result.get('total', 0) == 0 and select_date:
-                import threading
                 from backend.data.select_daily import selectVolMagnify
                 from backend.data.select_daily import selectLowTrendLowShadow
                 from backend.data.select_ma import selectMa
@@ -105,10 +107,23 @@ def create_stock_select_routes(app):
                 except Exception:
                     select_date_str = select_date  # 如果已是yyyyMMdd则直接用
 
+                # 唯一性判断，防止重复执行
+                task_key = select_date_str
+                with _running_tasks_lock:
+                    if task_key in _running_select_tasks:
+                        return jsonify({'error': '选股任务已在执行中，请稍后查询', 'total': 0}), 200
+                    _running_select_tasks.add(task_key)
+
                 def async_select(date_str, n):
-                    selectVolMagnify(date_str, n)
-                    selectLowTrendLowShadow(date_str, n)
-                    selectMa(date_str, n)
+                    try:
+                        selectVolMagnify(date_str, n)
+                        selectLowTrendLowShadow(date_str, n)
+                        selectMa(date_str, n)
+                    finally:
+                        # 任务完成后从运行集合中移除
+                        with _running_tasks_lock:
+                            _running_select_tasks.discard(task_key)
+
                 threading.Thread(target=async_select, args=(select_date_str, 100), daemon=True).start()
                 return jsonify({'error': '当前没有查到数据，正在选股中，请稍后查询', 'total': 0}), 200
             if error:
