@@ -85,7 +85,7 @@ def create_stock_select_routes(app):
     @app.route('/api/stock_select', methods=['GET'])
     @require_auth
     def get_stock_select():
-                """获取选股列表 - 支持分页和日期筛选"""
+        """获取选股列表 - 支持分页和日期筛选"""
         try:
             page = int(request.args.get('page', 1))
             page_size = int(request.args.get('page_size', 10))
