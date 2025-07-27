@@ -97,6 +97,7 @@ def create_stock_select_routes(app):
                 import threading
                 from backend.data.select_daily import selectVolMagnify
                 from backend.data.select_daily import selectLowTrendLowShadow
+                from backend.data.select_ma import selectMa
                 # 格式化select_date为yyyyMMdd
                 try:
                     date_obj = datetime.datetime.strptime(select_date, '%Y-%m-%d')
@@ -107,6 +108,7 @@ def create_stock_select_routes(app):
                 def async_select(date_str, n):
                     selectVolMagnify(date_str, n)
                     selectLowTrendLowShadow(date_str, n)
+                    selectMa(date_str, n)
                 threading.Thread(target=async_select, args=(select_date_str, 100), daemon=True).start()
                 return jsonify({'error': '当前没有查到数据，正在选股中，请稍后查询', 'total': 0}), 200
             if error:

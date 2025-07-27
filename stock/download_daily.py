@@ -3,6 +3,7 @@ from datetime import datetime
 from moduledir.stockutil import *
 from backend.data.select_daily import selectVolMagnify
 from backend.data.select_daily import selectLowTrendLowShadow
+from backend.data.select_ma import selectMa
 
 logger = logging.getLogger('myapp')
 
@@ -18,3 +19,4 @@ def download_daily():
 
     selectVolMagnify(current_date, 100)
     selectLowTrendLowShadow(current_date, 100)
+    selectMa(current_date, 100)
