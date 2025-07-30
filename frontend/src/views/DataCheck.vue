@@ -8,6 +8,11 @@
           <el-button type="primary" @click="handleSearch" style="margin-left: 8px;">查询</el-button>
         </div>
         <div class="toolbar-right">
+          <el-radio-group v-model="addType" style="margin-right: 8px;">
+            <el-radio label="d">日</el-radio>
+            <el-radio label="w">周</el-radio>
+            <el-radio label="m">月</el-radio>
+          </el-radio-group>
           <el-date-picker v-model="addStartDate" type="date" placeholder="补录开始日期（必选）" style="width: 140px;" />
           <el-date-picker v-model="addEndDate" type="date" placeholder="补录结束日期（必选）" style="width: 140px; margin-left: 8px;" />
           <el-button type="success" :disabled="!addStartDate || !addEndDate" @click="handleAdd" style="margin-left: 8px;">补录</el-button>
@@ -62,6 +67,7 @@ export default {
         startDate: get30DaysAgoStr(),
         endDate: getTodayStr()
       },
+      addType: 'd', // 默认选择日数据
       addStartDate: '',
       addEndDate: '',
       tableData: [],
@@ -90,7 +96,7 @@ export default {
           page: this.page,
           page_size: this.pageSize
         }
-        const res = await axios.get('/api/stock/check', { params })
+        const res = await axios.get('/api/stock/check', {params})
         if (res.data && res.data.code === 0 && res.data.data && res.data.data.list) {
           this.tableData = res.data.data.list
           this.total = res.data.data.total
@@ -122,8 +128,9 @@ export default {
       }
       const start_date = this.formatDate(this.addStartDate)
       const end_date = this.formatDate(this.addEndDate)
+      const type = this.addType // 获取选中的类型
       try {
-        const res = await axios.post('/api/stock/daily/add', { start_date, end_date })
+        const res = await axios.post('/api/stock/daily/add', {start_date, end_date, type})
         if (res.data && res.data.success) {
           this.$message.success(res.data && res.data.message ? res.data.message : '补录成功')
         } else {
@@ -147,25 +154,30 @@ export default {
   align-items: center;
   margin-bottom: 18px;
 }
+
 .toolbar-left {
   display: flex;
   align-items: center;
   gap: 8px;
 }
+
 .toolbar-right {
   display: flex;
   align-items: center;
   gap: 8px;
 }
+
 .left-align-header {
   text-align: left !important;
 }
+
 .left-align-cell {
   text-align: left !important;
 }
+
 .table-wrapper {
   text-align: left;
   margin-left: 0;
   /* 控制表格宽度和左对齐 */
 }
-</style> 
+</style>

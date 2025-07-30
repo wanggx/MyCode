@@ -109,6 +109,7 @@ def saveWeekData(week_df):
     sql = text("delete w from stock_week w join stock_week_temp t on w.ts_code = t.ts_code and w.trade_date = t.trade_date")
     with engine.connect() as conn:
         conn.execute(sql)
+        conn.commit()
     week_df.to_sql('stock_week', con=engine, if_exists='append', index=False)
 
 def saveMonthData(month_df):
@@ -118,5 +119,6 @@ def saveMonthData(month_df):
         "delete m from stock_month m join stock_month_temp t on m.ts_code = t.ts_code and m.trade_date = t.trade_date")
     with engine.connect() as conn:
         conn.execute(sql)
+        conn.commit()
     month_df.to_sql('stock_month', con=engine, if_exists='append', index=False)
 

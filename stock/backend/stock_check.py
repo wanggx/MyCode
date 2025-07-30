@@ -56,6 +56,7 @@ def stock_daily_add():
     data = request.get_json()
     start_date = data.get('start_date')
     end_date = data.get('end_date')
+    data_type = data.get('type', 'd')  # 默认为日数据
     date_pattern = re.compile(r'^\d{8}$')
     if not start_date or not end_date:
         return jsonify({'success': False, 'message': 'start_date和end_date必填'})
@@ -66,15 +67,22 @@ def stock_daily_add():
         end_dt = datetime.strptime(end_date, '%Y%m%d')
         if start_dt > end_dt:
             return jsonify({'success': False, 'message': '开始日期不能大于结束日期'})
-        if (end_dt - start_dt).days > 30:
+        if ((end_dt - start_dt).days > 30) & (data_type == 'd'):
             return jsonify({'success': False, 'message': '补录区间不能超过一个月'})
-    except Exception:
+    except Exception as e:
         return jsonify({'success': False, 'message': '日期格式错误'})
 
     # 异步调用下载数据
     def async_download():
-        from backend.data.daily import download_daily_data
-        download_daily_data(start_date, end_date)
+        if data_type == 'd':
+            from backend.data.daily import download_daily_data
+            download_daily_data(start_date, end_date)
+        elif data_type == 'w':
+            from backend.data.wm import iterate_weeks
+            iterate_weeks(start_date, end_date)
+        elif data_type == 'm':
+            from backend.data.wm import iterate_months
+            iterate_months(start_date, end_date)
     threading.Thread(target=async_download, daemon=True).start()
 
     return jsonify({'success': True, 'message': '补录任务已提交，正在后台处理'})
