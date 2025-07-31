@@ -46,21 +46,53 @@
       title="近60天日线数据"
       append-to-body>
       <template #title>
-        <span>近60天日线数据 - {{ stockDialogTsCode }}</span>
+        <span>股票数据 - {{ stockDialogTsCode }}</span>
         <el-button style="float:right;" icon="el-icon-close" @click="closeStockDialog" circle plain></el-button>
       </template>
-      <el-table :data="stockDialogData" stripe border v-loading="stockDialogLoading" style="margin-top: 0; min-width: 800px;">
-        <el-table-column prop="ts_code" label="TS代码" width="120" />
-        <el-table-column prop="trade_date" label="交易日期" width="120" />
-        <el-table-column prop="open" label="开盘价" width="100" />
-        <el-table-column prop="high" label="最高价" width="100" />
-        <el-table-column prop="low" label="最低价" width="100" />
-        <el-table-column prop="close" label="收盘价" width="100" />
-        <el-table-column prop="pre_close" label="昨收" width="100" />
-        <el-table-column prop="change" label="涨跌额" width="100" />
-        <el-table-column prop="pct_chg" label="涨跌幅%" width="100" />
-        <el-table-column prop="vol" label="成交量" width="120" />
-      </el-table>
+      <el-tabs v-model="stockDialogActiveTab" @tab-click="handleTabClick">
+        <el-tab-pane label="日线" name="daily">
+          <el-table :data="stockDialogData" stripe border v-loading="stockDialogLoading" style="margin-top: 0; min-width: 800px;">
+            <el-table-column prop="ts_code" label="TS代码" width="120" />
+            <el-table-column prop="trade_date" label="交易日期" width="120" />
+            <el-table-column prop="open" label="开盘价" width="100" />
+            <el-table-column prop="high" label="最高价" width="100" />
+            <el-table-column prop="low" label="最低价" width="100" />
+            <el-table-column prop="close" label="收盘价" width="100" />
+            <el-table-column prop="pre_close" label="昨收" width="100" />
+            <el-table-column prop="change" label="涨跌额" width="100" />
+            <el-table-column prop="pct_chg" label="涨跌幅%" width="100" />
+            <el-table-column prop="vol" label="成交量" width="120" />
+          </el-table>
+        </el-tab-pane>
+        <el-tab-pane label="周线" name="weekly">
+          <el-table :data="stockDialogData" stripe border v-loading="stockDialogLoading" style="margin-top: 0; min-width: 800px;">
+            <el-table-column prop="ts_code" label="TS代码" width="120" />
+            <el-table-column prop="trade_date" label="交易日期" width="120" />
+            <el-table-column prop="open" label="开盘价" width="100" />
+            <el-table-column prop="high" label="最高价" width="100" />
+            <el-table-column prop="low" label="最低价" width="100" />
+            <el-table-column prop="close" label="收盘价" width="100" />
+            <el-table-column prop="pre_close" label="昨收" width="100" />
+            <el-table-column prop="change" label="涨跌额" width="100" />
+            <el-table-column prop="pct_chg" label="涨跌幅%" width="100" />
+            <el-table-column prop="vol" label="成交量" width="120" />
+          </el-table>
+        </el-tab-pane>
+        <el-tab-pane label="月线" name="monthly">
+          <el-table :data="stockDialogData" stripe border v-loading="stockDialogLoading" style="margin-top: 0; min-width: 800px;">
+            <el-table-column prop="ts_code" label="TS代码" width="120" />
+            <el-table-column prop="trade_date" label="交易日期" width="120" />
+            <el-table-column prop="open" label="开盘价" width="100" />
+            <el-table-column prop="high" label="最高价" width="100" />
+            <el-table-column prop="low" label="最低价" width="100" />
+            <el-table-column prop="close" label="收盘价" width="100" />
+            <el-table-column prop="pre_close" label="昨收" width="100" />
+            <el-table-column prop="change" label="涨跌额" width="100" />
+            <el-table-column prop="pct_chg" label="涨跌幅%" width="100" />
+            <el-table-column prop="vol" label="成交量" width="120" />
+          </el-table>
+        </el-tab-pane>
+      </el-tabs>
       <div class="pagination-bar">
         <el-pagination
           background
@@ -101,6 +133,9 @@ export default {
       stockDialogLoading: false,
       stockDialogStartDate: '',
       stockDialogEndDate: '',
+      stockDialogActiveTab: 'daily',
+      stockDialogType: 'd',
+      stockDialogDays: 60,
     }
   },
   methods: {
@@ -180,8 +215,50 @@ export default {
       this.stockDialogTsCode = ts_code;
       this.stockDialogStartDate = startDate;
       this.stockDialogEndDate = endDate;
+      this.stockDialogActiveTab = 'daily';
+      this.stockDialogType = 'd';
+      this.stockDialogDays = 60;
       this.stockDialogPage = 1;
       this.stockDialogVisible = true;
+      this.fetchStockDialogData();
+    },
+    handleTabClick(tab) {
+      console.log('Tab点击事件参数:', tab);
+      const tabName = tab.name || tab.paneName;
+      console.log('解析后的tabName:', tabName);
+      if (tabName === 'daily') {
+        this.stockDialogType = 'd';
+        this.stockDialogDays = 60;
+        // 近60天
+        const today = new Date();
+        const endDate = today.toISOString().slice(0, 10).replace(/-/g, '');
+        const start = new Date(today.getTime() - 59 * 24 * 60 * 60 * 1000);
+        const startDate = start.toISOString().slice(0, 10).replace(/-/g, '');
+        this.stockDialogStartDate = startDate;
+        this.stockDialogEndDate = endDate;
+      } else if (tabName === 'weekly') {
+        this.stockDialogType = 'w';
+        this.stockDialogDays = 30;
+        // 近30周
+        const today = new Date();
+        const endDate = today.toISOString().slice(0, 10).replace(/-/g, '');
+        const start = new Date(today.getTime() - 29 * 7 * 24 * 60 * 60 * 1000);
+        const startDate = start.toISOString().slice(0, 10).replace(/-/g, '');
+        this.stockDialogStartDate = startDate;
+        this.stockDialogEndDate = endDate;
+      } else if (tabName === 'monthly') {
+        this.stockDialogType = 'm';
+        this.stockDialogDays = 12;
+        // 近12月
+        const today = new Date();
+        const endDate = today.toISOString().slice(0, 10).replace(/-/g, '');
+        const start = new Date(today.getTime() - 11 * 30 * 24 * 60 * 60 * 1000);
+        const startDate = start.toISOString().slice(0, 10).replace(/-/g, '');
+        this.stockDialogStartDate = startDate;
+        this.stockDialogEndDate = endDate;
+      }
+      console.log('Tab切换，type参数:', this.stockDialogType, 'tabName:', tabName);
+      this.stockDialogPage = 1;
       this.fetchStockDialogData();
     },
     async fetchStockDialogData() {
@@ -193,7 +270,8 @@ export default {
             startDate: this.stockDialogStartDate,
             endDate: this.stockDialogEndDate,
             page: this.stockDialogPage,
-            page_size: this.stockDialogPageSize
+            page_size: this.stockDialogPageSize,
+            type: this.stockDialogType
           }
         });
         if (res.data && res.data.data) {
@@ -204,7 +282,7 @@ export default {
           this.stockDialogTotal = 0;
         }
       } catch (e) {
-        this.$message.error('获取日线数据失败');
+        this.$message.error('获取数据失败');
         this.stockDialogData = [];
         this.stockDialogTotal = 0;
       } finally {

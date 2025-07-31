@@ -223,26 +223,34 @@ def create_stock_routes(app):
     @app.route('/api/stock/data', methods=['GET'])
     @require_auth
     def get_stock_daily_data():
-        """获取指定ts_code近60天的日线数据，支持分页"""
+        """获取指定ts_code的日线/周线/月线数据，支持分页"""
         try:
             ts_code = request.args.get('ts_code')
             start_date = request.args.get('startDate')
             end_date = request.args.get('endDate')
             page = int(request.args.get('page', 1))
             page_size = int(request.args.get('page_size', 10))
+            data_type = request.args.get('type', 'd')  # d: 日线, w: 周线, m: 月线
             if not ts_code or not start_date or not end_date:
                 return jsonify({'error': '参数缺失(ts_code, startDate, endDate)'}), 400
             if page < 1:
                 page = 1
             if page_size < 1 or page_size > 100:
                 page_size = 10
+            # 根据type确定查询表
+            table_map = {
+                'd': 'stock_daily',
+                'w': 'stock_week', 
+                'm': 'stock_month'
+            }
+            table_name = table_map.get(data_type, 'stock_daily')
             connection = get_db_connection()
             if not connection:
                 return jsonify({'error': '数据库连接失败'}), 500
             cursor = connection.cursor()
             # 获取总数
-            count_sql = """
-                SELECT COUNT(*) as total FROM stock_daily
+            count_sql = f"""
+                SELECT COUNT(*) as total FROM {table_name}
                 WHERE ts_code = %s AND trade_date BETWEEN %s AND %s
             """
             cursor.execute(count_sql, (ts_code, start_date, end_date))
@@ -250,9 +258,9 @@ def create_stock_routes(app):
             total = total_result['total'] if total_result else 0
             # 获取分页数据
             offset = (page - 1) * page_size
-            sql = """
+            sql = f"""
                 SELECT ts_code, trade_date, open, high, low, close, pre_close, `change`, pct_chg, vol
-                FROM stock_daily
+                FROM {table_name}
                 WHERE ts_code = %s AND trade_date BETWEEN %s AND %s
                 ORDER BY trade_date DESC
                 LIMIT %s OFFSET %s
@@ -272,4 +280,4 @@ def create_stock_routes(app):
                 }
             }), 200
         except Exception as e:
-            return jsonify({'error': f'获取日线数据失败: {str(e)}'}), 500
+            return jsonify({'error': f'获取数据失败: {str(e)}'}), 500
