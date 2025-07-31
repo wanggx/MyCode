@@ -109,6 +109,6 @@ def get_current_saturday_and_month_start(current_date):
 
     # 格式化为字符串并返回
     return (
-        saturday_date.strftime('%Y%m%d'),
+        (saturday_date + datetime.timedelta(days=-7)).strftime('%Y%m%d'),
         month_start_date.strftime('%Y%m%d')
     )

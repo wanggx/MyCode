@@ -20,11 +20,12 @@ def download_daily():
     mergeDailyData()
     logger.info(("end " + current_date_str))
 
-    selectVolMagnify(current_date, 100)
-    selectLowTrendLowShadow(current_date, 100)
-    selectMa(current_date, 100)
+    selectVolMagnify(current_date_str, 100)
+    selectLowTrendLowShadow(current_date_str, 100)
+    selectMa(current_date_str, 100)
 
     saturday, month_start = get_current_saturday_and_month_start(current_date)
 
-    iterate_weeks(saturday, current_date)
-    iterate_months(month_start, current_date)
+    iterate_weeks(saturday, current_date_str)
+    iterate_months(month_start, current_date_str)
+
