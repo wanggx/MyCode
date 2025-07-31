@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, timedelta
 import calendar
 
 def friday(date):
@@ -112,3 +112,32 @@ def get_current_saturday_and_month_start(current_date):
         (saturday_date + datetime.timedelta(days=-7)).strftime('%Y%m%d'),
         month_start_date.strftime('%Y%m%d')
     )
+
+def calculate_date(date_input, n):
+    """
+    计算给定日期前后n天的日期
+
+    Args:
+        date_input (str or datetime): 输入日期，可以是字符串格式'YYYYMMDD'或datetime对象
+        n (int): 天数偏移量，正数表示往后推n天，负数表示往前推n天
+
+    Returns:
+        datetime: 计算后的日期对象
+
+    Examples:
+        >>> calculate_date('20231001', 5)
+        datetime.datetime(2023, 10, 6, 0, 0)
+
+        >>> calculate_date(datetime(2023, 10, 1), -3)
+        datetime.datetime(2023, 9, 28, 0, 0)
+    """
+    # 如果输入是字符串，则转换为datetime对象
+    if isinstance(date_input, str):
+        date = datetime.strptime(date_input, '%Y%m%d')
+    else:
+        date = date_input
+
+    # 计算前后n天的日期
+    result_date = date + timedelta(days=n)
+
+    return result_date
