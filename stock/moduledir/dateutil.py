@@ -1,6 +1,5 @@
-from datetime import datetime, timedelta
+import datetime
 import calendar
-
 def friday(date):
     days_since_monday = (date.weekday()) % 7
     return date - datetime.timedelta(days=days_since_monday) + datetime.timedelta(4)
@@ -133,11 +132,11 @@ def calculate_date(date_input, n):
     """
     # 如果输入是字符串，则转换为datetime对象
     if isinstance(date_input, str):
-        date = datetime.strptime(date_input, '%Y%m%d')
+        date = datetime.datetime.strptime(date_input, '%Y%m%d')
     else:
         date = date_input
 
     # 计算前后n天的日期
-    result_date = date + timedelta(days=n)
+    result_date = date + datetime.timedelta(days=n)
 
     return result_date
