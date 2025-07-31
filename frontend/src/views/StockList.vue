@@ -111,7 +111,7 @@
 import axios from '@/config/axios'
 
 export default {
-  name: 'DataTable',
+  name: 'StockList',
   data() {
     return {
       searchForm: {

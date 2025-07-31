@@ -30,7 +30,7 @@
         </el-menu>
         <div class="main-view-content">
           <transition name="fade" mode="out-in">
-            <DataTable v-if="activeMenu === 'table'" :key="'table'" />
+            <StockList v-if="activeMenu === 'table'" :key="'table'" />
             <StockSelect v-else-if="activeMenu === 'stockselect'" :key="'stockselect'" />
             <DataCheck v-else-if="activeMenu === 'datacheck'" :key="'datacheck'" />
             <SystemSettings v-else-if="activeMenu === 'settings'" :key="'settings'" />
@@ -65,7 +65,7 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 import { ArrowDown } from '@element-plus/icons-vue'
-import DataTable from './DataTable.vue'
+import StockList from './StockList.vue'
 import StockSelect from './StockSelect.vue'
 import DataCheck from './DataCheck.vue'
 import SystemSettings from './SystemSettings.vue'
@@ -74,7 +74,7 @@ import axios from '@/config/axios'
 export default {
   name: 'MainLayout',
   components: {
-    DataTable,
+    StockList,
     StockSelect,
     DataCheck,
     SystemSettings,
