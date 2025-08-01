@@ -38,11 +38,14 @@ def aggline(week):
 def processWeekDf(stock_df):
     stock_df['week'] = stock_df['trade_date'].transform(fridayline)
     week_df = stock_df.groupby(['ts_code', 'week']).apply(aggline, include_groups=False)
-    week_df['pre_close'] = week_df['close'].shift(1)
+    # week_df['pre_close'] = week_df['close'].shift(1)
     # 过滤掉 pre_close 为 NaN 的行
-    week_df = week_df.dropna(subset=['pre_close'])
-    week_df['change'] = week_df['close'] - week_df['pre_close']
-    week_df['pct_chg'] = (week_df['close'] - week_df['pre_close']) / week_df['pre_close']
+    # week_df = week_df.dropna(subset=['pre_close'])
+    # week_df['change'] = week_df['close'] - week_df['pre_close']
+    # week_df['pct_chg'] = (week_df['close'] - week_df['pre_close']) / week_df['pre_close']
+    week_df['pre_close'] = 0
+    week_df['change'] = 0
+    week_df['pct_chg'] = 0
     week_df.reset_index(inplace=True)
     week_df.rename(columns={'week':'trade_date'},  inplace=True)
     week_df = week_df.reindex(columns=['ts_code', 'trade_date', 'close', 'open', 'high', 'low', 'pre_close', 'change' , 'pct_chg', 'vol', 'amount'])
@@ -51,11 +54,14 @@ def processWeekDf(stock_df):
 def processMonthDf(stock_df):
     stock_df['month'] = stock_df['trade_date'].transform(lastday)
     month_df = stock_df.groupby(['ts_code', 'month']).apply(aggline, include_groups=False)
-    month_df['pre_close'] = month_df['close'].shift(1)
+    # month_df['pre_close'] = month_df['close'].shift(1)
     # 过滤掉 pre_close 为 NaN 的行
-    month_df = month_df.dropna(subset=['pre_close'])
-    month_df['change'] = month_df['close'] - month_df['pre_close']
-    month_df['pct_chg'] = (month_df['close'] - month_df['pre_close']) / month_df['pre_close']
+    # month_df = month_df.dropna(subset=['pre_close'])
+    # month_df['change'] = month_df['close'] - month_df['pre_close']
+    # month_df['pct_chg'] = (month_df['close'] - month_df['pre_close']) / month_df['pre_close']
+    month_df['pre_close'] = 0
+    month_df['change'] = 0
+    month_df['pct_chg'] = 0
     month_df.reset_index(inplace=True)
     month_df.rename(columns={'month': 'trade_date'}, inplace=True)
     month_df = month_df.reindex(columns=['ts_code', 'trade_date', 'close', 'open', 'high', 'low', 'pre_close', 'change' , 'pct_chg', 'vol', 'amount'])
@@ -96,8 +102,8 @@ def iterate_weeks(start_date_str, end_date_str):
             actual_start = max(current_week_start, start_date)
             actual_end = min(current_week_end, end_date)
             logger.info(f"开始处理周数据，开始日期：{actual_start.strftime('%Y%m%d')}, 结束日期：{actual_end.strftime('%Y%m%d')}")
-            pre_start_date = calculate_date(actual_start, -1)
-            stock_pd = getStockData('000001.SZ', pre_start_date.strftime('%Y%m%d'), actual_end.strftime('%Y%m%d'))
+            pre_start_date = calculate_date(actual_start, 0)
+            stock_pd = getStockData(None, pre_start_date.strftime('%Y%m%d'), actual_end.strftime('%Y%m%d'))
             processWeekDf(stock_pd)
         # 移动到下一周的周六
         current_week_start += datetime.timedelta(days=7)
@@ -140,7 +146,7 @@ def iterate_months(start_date_str, end_date_str):
             actual_start = max(month_start, start_date)
             actual_end = min(month_end, end_date)
             logger.info(f"开始处理月数据，开始日期：{actual_start.strftime('%Y%m%d')}, 结束日期：{actual_end.strftime('%Y%m%d')}")
-            pre_start_date = calculate_date(actual_start, -1)
+            pre_start_date = calculate_date(actual_start, 0)
             stock_pd = getStockData(None, pre_start_date.strftime('%Y%m%d'), actual_end.strftime('%Y%m%d'))
             processMonthDf(stock_pd)
 
