@@ -1,5 +1,24 @@
 import datetime
 import calendar
+
+def adjust_date(input_date):
+    """
+    根据输入的日期，如果日期大于当前天，则返回当前天；
+    如果小于或等于当前天，则直接返回该日期。
+
+    参数:
+        input_date (datetime.date): 输入的日期
+
+    返回:
+        datetime.date: 调整后的日期
+    """
+    current_date = datetime.date.today()
+    if input_date > current_date:
+        return current_date
+    else:
+        return input_date
+
+
 def friday(date):
     days_since_monday = (date.weekday()) % 7
     return date - datetime.timedelta(days=days_since_monday) + datetime.timedelta(4)

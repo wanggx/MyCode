@@ -4,22 +4,19 @@ import pandas as pd
 import datetime
 from moduledir.stockutil import *
 from moduledir.dateutil import *
-from moduledir.dateutil import saturday
-
 from moduledir.stockutil import getStockData
 
-from moduledir.dateutil import calculate_date
 
 logger = logging.getLogger('myapp')
 
 def fridayline(datestr):
     date = pd.to_datetime(datestr).date()
-    return friday(date).strftime('%Y%m%d')
+    return adjust_date(friday(date)).strftime('%Y%m%d')
 
 
 def lastday(datestr):
     date = pd.to_datetime(datestr).date()
-    return last_day_of_monday(date).strftime('%Y%m%d')
+    return adjust_date(last_day_of_monday(date)).strftime('%Y%m%d')
 
 def aggline(week):
     week.sort_values(by=['trade_date'], inplace=True, ascending=True)
