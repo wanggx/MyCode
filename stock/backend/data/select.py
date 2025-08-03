@@ -14,7 +14,7 @@ def select(date_str):
     ma_df_daily = selectMaByDaily(date_str, 200)
     ma_df_week = selectMaByWeek(date_str, 360)
     ta_df_daily = selectMacdAndKdjByDaily(date_str, 200)
-    ta_df_week = selectMacdAndKdjByWeek(date_str, 360)
+    ta_df_week = selectMacdAndKdjByWeek(date_str, 1200)
 
     stock_df = getStockList()
     select_df = (pd.merge(ma_df_daily, ma_df_week, on='ts_code', how='left', suffixes=('_d', '_w'))
