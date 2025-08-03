@@ -11,11 +11,6 @@ def select(date_str):
         date_str: 结束日期（字符串，格式如'20250710'）
         n: 向前推的天数
         """
-    import time
-    start_time = time.time()
-    # 发送开始选股消息
-    sendMsg(f"开始{date_str}的选股")
-
     ma_df_daily = selectMaByDaily(date_str, 200)
     ma_df_week = selectMaByWeek(date_str, 360)
     ta_df_daily = selectMacdAndKdjByDaily(date_str, 200)
@@ -43,6 +38,3 @@ def select(date_str):
     file_name = date_str + '_select.csv'
     join_df.to_csv(file_name, index=True)
     sendGroupFile(file_name)
-    # 发送结束选股消息
-    elapsed = int(time.time() - start_time)
-    sendMsg(f"结束{date_str}的选股，耗时{elapsed}s")

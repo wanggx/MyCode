@@ -6,6 +6,7 @@ from backend.data.select_daily import selectLowTrendLowShadow
 from backend.data.select import select
 from moduledir.dateutil import get_current_saturday_and_month_start
 from backend.data.wm import iterate_weeks, iterate_months
+from moduledir.chatutil import sendMsg, sendGroupFile
 
 logger = logging.getLogger('myapp')
 
@@ -20,12 +21,20 @@ def download_daily():
     mergeDailyData()
     logger.info(("end " + current_date_str))
 
+    saturday, month_start = get_current_saturday_and_month_start(current_date)
+    iterate_weeks(saturday, current_date_str)
+    iterate_months(month_start, current_date_str)
+
+    import time
+    start_time = time.time()
+    # 发送开始选股消息
+    sendMsg(f"开始{current_date_str}的选股")
+
     selectVolMagnify(current_date_str, 100)
     selectLowTrendLowShadow(current_date_str, 100)
     select(current_date_str)
 
-    saturday, month_start = get_current_saturday_and_month_start(current_date)
-
-    iterate_weeks(saturday, current_date_str)
-    iterate_months(month_start, current_date_str)
+    # 发送结束选股消息
+    elapsed = int(time.time() - start_time)
+    sendMsg(f"结束{current_date_str}的选股，耗时{elapsed}s")
 

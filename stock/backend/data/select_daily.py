@@ -1,10 +1,8 @@
 import logging
-from datetime import datetime, timedelta
-from moduledir.chatutil import *
 import numpy as np
 import pandas as pd
-from sqlalchemy import false
-
+from datetime import datetime, timedelta
+from moduledir.chatutil import *
 from moduledir.dateutil import date_equal
 from moduledir.stockutil import getStockData, getStockList, saveStockSelect
 
@@ -74,10 +72,7 @@ def selectVolMagnify(date_str, n):
     date_str: 结束日期（字符串，格式如'20250710'）
     n: 向前推的天数
     """
-    import time
-    start_time = time.time()
-    # 发送开始选股消息
-    sendMsg(f"开始{date_str}的选股")
+
     # 计算startDate
     end_date = datetime.strptime(date_str, '%Y%m%d')
     start_date = end_date - timedelta(days=n-1)
@@ -90,7 +85,6 @@ def selectVolMagnify(date_str, n):
                          .groupby(['ts_code'])
                          .apply(polylineslope, include_groups=False).reset_index())
     if stock_polyline_df is None or len(stock_polyline_df) == 0:
-        sendMsg(f"{date_str}没有选中任何股票")
         return None
     print(stock_polyline_df.head(2))
     select_df = stock_polyline_df[(stock_polyline_df['vol_magnify'] > 0)
@@ -115,19 +109,14 @@ def selectVolMagnify(date_str, n):
     final_df.to_csv(filename, index=True)
     saveStockSelect(final_df)
     sendGroupFile(filename)
-    # 发送结束选股消息
-    elapsed = int(time.time() - start_time)
-    sendMsg(f"结束{date_str}的选股，耗时{elapsed}s")
+
+
 
 def selectLowTrendLowShadow(date_str, n):
     """
     date_str: 结束日期（字符串，格式如'20250710'）
     n: 向前推的天数
     """
-    import time
-    start_time = time.time()
-    # 发送开始选股消息
-    sendMsg(f"开始下影线{date_str}的选股")
     # 计算startDate
     end_date = datetime.strptime(date_str, '%Y%m%d')
     start_date = end_date - timedelta(days=n-1)
@@ -140,7 +129,6 @@ def selectLowTrendLowShadow(date_str, n):
                          .groupby(['ts_code'])
                          .apply(polylineslope, include_groups=False).reset_index())
     if stock_polyline_df is None or len(stock_polyline_df) == 0:
-        sendMsg(f"{date_str}没有选中任何股票")
         return None
     print(stock_polyline_df.head(2))
     select_df = stock_polyline_df[(stock_polyline_df['low_shadow'])]
@@ -148,9 +136,6 @@ def selectLowTrendLowShadow(date_str, n):
     filename = date_str + '_lowshadow.csv'
     select_df.round(3).to_csv(filename, index=True)
     sendGroupFile(filename)
-    # 发送结束选股消息
-    elapsed = int(time.time() - start_time)
-    sendMsg(f"结束下影线{date_str}的选股，耗时{elapsed}s")
 
 
 def selectTrend():
