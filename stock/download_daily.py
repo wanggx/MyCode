@@ -3,7 +3,7 @@ from datetime import datetime
 from moduledir.stockutil import *
 from backend.data.select_daily import selectVolMagnify
 from backend.data.select_daily import selectLowTrendLowShadow
-from backend.data.select_ma import selectMa
+from backend.data.select import select
 from moduledir.dateutil import get_current_saturday_and_month_start
 from backend.data.wm import iterate_weeks, iterate_months
 
@@ -22,7 +22,7 @@ def download_daily():
 
     selectVolMagnify(current_date_str, 100)
     selectLowTrendLowShadow(current_date_str, 100)
-    selectMa(current_date_str, 100)
+    select(current_date_str)
 
     saturday, month_start = get_current_saturday_and_month_start(current_date)
 

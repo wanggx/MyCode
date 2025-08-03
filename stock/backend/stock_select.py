@@ -99,7 +99,7 @@ def create_stock_select_routes(app):
             if result and result.get('total', 0) == 0 and select_date:
                 from backend.data.select_daily import selectVolMagnify
                 from backend.data.select_daily import selectLowTrendLowShadow
-                from backend.data.select_ma import selectMa
+                from backend.data.select import select
                 # 格式化select_date为yyyyMMdd
                 try:
                     date_obj = datetime.datetime.strptime(select_date, '%Y-%m-%d')
@@ -118,7 +118,7 @@ def create_stock_select_routes(app):
                     try:
                         selectVolMagnify(date_str, n)
                         selectLowTrendLowShadow(date_str, n)
-                        selectMa(date_str, n)
+                        select(date_str)
                     finally:
                         # 任务完成后从运行集合中移除
                         with _running_tasks_lock:

@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 
 from moduledir.chatutil import sendMsg, sendGroupFile
-from moduledir.stockutil import getStockData, getStockList
+from moduledir.stockutil import getStockData, getStockList, getStockWeekData
 
 def ma(df):
     if df is None or len(df) == 0:
@@ -33,15 +33,37 @@ def ma(df):
         return None
 
 
-def selectMa(date_str, n):
+def processMa(df):
+    if df is None or len(df) == 0:
+        return None
+    return df.groupby(['ts_code']).apply(ma, include_groups=False).reset_index()
+
+def selectMaByWeek(date_str, n):
+    """
+        date_str: 结束日期（字符串，格式如'20250710'）
+        n: 向前推的天数
+        """
+    # 计算startDate
+    end_date = datetime.strptime(date_str, '%Y%m%d')
+    start_date = end_date - timedelta(days=n - 1)
+    start_str = start_date.strftime('%Y%m%d')
+    stock_daily_df = getStockWeekData(None, start_str, date_str)
+
+    close_ma_df = (stock_daily_df[['ts_code', 'trade_date', 'high', 'open', 'close', 'low']]
+                   .groupby(['ts_code']).tail(60))
+    filter_df = close_ma_df.groupby(['ts_code']).filter(lambda x: x['trade_date'].max() == date_str)
+    stock_ma_df = processMa(filter_df)
+    if stock_ma_df is None or len(stock_ma_df) == 0:
+        return None
+    stock_ma_df = stock_ma_df[stock_ma_df['ma35_3']]
+    stock_ma_df.insert(0, 'select_date', date_str)
+    return stock_ma_df[['select_date', 'ts_code', 'ma35_3', 'ma35_5', 'ma3', 'ma5']].round(3)
+
+def selectMaByDaily(date_str, n):
     """
     date_str: 结束日期（字符串，格式如'20250710'）
     n: 向前推的天数
     """
-    import time
-    start_time = time.time()
-    # 发送开始选股消息
-    sendMsg(f"开始{date_str}的均线选股")
     # 计算startDate
     end_date = datetime.strptime(date_str, '%Y%m%d')
     start_date = end_date - timedelta(days=n-1)
@@ -49,23 +71,11 @@ def selectMa(date_str, n):
     stock_daily_df = getStockData(None, start_str, date_str)
 
     close_ma_df = stock_daily_df[['ts_code', 'trade_date', 'high', 'open', 'close', 'low']].groupby(['ts_code']).tail(60)
-    stock_ma_df = (close_ma_df.groupby(['ts_code'])
-                         .filter(lambda x: x['trade_date'].max() == date_str)
-                         .groupby(['ts_code'])
-                         .apply(ma, include_groups=False).reset_index())
+    filter_df = close_ma_df.groupby(['ts_code']).filter(lambda x: x['trade_date'].max() == date_str)
+    stock_ma_df = processMa(filter_df)
     if stock_ma_df is None or len(stock_ma_df) == 0:
         sendMsg(f"{date_str}没有选中任何股票")
         return None
-
-    stock_ma_df = stock_ma_df[stock_ma_df['ma35_3']
-                              & stock_ma_df['ma35_5']]
+    stock_ma_df = stock_ma_df[stock_ma_df['ma35_3'] & stock_ma_df['ma35_5']]
     stock_ma_df.insert(0, 'select_date', date_str)
-    stock_df = getStockList()
-    join_df = pd.merge(stock_ma_df, stock_df[['ts_code', 'name']], on='ts_code', how='left')
-    print(join_df.columns)
-    final_df = join_df[['select_date', 'ts_code', 'name', 'ma35_3', 'ma35_5', 'ma3', 'ma5']].round(3)
-    final_df.to_csv('ma35.csv', index=True)
-    sendGroupFile('ma35.csv')
-    # 发送结束选股消息
-    elapsed = int(time.time() - start_time)
-    sendMsg(f"结束{date_str}的均线选股，耗时{elapsed}s")
+    return stock_ma_df[['select_date', 'ts_code', 'ma35_3', 'ma35_5', 'ma3', 'ma5']].round(3)
