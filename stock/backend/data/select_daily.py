@@ -107,16 +107,14 @@ def selectVolMagnify(date_str, n):
                               'slope20': 'trend20',
                               'slope30': 'trend30',
                               'vol_magnify': 'vol'}, inplace=True)
-    print(select_df.columns)
     stock_df = getStockList()
     join_df = pd.merge(select_df, stock_df[['ts_code', 'name']], on='ts_code', how='left')
-    print(join_df.columns)
     final_df = join_df[['select_date', 'ts_code', 'name', 'vol', 'trend3', 'trend5', 'trend10', 'trend20', 'trend30']].round(3)
-    final_df.to_csv('vol.csv', index=True)
 
+    filename = date_str + '_vol.csv'
+    final_df.to_csv(filename, index=True)
     saveStockSelect(final_df)
-
-    sendGroupFile('vol.csv')
+    sendGroupFile(filename)
     # 发送结束选股消息
     elapsed = int(time.time() - start_time)
     sendMsg(f"结束{date_str}的选股，耗时{elapsed}s")
@@ -147,8 +145,9 @@ def selectLowTrendLowShadow(date_str, n):
     print(stock_polyline_df.head(2))
     select_df = stock_polyline_df[(stock_polyline_df['low_shadow'])]
 
-    select_df.round(3).to_csv('lowshadow.csv', index=True)
-    sendGroupFile('lowshadow.csv')
+    filename = date_str + '_lowshadow.csv'
+    select_df.round(3).to_csv(filename, index=True)
+    sendGroupFile(filename)
     # 发送结束选股消息
     elapsed = int(time.time() - start_time)
     sendMsg(f"结束下影线{date_str}的选股，耗时{elapsed}s")
