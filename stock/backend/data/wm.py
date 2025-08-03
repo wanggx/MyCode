@@ -33,6 +33,8 @@ def aggline(week):
     return pd.Series({'close': close, 'open': open, 'high': high, 'low': low , 'change': change, 'vol': vol, 'amount': amount})
 
 def processWeekDf(stock_df):
+    if stock_df is None or len(stock_df) == 0:
+        return None
     stock_df['week'] = stock_df['trade_date'].transform(fridayline)
     week_df = stock_df.groupby(['ts_code', 'week']).apply(aggline, include_groups=False)
     # week_df['pre_close'] = week_df['close'].shift(1)
