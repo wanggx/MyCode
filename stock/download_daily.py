@@ -40,6 +40,6 @@ def download_daily():
         sendMsg(f"结束{current_date_str}的选股，耗时{elapsed}s")
     except Exception as e:
         sendMsg(f"发生异常：{e}")
-        logger.error("发生异常：" + e)
+        logger.error(f"发生异常：{e}")
 
 
