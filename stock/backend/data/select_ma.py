@@ -4,7 +4,6 @@ import pandas as pd
 
 from moduledir.chatutil import sendMsg, sendGroupFile
 from moduledir.stockutil import getStockData, getStockList, getStockWeekData
-from pandas.conftest import axis_1
 
 
 def ma(df):
@@ -73,7 +72,7 @@ def selectMaByDaily(date_str, n):
     stock_daily_df = getStockData(None, start_str, date_str)
 
     close_ma_df = stock_daily_df[['ts_code', 'trade_date', 'high', 'open', 'close', 'low']].groupby(['ts_code']).tail(60)
-    filter_df = close_ma_df.groupby(['ts_code']).filter(lambda x: x['trade_date'].max() == date_str, axis = 0)
+    filter_df = close_ma_df.groupby(['ts_code']).filter(lambda x: x['trade_date'].max() == date_str)
     stock_ma_df = processMa(filter_df)
     if stock_ma_df is None or len(stock_ma_df) == 0:
         sendMsg(f"{date_str}没有选中任何股票")
