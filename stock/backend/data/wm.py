@@ -4,7 +4,7 @@ import pandas as pd
 import datetime
 from moduledir.stockutil import *
 from moduledir.dateutil import *
-from moduledir.stockutil import getStockData
+from moduledir.stockutil import getStockData, deleteWeekData, deleteMonthData
 
 
 logger = logging.getLogger('myapp')
@@ -102,6 +102,7 @@ def iterate_weeks(start_date_str, end_date_str):
             actual_end = min(current_week_end, end_date)
             logger.info(f"开始处理周数据，开始日期：{actual_start.strftime('%Y%m%d')}, 结束日期：{actual_end.strftime('%Y%m%d')}")
             pre_start_date = calculate_date(actual_start, 0)
+            deleteWeekData(pre_start_date.strftime('%Y%m%d'), actual_end.strftime('%Y%m%d'))
             stock_pd = getStockData(None, pre_start_date.strftime('%Y%m%d'), actual_end.strftime('%Y%m%d'))
             processWeekDf(stock_pd)
         # 移动到下一周的周六
@@ -146,6 +147,7 @@ def iterate_months(start_date_str, end_date_str):
             actual_end = min(month_end, end_date)
             logger.info(f"开始处理月数据，开始日期：{actual_start.strftime('%Y%m%d')}, 结束日期：{actual_end.strftime('%Y%m%d')}")
             pre_start_date = calculate_date(actual_start, 0)
+            deleteMonthData(pre_start_date.strftime('%Y%m%d'), actual_end.strftime('%Y%m%d'))
             stock_pd = getStockData(None, pre_start_date.strftime('%Y%m%d'), actual_end.strftime('%Y%m%d'))
             processMonthDf(stock_pd)
 

@@ -127,6 +127,15 @@ def saveWeekData(week_df):
         conn.commit()
     week_df.to_sql('stock_week', con=engine, if_exists='append', index=False)
 
+def deleteWeekData(startDate, endDate):
+    engine = create_engine('mysql+pymysql://' + mysql_user + ':' + mysql_pass + '@' + mysql_url + '/' + mysql_db)
+    sql = "delete from stock_week where trade_date >= \'" + startDate + "\' and trade_date <= \'" + endDate + "\'";
+    sqlText = text("delete from stock_week where trade_date >= \'" + startDate + "\' and trade_date <= \'" + endDate + "\'")
+    with engine.connect() as conn:
+        conn.execute(sqlText)
+        conn.commit()
+    logger.info("删除周数据SQL:" + sql)
+
 def saveMonthData(month_df):
     engine = create_engine('mysql+pymysql://' + mysql_user + ':' + mysql_pass + '@' + mysql_url + '/' + mysql_db)
     month_df.to_sql('stock_month_temp', con=engine, if_exists='replace', index=False)
@@ -137,3 +146,11 @@ def saveMonthData(month_df):
         conn.commit()
     month_df.to_sql('stock_month', con=engine, if_exists='append', index=False)
 
+def deleteMonthData(startDate, endDate):
+    engine = create_engine('mysql+pymysql://' + mysql_user + ':' + mysql_pass + '@' + mysql_url + '/' + mysql_db)
+    sql = "delete from stock_month where trade_date >= \'" + startDate + "\' and trade_date <= \'" + endDate + "\'";
+    sqlText = text(sql)
+    with engine.connect() as conn:
+        conn.execute(sqlText)
+        conn.commit()
+    logger.info("删除月数据SQL:" + sql)
