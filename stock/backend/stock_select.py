@@ -13,6 +13,43 @@ import datetime
 _running_select_tasks = set()
 _running_tasks_lock = threading.Lock()
 
+
+def remove_selectedstock_from_db(select_date):
+    """
+    从数据库中删除指定日期的选股记录
+    
+    Args:
+        select_date (str): 选股日期，格式为 'YYYY-MM-DD'
+    
+    Returns:
+        tuple: (success_count, error_message)
+               success_count: 成功删除的记录数，如果出错则为None
+               error_message: 错误信息，如果没有错误则为None
+    """
+    try:
+        connection = get_db_connection()
+        if not connection:
+            return None, "数据库连接失败"
+        
+        cursor = connection.cursor()
+        # 执行删除操作
+        sql = "DELETE FROM stock_select WHERE select_date = %s"
+        affected_rows = cursor.execute(sql, (select_date,))
+        
+        # 提交事务
+        connection.commit()
+        
+        # 关闭连接
+        cursor.close()
+        connection.close()
+        
+        return affected_rows, None
+        
+    except Exception as e:
+        print(f"删除选股数据失败: {e}")
+        return None, f"删除失败: {str(e)}"
+
+
 def get_stock_select_from_db(page=1, page_size=10, select_date=None):
     """从数据库获取选股列表"""
     try:
@@ -90,32 +127,48 @@ def create_stock_select_routes(app):
             page = int(request.args.get('page', 1))
             page_size = int(request.args.get('page_size', 10))
             select_date = request.args.get('select_date', None)
+            # 获取reselect参数，默认为False
+            reselect = request.args.get('reselect', 'false').lower() == 'true'
+
+            # 格式化select_date为yyyyMMdd
+            try:
+                date_obj = datetime.datetime.strptime(select_date, '%Y-%m-%d')
+                select_date_str = date_obj.strftime('%Y%m%d')
+            except Exception:
+                select_date_str = select_date  # 如果已是yyyyMMdd则直接用
+
+            # 唯一性判断，防止重复执行
+            task_key = select_date_str
+            with _running_tasks_lock:
+                if task_key in _running_select_tasks:
+                    return jsonify({'error': '选股任务已在执行中，请稍后查询', 'total': 0}), 200
+
+            # 如果reselect为True且select_date存在，则先删除现有数据
+            if reselect and select_date:
+                remove_selectedstock_from_db(select_date)
+
             if page < 1:
                 page = 1
             if page_size < 1 or page_size > 100:
                 page_size = 10
-            result, error = get_stock_select_from_db(page, page_size, select_date)
+
+            # 只有当reselect为False时才查询现有数据
+            if not reselect:
+                result, error = get_stock_select_from_db(page, page_size, select_date)
+            else:
+                # 如果是reselect模式，直接设置result为空，触发后续的选股逻辑
+                result = {'total': 0}  # 设置total为0触发选股逻辑
+                error = None
+
             # 新增逻辑：如果查到数据为0，且有select_date，异步触发选股
             if result and result.get('total', 0) == 0 and select_date:
                 from backend.data.select_daily import selectVolMagnify
                 from backend.data.select_daily import selectLowTrendLowShadow
                 from backend.data.select import select
-                # 格式化select_date为yyyyMMdd
-                try:
-                    date_obj = datetime.datetime.strptime(select_date, '%Y-%m-%d')
-                    select_date_str = date_obj.strftime('%Y%m%d')
-                except Exception:
-                    select_date_str = select_date  # 如果已是yyyyMMdd则直接用
-
-                # 唯一性判断，防止重复执行
-                task_key = select_date_str
-                with _running_tasks_lock:
-                    if task_key in _running_select_tasks:
-                        return jsonify({'error': '选股任务已在执行中，请稍后查询', 'total': 0}), 200
-                    _running_select_tasks.add(task_key)
 
                 def async_select(date_str, n):
                     try:
+                        _running_select_tasks.add(task_key)
                         selectVolMagnify(date_str, n)
                         selectLowTrendLowShadow(date_str, n)
                         select(date_str)

@@ -14,6 +14,13 @@
             :clearable="false"
             :disabled="loading"
           />
+          <el-checkbox 
+            v-model="reselectFlag" 
+            style="margin-left: 12px;"
+            :disabled="loading"
+          >
+            重选
+          </el-checkbox>
           <el-button type="primary" @click="fetchData" style="margin-left: 12px;" :disabled="!queryDate || loading">查询</el-button>
         </div>
         <span v-if="!queryDate" style="color: #f56c6c; margin-left: 12px; font-size: 13px; align-self: center;">请先选择选股日期</span>
@@ -66,6 +73,9 @@ import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
 
+// 添加新的响应式变量
+const reselectFlag = ref(false)
+
 const getCodePrefix = (tsCode) => {
   if (!tsCode || !tsCode.includes('.')) return tsCode
   return tsCode.split('.')[0]
@@ -101,6 +111,10 @@ const fetchData = async () => {
     if (queryDate.value) {
       params.select_date = queryDate.value
     }
+
+    // 添加新参数
+    params.reselect = reselectFlag.value
+
     const res = await axios.get('/api/stock_select', {
       params,
       headers: { Authorization: `Bearer ${token}` }
