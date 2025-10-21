@@ -27,9 +27,9 @@ def volmagnify(df):
     return 0
 
 def has_low_shadow(df):
-    df['drop_pct'] = (df['low'] - df['pre_close']) / df['pre_close'] * 100
+    df.loc[:, 'drop_pct'] = (df['low'] - df['pre_close']) / df['pre_close'] * 100
     # 筛选符合条件的行：翻红且最低价跌幅 >= 5%
-    df['low_shadow'] = (df['close'] > df['open']) & (df['drop_pct'] <= -5.0)
+    df.loc[:, 'low_shadow'] = (df['close'] > df['open']) & (df['drop_pct'] <= -5.0)
     return df['low_shadow'].values[0]
 
 def polylineslope(df):
