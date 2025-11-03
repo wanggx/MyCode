@@ -32,7 +32,7 @@ def download_daily():
         sendMsg(f"开始{current_date_str}的选股")
 
         selectVolMagnify(current_date_str, 100)
-        selectLowTrendLowShadow(current_date_str, 100)
+        # selectLowTrendLowShadow(current_date_str, 100)
         select(current_date_str)
 
         # 发送结束选股消息

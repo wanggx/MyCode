@@ -170,7 +170,7 @@ def create_stock_select_routes(app):
                     try:
                         _running_select_tasks.add(task_key)
                         selectVolMagnify(date_str, n)
-                        selectLowTrendLowShadow(date_str, n)
+                        # selectLowTrendLowShadow(date_str, n)
                         select(date_str)
                     finally:
                         # 任务完成后从运行集合中移除
