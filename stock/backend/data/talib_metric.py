@@ -1,5 +1,6 @@
 import logging
 import talib
+import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 from moduledir.stockutil import getStockData, getStockWeekData
@@ -23,10 +24,21 @@ def calc_macd_and_kdj(df):
 
 def process_macd_and_kdj(stock_df):
     if stock_df is None or len(stock_df) == 0:
-        return None
+        return pd.DataFrame({
+            'ts_code': pd.Series([], dtype='str'),
+            'trade_date': pd.Series([], dtype='str'),
+            'macd_gloden': pd.Series([], dtype='bool'),
+            'dif': pd.Series([], dtype='float64'),
+            'dea': pd.Series([], dtype='float64'),
+            'macd': pd.Series([], dtype='float64'),
+            'kdj_gloden': pd.Series([], dtype='bool'),
+            'k': pd.Series([], dtype='float64'),
+            'd': pd.Series([], dtype='float64'),
+            'j': pd.Series([], dtype='float64')
+        })
     final_df = stock_df.groupby('ts_code').apply(calc_macd_and_kdj, include_groups=False).reset_index()
 
-    return final_df[['ts_code', 'trade_date', 'macd_gloden', 'dif', 'dea', 'macd', 'kdj_gloden', 'k', 'd', 'j', ]].round(2)
+    return final_df[['ts_code', 'trade_date', 'macd_gloden', 'dif', 'dea', 'macd', 'kdj_gloden', 'k', 'd', 'j']].round(2)
 
 
 def selectMacdAndKdjByDaily(date_str, n):
@@ -35,7 +47,18 @@ def selectMacdAndKdjByDaily(date_str, n):
     start_str = start_date.strftime('%Y%m%d')
     stock_daily_df = getStockData(None, start_str, date_str)
     if stock_daily_df is None or len(stock_daily_df) == 0:
-        return None
+        return pd.DataFrame({
+            'ts_code': pd.Series([], dtype='str'),
+            'trade_date': pd.Series([], dtype='str'),
+            'macd_gloden': pd.Series([], dtype='float64'),
+            'dif': pd.Series([], dtype='float64'),
+            'dea': pd.Series([], dtype='float64'),
+            'macd': pd.Series([], dtype='float64'),
+            'kdj_gloden': pd.Series([], dtype='float64'),
+            'k': pd.Series([], dtype='float64'),
+            'd': pd.Series([], dtype='float64'),
+            'j': pd.Series([], dtype='float64')
+        })
     final_df = stock_daily_df.groupby('ts_code').filter(lambda x: x['trade_date'].max() == date_str)
 
     return process_macd_and_kdj(final_df)
@@ -46,7 +69,18 @@ def selectMacdAndKdjByWeek(date_str, n):
     start_str = start_date.strftime('%Y%m%d')
     stock_daily_df = getStockWeekData(None, start_str, date_str)
     if stock_daily_df is None or len(stock_daily_df) == 0:
-        return None
+        return pd.DataFrame({
+            'ts_code': pd.Series([], dtype='str'),
+            'trade_date': pd.Series([], dtype='str'),
+            'macd_gloden': pd.Series([], dtype='float64'),
+            'dif': pd.Series([], dtype='float64'),
+            'dea': pd.Series([], dtype='float64'),
+            'macd': pd.Series([], dtype='float64'),
+            'kdj_gloden': pd.Series([], dtype='float64'),
+            'k': pd.Series([], dtype='float64'),
+            'd': pd.Series([], dtype='float64'),
+            'j': pd.Series([], dtype='float64')
+        })
     final_df = stock_daily_df.groupby('ts_code').filter(lambda x: x['trade_date'].max() == date_str)
 
     return process_macd_and_kdj(final_df)

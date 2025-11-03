@@ -55,7 +55,14 @@ def selectMaByWeek(date_str, n):
     filter_df = close_ma_df.groupby(['ts_code']).filter(lambda x: x['trade_date'].max() == date_str)
     stock_ma_df = processMa(filter_df)
     if stock_ma_df is None or len(stock_ma_df) == 0:
-        return None
+        return pd.DataFrame({
+            'select_date': pd.Series([], dtype='str'),
+            'ts_code': pd.Series([], dtype='str'),
+            'ma35_3': pd.Series([], dtype='float64'),
+            'ma35_5': pd.Series([], dtype='float64'),
+            'ma3': pd.Series([], dtype='float64'),
+            'ma5': pd.Series([], dtype='float64')
+        })
     stock_ma_df = stock_ma_df[stock_ma_df['ma35_3']]
     stock_ma_df.insert(0, 'select_date', date_str)
     return stock_ma_df[['select_date', 'ts_code', 'ma35_3', 'ma35_5', 'ma3', 'ma5']].round(3)
