@@ -6,6 +6,9 @@
         <el-tab-pane label="成交量选股" name="volume">
           <VolSelect ref="volSelectRef" @date-change="handleDateChange" />
         </el-tab-pane>
+        <el-tab-pane label="Volume Line" name="volLine">
+          <VolLine ref="volLineRef" @date-change="handleDateChange"/>
+        </el-tab-pane>
         <el-tab-pane label="趋势选股" name="trend">
           <TrendSelect ref="trendSelectRef" @date-change="handleDateChange" />
         </el-tab-pane>
@@ -18,10 +21,12 @@
 import { ref } from 'vue'
 import VolSelect from './VolSelect.vue'
 import TrendSelect from './TrendSelect.vue'
+import VolLine from './VolLine.vue'
 
 const activeTab = ref('volume')
 const volSelectRef = ref(null)
 const trendSelectRef = ref(null)
+const volLineRef = ref(null)
 
 const handleDateChange = (date) => {
   // 可以在这里处理日期变化事件

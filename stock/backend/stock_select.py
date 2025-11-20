@@ -206,4 +206,52 @@ def create_stock_select_routes(app):
             result_json = df.to_json(orient='records', force_ascii=False)
             return jsonify({'result': result_json}), 200
         except Exception as e:
-            return jsonify({'error': f'Mock选股失败: {str(e)}'}), 500 
+            return jsonify({'error': f'Mock选股失败: {str(e)}'}), 500
+
+    @app.route('/api/vol_line', methods=['GET'])
+    #@require_auth
+    def get_vol_line_data():
+        """Get volume line data for date range"""
+        try:
+            start_date = request.args.get('startDate')
+            end_date = request.args.get('endDate')
+
+            if not start_date or not end_date:
+                return jsonify({'error': 'startDate and endDate parameters are required'}), 400
+
+            connection = get_db_connection()
+            if not connection:
+                return jsonify({'error': 'Database connection failed'}), 500
+
+            cursor = connection.cursor()
+
+            # Query to get count of stocks per date within the date range
+            sql = """
+                SELECT select_date, COUNT(1) as count 
+                FROM stock_select 
+                WHERE select_date >= %s AND select_date <= %s 
+                GROUP BY select_date 
+                ORDER BY select_date
+            """
+
+            cursor.execute(sql, (start_date, end_date))
+            rows = cursor.fetchall()
+
+            # Format the results
+            result_data = []
+            for row in rows:
+                result_data.append({
+                    'select_date': str(row['select_date']),
+                    'count': row['count']
+                })
+
+            cursor.close()
+            connection.close()
+
+            return jsonify({
+                'message': 'Success',
+                'data': result_data
+            }), 200
+
+        except Exception as e:
+            return jsonify({'error': f'Failed to get volume line data: {str(e)}'}), 500
