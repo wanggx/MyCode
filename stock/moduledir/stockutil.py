@@ -25,6 +25,10 @@ def saveStockSelect(df):
     engine = create_engine('mysql+pymysql://' + mysql_user + ':' + mysql_pass + '@' + mysql_url + '/' + mysql_db)
     df.to_sql('stock_select', con=engine, if_exists='append', index=False)
 
+def saveStockTrendSelect(df):
+    engine = create_engine('mysql+pymysql://' + mysql_user + ':' + mysql_pass + '@' + mysql_url + '/' + mysql_db)
+    df.to_sql('stock_trend_select', con=engine, if_exists='append', index=False)
+
 
 def saveStockDailyData(ts_codes, replace, daily_date):
 

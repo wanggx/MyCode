@@ -1,10 +1,11 @@
-
+import logging
 import pandas as pd
 from moduledir.stockutil import getStockList
 from backend.data.talib_metric import selectMacdAndKdjByDaily, selectMacdAndKdjByWeek
 from backend.data.select_ma import selectMaByDaily, selectMaByWeek
 from moduledir.chatutil import sendMsg, sendGroupFile
 
+logger = logging.getLogger('myapp')
 
 def select(date_str):
     """
@@ -17,14 +18,30 @@ def select(date_str):
     ta_df_week = selectMacdAndKdjByWeek(date_str, 1200)
 
     stock_df = getStockList()
-    select_df = (pd.merge(ma_df_daily, ma_df_week, on='ts_code', how='left', suffixes=('_d', '_w'))
-                 .merge(ta_df_daily, on='ts_code', how='left', suffixes=('_d', '_w'))
-                 .merge(ta_df_week, on='ts_code', how='left', suffixes=('_d', '_w')))
 
-    select_df = select_df[select_df['macd_gloden_d'] | select_df['kdj_gloden_d']
-                          | select_df['macd_gloden_w'] | select_df['kdj_gloden_w']]
+    select_df = ma_df_daily 
 
-    print(len(select_df))
+    if ma_df_daily is None or len(ma_df_daily) == 0:
+        log.warning('日均线数据不存在')
+        sendMsg('日均线数据不存在')
+        return
+
+    if ma_df_week is None or len(ma_df_week) == 0:
+        logger.warning('周均线数据不存在')
+    else: 
+        select_df = pd.merge(select_df, ma_df_week, on='ts_code', how='left', suffixes=('_d', '_w'))
+
+    if ta_df_daily is None or len(ta_df_daily) == 0:
+        logger.warning('日ta数据不存在')
+    else:
+        select_df = pd.merge(select_df, ta_df_daily, on='ts_code', how='left', suffixes=('_d', '_w'))
+        select_df = select_df[select_df['macd_gloden_d'] | select_df['kdj_gloden_d']]
+
+    if ta_df_week is None or len(ta_df_week) == 0:
+        logger.warning('周ta数据不存在')
+    else:
+        select_df = pd.merge(select_df, ta_df_week, on='ts_code', how='left', suffixes=('_d', '_w'))
+        select_df = select_df[select_df['macd_gloden_w'] | select_df['kdj_gloden_w']]
 
     join_df = pd.merge(select_df, stock_df[['ts_code', 'name']], on='ts_code', how='left')
     join_df = join_df[['select_date_d', 'ts_code', 'name',
@@ -34,6 +51,10 @@ def select(date_str):
                        'ma35_3_w', 'ma35_5_w', 'ma3_w', 'ma5_w',
                        'macd_gloden_w', 'dif_w', 'dea_w', 'macd_w',
                        'kdj_gloden_w', 'k_w', 'd_w', 'j_w']].round(2)
+
+    join_df.rename(columns={'select_date_d': 'select_date'}, inplace=True)
+
+    saveStockTrendSelect(join_df)
 
     file_name = date_str + '_select.csv'
     join_df.to_csv(file_name, index=True)
