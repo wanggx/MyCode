@@ -1,6 +1,6 @@
 import logging
 import pandas as pd
-from moduledir.stockutil import getStockList
+from moduledir.stockutil import getStockList, saveStockTrendSelect
 from backend.data.talib_metric import selectMacdAndKdjByDaily, selectMacdAndKdjByWeek
 from backend.data.select_ma import selectMaByDaily, selectMaByWeek
 from moduledir.chatutil import sendMsg, sendGroupFile
@@ -17,8 +17,6 @@ def select(date_str):
     ta_df_daily = selectMacdAndKdjByDaily(date_str, 200)
     ta_df_week = selectMacdAndKdjByWeek(date_str, 1200)
 
-    stock_df = getStockList()
-
     select_df = ma_df_daily 
 
     if ma_df_daily is None or len(ma_df_daily) == 0:
@@ -26,23 +24,12 @@ def select(date_str):
         sendMsg('日均线数据不存在')
         return
 
-    if ma_df_week is None or len(ma_df_week) == 0:
-        logger.warning('周均线数据不存在')
-    else: 
-        select_df = pd.merge(select_df, ma_df_week, on='ts_code', how='left', suffixes=('_d', '_w'))
+    select_df = pd.merge(select_df, ma_df_week, on='ts_code', how='left', suffixes=('_d', '_w'))
+    select_df = pd.merge(select_df, ta_df_daily, on='ts_code', how='left', suffixes=('_d', '_w'))
+    select_df = pd.merge(select_df, ta_df_week, on='ts_code', how='left', suffixes=('_d', '_w'))
+    select_df = select_df[select_df['macd_gloden_w'] | select_df['kdj_gloden_w'] | select_df['macd_gloden_d'] | select_df['kdj_gloden_d']]
 
-    if ta_df_daily is None or len(ta_df_daily) == 0:
-        logger.warning('日ta数据不存在')
-    else:
-        select_df = pd.merge(select_df, ta_df_daily, on='ts_code', how='left', suffixes=('_d', '_w'))
-        select_df = select_df[select_df['macd_gloden_d'] | select_df['kdj_gloden_d']]
-
-    if ta_df_week is None or len(ta_df_week) == 0:
-        logger.warning('周ta数据不存在')
-    else:
-        select_df = pd.merge(select_df, ta_df_week, on='ts_code', how='left', suffixes=('_d', '_w'))
-        select_df = select_df[select_df['macd_gloden_w'] | select_df['kdj_gloden_w']]
-
+    stock_df = getStockList()
     join_df = pd.merge(select_df, stock_df[['ts_code', 'name']], on='ts_code', how='left')
     join_df = join_df[['select_date_d', 'ts_code', 'name',
                        'ma35_3_d', 'ma35_5_d','ma3_d', 'ma5_d',
