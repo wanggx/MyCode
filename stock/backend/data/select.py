@@ -20,7 +20,7 @@ def select(date_str):
     select_df = ma_df_daily 
 
     if ma_df_daily is None or len(ma_df_daily) == 0:
-        log.warning('日均线数据不存在')
+        logger.warning('日均线数据不存在')
         sendMsg('日均线数据不存在')
         return
 
