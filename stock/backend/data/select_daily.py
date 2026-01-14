@@ -90,10 +90,11 @@ def selectVolMagnify(date_str, n):
     print(stock_polyline_df.head(2))
     select_df = stock_polyline_df[(stock_polyline_df['vol_magnify'] > 0)
                                 #   & (stock_polyline_df['out_date'] == False)
-                                  & (stock_polyline_df['sun'])
-                                  & (stock_polyline_df['slope60'] > 0)
-                                  & (stock_polyline_df['slope30'] > 0)
-                                  & (stock_polyline_df['slope20'] > 0)]
+                                #  & (stock_polyline_df['sun'])
+                                #  & (stock_polyline_df['slope60'] > 0)
+                                #  & (stock_polyline_df['slope30'] > 0)
+                                #  & (stock_polyline_df['slope20'] > 0)
+                                ]
     print(select_df.columns)
     select_df.insert(0, 'select_date', date_str)
     select_df.rename(columns={'slope3': 'trend3',
