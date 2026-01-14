@@ -73,10 +73,12 @@ def downloadStockList():
 def getStockList():
     engine = create_engine('mysql+pymysql://' + mysql_user + ':' + mysql_pass + '@' + mysql_url + '/' + mysql_db)
     stock_df = pd.read_sql_table('stock', con=engine)
-    return stock_df[(stock_df['ts_code'].str.startswith('30') == False) &
-                    (stock_df['ts_code'].str.startswith('68') == False) &
-                    (stock_df['ts_code'].str.endswith('BJ') == False) &
-                    (stock_df['name'].str.contains('ST') == False)]
+    return stock_df[
+        # (stock_df['ts_code'].str.startswith('30') == False) &
+        (stock_df['ts_code'].str.startswith('68') == False) &
+        (stock_df['ts_code'].str.endswith('BJ') == False) &
+        (stock_df['name'].str.contains('ST') == False)
+    ]
 
 def getStockData(ts_code, start_date, end_date):
     engine = create_engine('mysql+pymysql://' + mysql_user + ':' + mysql_pass + '@' + mysql_url + '/' + mysql_db)
@@ -86,7 +88,7 @@ def getStockData(ts_code, start_date, end_date):
             stock_sql = stock_sql + " and trade_date >= \'" + start_date + "\' and trade_date <= \'" + end_date + "\'"
     else:
         stock_sql = ('select * from stock_daily where ts_code in ' +
-                     '(select ts_code from stock where ts_code not like \'688%%\' and ts_code not like \'30%%\' and ts_code not like \'%%BJ\' and name not like \'%%ST%%\')')
+                     '(select ts_code from stock where ts_code not like \'688%%\' and ts_code not like \'%%BJ\' and name not like \'%%ST%%\')')
         if start_date is not None and end_date is not None:
             stock_sql = stock_sql + " and trade_date >= \'" + start_date + "\' and trade_date <= \'" + end_date + "\'"
     logger.info("取数SQL:" + stock_sql)
@@ -101,7 +103,7 @@ def getStockWeekData(ts_code, start_date, end_date):
             stock_sql = stock_sql + " and trade_date >= \'" + start_date + "\' and trade_date <= \'" + end_date + "\'"
     else:
         stock_sql = ('select * from stock_week where ts_code in ' +
-                     '(select ts_code from stock where ts_code not like \'688%%\' and ts_code not like \'30%%\' and ts_code not like \'%%BJ\' and name not like \'%%ST%%\')')
+                     '(select ts_code from stock where ts_code not like \'688%%\' and ts_code not like \'%%BJ\' and name not like \'%%ST%%\')')
         if start_date is not None and end_date is not None:
             stock_sql = stock_sql + " and trade_date >= \'" + start_date + "\' and trade_date <= \'" + end_date + "\'"
     logger.info("取数SQL:" + stock_sql)
@@ -116,7 +118,7 @@ def getStockTestData(ts_code, start_date, end_date):
             stock_sql = stock_sql + " and trade_date >= \'" + start_date + "\' and trade_date <= \'" + end_date + "\'"
     else:
         stock_sql = ('select * from stock_daily_test where ts_code in ' +
-                     '(select ts_code from stock where ts_code not like \'688%%\' and ts_code not like \'30%%\')')
+                     '(select ts_code from stock where ts_code not like \'688%%\')')
         if start_date is not None and end_date is not None:
             stock_sql = stock_sql + " and trade_date >= \'" + start_date + "\' and trade_date <= \'" + end_date + "\'"
     stock_df = pd.read_sql(stock_sql, con=engine)
