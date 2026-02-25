@@ -3,6 +3,9 @@ import time
 from moduledir.stockutil import *
 from datetime import datetime, timedelta
 
+from hk.hk_daily import saveHKStockDaily
+from hk.hkutil import mergeHKDailyData
+
 logger = logging.getLogger('myapp')
 
 
@@ -39,13 +42,17 @@ def download_daily_data(startDate, endDate):
             time.sleep(2)
             current_dt += timedelta(days=1)
         
-        return date_str
+
     except ValueError as e:
         print(f"日期格式错误: {e}")
-        return []
     except Exception as e:
         print(f"遍历日期时发生错误: {e}")
-        return []
+
+    try:
+        saveHKStockDaily("")
+        mergeHKDailyData()
+    except Exception as e:
+        logger.error(f"获取港股数据发生异常：{e}")
 
 # 示例使用
 # dates = traverse_dates('20240101', '20240131')

@@ -7,6 +7,8 @@ from backend.data.select import select
 from moduledir.dateutil import get_current_saturday_and_month_start
 from backend.data.wm import iterate_weeks, iterate_months
 from moduledir.chatutil import sendMsg, sendGroupFile
+from hk.hk_daily import saveHKStockDaily
+from hk.hkutil import mergeHKDailyData
 
 logger = logging.getLogger('myapp')
 
@@ -40,6 +42,13 @@ def download_daily():
         sendMsg(f"结束{current_date_str}的选股，耗时{elapsed}s")
     except Exception as e:
         sendMsg(f"发生异常：{e}")
+        logger.error(f"发生异常：{e}")
+
+    try:
+        saveHKStockDaily("")
+        mergeHKDailyData()
+    except Exception as e:
+        sendMsg(f"港股数据发生异常：{e}")
         logger.error(f"发生异常：{e}")
 
 
