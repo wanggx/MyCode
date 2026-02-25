@@ -22,7 +22,7 @@ def volmagnify(df):
     max = prev.max()
     latest = df.values[size-1]
     latest_prev = df.values[size-2]
-    if (latest > mean * 2 and latest > latest_prev * 2 and latest > max):
+    if (latest > mean * 1.5 and latest > latest_prev * 1.5 and latest > max):
         return latest / mean
     return 0
 
