@@ -8,6 +8,7 @@ on:
       - 'frontend/**'
       - 'bin/**'
       - '.github/workflows/frontend-deploy.yml'
+      - 'package-lock.json'
 
 jobs:
   deploy:
