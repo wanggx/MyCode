@@ -31,13 +31,13 @@ jobs:
         run: |
           cd frontend 
           ls -al 
-          npm install
+          npm install echarts@5.6.0 element-plus@2.10.3 vue-router@4.5.1 vuex@4.1.0 --save --save-exact
           ls -al
 
       - name: 4. 构建项目 🔨
         run: |
           cd frontend
-          ls -al && ls -al node_modules
+          ls -al
           npm run build
           ls -al
 
