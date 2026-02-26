@@ -1,0 +1,44 @@
+name: Auto Deploy on Push
+
+on:
+  push:
+    branches:
+      - stock  # 监听 main 分支推送
+    paths:
+      - 'frontend/**'
+      - 'bin/**'
+      - '.github/workflows/frontend-deploy.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: AliyunECS  # 如果你使用了环境 Secrets，必须指定
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: 2. 设置 Node.js 环境
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          # 缓存 frontend 目录下的 npm 依赖，加速构建 [citation:1]
+          cache: 'npm'
+          cache-dependency-path: './frontend/package-lock.json'
+
+      - name: 3. 安装依赖 📦
+        run: npm ci
+
+      - name: 4. 构建项目 🔨
+        run: npm run build
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}  # 如未设置，默认 22
+          source: "frontend/dist/*"
+          target: "/data/html/"
+          strip_components: 1

@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - stock  # 监听 main 分支推送
+    paths:
+      - 'stock/**'
+      - 'bin/**'
+      - '.github/workflows/backend-deploy.yml'
 
 jobs:
   deploy:

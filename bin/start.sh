@@ -58,6 +58,6 @@ clean_up() {
 # 执行清理和启动
 clean_up
 start_backend
-start_frontend
+#start_frontend
 
 echo -e "${GREEN}✅ 服务启动完成！${NC}"
