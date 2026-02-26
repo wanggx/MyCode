@@ -41,7 +41,7 @@ jobs:
               git checkout .
               git pull -r
             else
-              git clone -b stock git@github.com:wanggx/stock.git stock
+              git clone -b stock --single-branch --depth 1 git@github.com:wanggx/stock.git stock
             fi
             cd /data/stock         # 替换为你服务器上项目的路径
             ls -l
