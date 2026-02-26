@@ -47,6 +47,6 @@ stop_frontend() {
 
 # 执行停止流程
 stop_backend
-stop_frontend
+# stop_frontend
 
 echo -e "${GREEN}✅ 服务已停止！${NC}"
