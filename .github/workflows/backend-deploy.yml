@@ -1,4 +1,4 @@
-name: Auto Deploy on Push
+name: Auto Deploy Backend on Push
 
 on:
   push:
