@@ -38,11 +38,25 @@ jobs:
         run: |
           cd frontend
           ls -al
+          npm list echarts element-plus vue-router vuex --depth=0
           npm run build
           ls -al
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            # 清理旧文件
+            rm -rf /data/html/*
+            # 创建目录
+            mkdir -p /data/html/
+
+      - name: Deploy via SSH
+        uses: appleboy/scp-action@v0.1.5
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
