@@ -37,11 +37,16 @@ start_frontend() {
     echo -e "${GREEN}🌐 正在启动 Vue 前端开发服务器...${NC}"
     cd "$PROJECT_ROOT/frontend" || exit
 
+    npm run build
+
+    rm -fr /data/html/*
+    cp -r dist/* /data/html/
+
     # 启动前端服务并记录 PID
-    npm run serve > frontend.log 2>&1 &
-    FRONTEND_PID=$!
-    echo $FRONTEND_PID > "$PROJECT_ROOT/.frontend_pid"
-    echo "Vue frontend started with PID: $FRONTEND_PID"
+    # npm run serve > frontend.log 2>&1 &
+    # FRONTEND_PID=$!
+    # echo $FRONTEND_PID > "$PROJECT_ROOT/.frontend_pid"
+    # echo "Vue frontend started with PID: $FRONTEND_PID"
 }
 
 # 清理旧的进程记录
