@@ -41,6 +41,7 @@ start_frontend() {
 
     rm -fr /data/html/*
     cp -r dist/* /data/html/
+    ls -al /data/html/
 
     # 启动前端服务并记录 PID
     # npm run serve > frontend.log 2>&1 &
