@@ -38,7 +38,7 @@ jobs:
             set -ex
             cd /data
             if [ -d "stock" ]; then
-              cd MyCode
+              cd stock
               git checkout .
               git pull -r
             else
