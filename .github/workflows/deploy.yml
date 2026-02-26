@@ -35,6 +35,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}  # 如未设置，默认 22
           script: |
+            set -ex
             cd /data
             if [ -d "stock" ]; then
               cd MyCode
