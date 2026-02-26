@@ -36,7 +36,7 @@ jobs:
       - name: 4. 构建项目 🔨
         run: |
           cd frontend
-          ls -al
+          ls -al && ls -al node_modules
           npm run build
           ls -al
 
