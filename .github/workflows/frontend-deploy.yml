@@ -42,7 +42,7 @@ jobs:
           npm run build
           ls -al
 
-      - name: Deploy via SSH
+      - name: Prepare Frontend Env
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -55,7 +55,7 @@ jobs:
             # 创建目录
             mkdir -p /data/html/
 
-      - name: Deploy via SSH
+      - name: Scp Frontend
         uses: appleboy/scp-action@v0.1.5
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -64,4 +64,6 @@ jobs:
           port: ${{ secrets.SSH_PORT || 22 }}  # 如未设置，默认 22
           source: "frontend/dist/*"
           target: "/data/html/"
-          strip_components: 1
+          strip_components: 2  # 改为 2，去掉 "frontend/dist" 两层目录
+          # strip_components: 1 去掉 "frontend"，保留 "dist"
+          # strip_components: 2 去掉 "frontend/dist"，只上传 dist 内的文件到目标目录
