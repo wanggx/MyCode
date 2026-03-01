@@ -41,11 +41,7 @@ def process_macd_and_kdj(stock_df):
     return final_df[['ts_code', 'trade_date', 'macd_gloden', 'dif', 'dea', 'macd', 'kdj_gloden', 'k', 'd', 'j']].round(2)
 
 
-def selectMacdAndKdjByDaily(date_str, n):
-    end_date = datetime.strptime(date_str, '%Y%m%d')
-    start_date = end_date - timedelta(days=n - 1)
-    start_str = start_date.strftime('%Y%m%d')
-    stock_daily_df = getStockData(None, start_str, date_str)
+def selectMacdAndKdjByDaily(stock_daily_df, date_str):
     if stock_daily_df is None or len(stock_daily_df) == 0:
         return pd.DataFrame({
             'ts_code': pd.Series([], dtype='str'),

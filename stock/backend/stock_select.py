@@ -163,8 +163,9 @@ def create_stock_select_routes(app):
             # 新增逻辑：如果查到数据为0，且有select_date，异步触发选股
             if result and result.get('total', 0) == 0 and select_date:
                 from backend.data.select_daily import selectVolMagnify
+                from backend.data.select_daily import selectHkVolMagnify
                 from backend.data.select_daily import selectLowTrendLowShadow
-                from backend.data.select import select
+                from backend.data.select import select, selectHk
 
                 def async_select(date_str, n):
                     try:
@@ -172,6 +173,9 @@ def create_stock_select_routes(app):
                         selectVolMagnify(date_str, n)
                         # selectLowTrendLowShadow(date_str, n)
                         select(date_str)
+
+                        selectHkVolMagnify(date_str, n)
+                        selectHk(date_str)
                     finally:
                         # 任务完成后从运行集合中移除
                         with _running_tasks_lock:

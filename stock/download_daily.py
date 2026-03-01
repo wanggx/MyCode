@@ -1,9 +1,9 @@
 import logging
 from datetime import datetime
 from moduledir.stockutil import *
-from backend.data.select_daily import selectVolMagnify
+from backend.data.select_daily import selectVolMagnify, selectHkVolMagnify
 from backend.data.select_daily import selectLowTrendLowShadow
-from backend.data.select import select
+from backend.data.select import select, selectHk
 from moduledir.dateutil import get_current_saturday_and_month_start
 from backend.data.wm import iterate_weeks, iterate_months
 from moduledir.chatutil import sendMsg, sendGroupFile
@@ -13,10 +13,10 @@ from hk.hkutil import mergeHKDailyData
 logger = logging.getLogger('myapp')
 
 def download_daily():
+    # 获取当前日期并格式化为 %Y%m%d
+    current_date = datetime.now()
+    current_date_str = current_date.strftime("%Y%m%d")
     try:
-        # 获取当前日期并格式化为 %Y%m%d
-        current_date = datetime.now()
-        current_date_str = current_date.strftime("%Y%m%d")
         stock_pd = getStockList()
         logger.info(len(stock_pd))
         logger.info(("begin " + current_date_str))
@@ -47,6 +47,9 @@ def download_daily():
     try:
         saveHKStockDaily("")
         mergeHKDailyData()
+
+        selectHkVolMagnify(current_date_str, 100)
+        selectHk(current_date_str)
     except Exception as e:
         sendMsg(f"港股数据发生异常：{e}")
         logger.error(f"发生异常：{e}")

@@ -6,6 +6,8 @@ from moduledir.chatutil import *
 from moduledir.dateutil import date_equal
 from moduledir.stockutil import getStockData, getStockList, saveStockSelect
 
+from hk.hkutil import getHkStockData
+
 logger = logging.getLogger('myapp')
 
 def polyline(df, n):
@@ -112,7 +114,49 @@ def selectVolMagnify(date_str, n):
     saveStockSelect(final_df)
     sendGroupFile(filename)
 
+def selectHkVolMagnify(date_str, n):
+    """
+    date_str: 结束日期（字符串，格式如'20250710'）
+    n: 向前推的天数
+    """
 
+    # 计算startDate
+    end_date = datetime.strptime(date_str, '%Y%m%d')
+    start_date = end_date - timedelta(days=n-1)
+    start_str = start_date.strftime('%Y%m%d')
+    stock_daily_df = getHkStockData(None, start_str, date_str)
+
+    close_polyline_df = stock_daily_df[['ts_code', 'trade_date', 'high', 'open', 'close', 'pre_close', 'low', 'vol']].groupby(['ts_code']).tail(60)
+    stock_polyline_df = (close_polyline_df.groupby(['ts_code'])
+                         .filter(lambda x: x['trade_date'].max() == date_str)
+                         .groupby(['ts_code'])
+                         .apply(polylineslope, include_groups=False).reset_index())
+    if stock_polyline_df is None or len(stock_polyline_df) == 0:
+        return None
+    print(stock_polyline_df.head(2))
+    select_df = stock_polyline_df[(stock_polyline_df['vol_magnify'] > 0)
+                                #   & (stock_polyline_df['out_date'] == False)
+                                #  & (stock_polyline_df['sun'])
+                                #  & (stock_polyline_df['slope60'] > 0)
+                                #  & (stock_polyline_df['slope30'] > 0)
+                                #  & (stock_polyline_df['slope20'] > 0)
+                                ]
+    print(select_df.columns)
+    select_df.insert(0, 'select_date', date_str)
+    select_df.rename(columns={'slope3': 'trend3',
+                              'slope5': 'trend5',
+                              'slope10': 'trend10',
+                              'slope20': 'trend20',
+                              'slope30': 'trend30',
+                              'vol_magnify': 'vol'}, inplace=True)
+    stock_df = getStockList()
+    join_df = pd.merge(select_df, stock_df[['ts_code', 'name']], on='ts_code', how='left')
+    final_df = join_df[['select_date', 'ts_code', 'name', 'vol', 'trend3', 'trend5', 'trend10', 'trend20', 'trend30']].round(3)
+
+    filename = date_str + '_hk_vol.csv'
+    final_df.to_csv(filename, index=True)
+    saveStockSelect(final_df)
+    sendGroupFile(filename)
 
 def selectLowTrendLowShadow(date_str, n):
     """

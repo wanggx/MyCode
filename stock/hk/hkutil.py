@@ -1,10 +1,13 @@
-
-
+import logging
+import akshare as ak
+import pandas as pd
 from db.db import getDbEngine
 from sqlalchemy import text
 
+logger = logging.getLogger('myapp')
 
-def saveHKStockList(stockdf):
+def saveHKStockList():
+    stockdf = ak.stock_hk_spot()
     engine = getDbEngine()
     stockdf.rename(columns={'日期时间': 'date', '代码': 'ts_code', '中文名称': 'cn_name',
                             '英文名称':'en_name', '交易类型': 'type', '最新价': 'price',
@@ -23,3 +26,24 @@ def mergeHKDailyData():
     with engine.connect() as conn:
         conn.execute(sql)
         conn.commit()
+
+def getHkStockList():
+    engine = getDbEngine()
+    stock_df = pd.read_sql_table('hk_stock', con=engine)
+    return stock_df
+
+
+
+def getHkStockData(ts_code, start_date, end_date):
+    engine = getDbEngine()
+    if ts_code is not None:
+        stock_sql = "select * from hk_stock_daily  where ts_code = \'" + ts_code + "\'"
+        if start_date is not None and end_date is not None:
+            stock_sql = stock_sql + " and trade_date >= \'" + start_date + "\' and trade_date <= \'" + end_date + "\'"
+    else:
+        stock_sql = ('select * from hk_stock_daily')
+        if start_date is not None and end_date is not None:
+            stock_sql = stock_sql + " and trade_date >= \'" + start_date + "\' and trade_date <= \'" + end_date + "\'"
+    logger.info("取数SQL:" + stock_sql)
+    stock_df = pd.read_sql(stock_sql, con=engine)
+    return stock_df

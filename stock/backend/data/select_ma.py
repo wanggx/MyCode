@@ -67,16 +67,10 @@ def selectMaByWeek(date_str, n):
     stock_ma_df.insert(0, 'select_date', date_str)
     return stock_ma_df[['select_date', 'ts_code', 'ma35_3', 'ma35_5', 'ma3', 'ma5']].round(3)
 
-def selectMaByDaily(date_str, n):
+def selectMaByDaily(stock_daily_df, date_str):
     """
     date_str: 结束日期（字符串，格式如'20250710'）
-    n: 向前推的天数
     """
-    # 计算startDate
-    end_date = datetime.strptime(date_str, '%Y%m%d')
-    start_date = end_date - timedelta(days=n-1)
-    start_str = start_date.strftime('%Y%m%d')
-    stock_daily_df = getStockData(None, start_str, date_str)
 
     close_ma_df = stock_daily_df[['ts_code', 'trade_date', 'high', 'open', 'close', 'low']].groupby(['ts_code']).tail(60)
     filter_df = close_ma_df.groupby(['ts_code']).filter(lambda x: x['trade_date'].max() == date_str)
