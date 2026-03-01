@@ -1,8 +1,11 @@
 import logging
+from dataclasses import replace
+
 import akshare as ak
 import pandas as pd
 from db.db import getDbEngine
 from sqlalchemy import text
+from sqlalchemy.dialects.mssql.information_schema import columns
 
 logger = logging.getLogger('myapp')
 
@@ -30,6 +33,7 @@ def mergeHKDailyData():
 def getHkStockList():
     engine = getDbEngine()
     stock_df = pd.read_sql_table('hk_stock', con=engine)
+    stock_df.rename(columns={'cn_name': 'name'}, inplace = True)
     return stock_df
 
 
@@ -43,7 +47,7 @@ def getHkStockData(ts_code, start_date, end_date):
     else:
         stock_sql = ('select * from hk_stock_daily')
         if start_date is not None and end_date is not None:
-            stock_sql = stock_sql + " and trade_date >= \'" + start_date + "\' and trade_date <= \'" + end_date + "\'"
+            stock_sql = stock_sql + " where trade_date >= \'" + start_date + "\' and trade_date <= \'" + end_date + "\'"
     logger.info("取数SQL:" + stock_sql)
     stock_df = pd.read_sql(stock_sql, con=engine)
     return stock_df

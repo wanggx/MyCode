@@ -6,7 +6,7 @@ from backend.data.talib_metric import selectMacdAndKdjByDaily, selectMacdAndKdjB
 from backend.data.select_ma import selectMaByDaily, selectMaByWeek
 from moduledir.chatutil import sendMsg, sendGroupFile
 
-from hk.hkutil import getHkStockData
+from hk.hkutil import getHkStockData, getHkStockList
 
 from moduledir.stockutil import getStockData
 
@@ -20,7 +20,7 @@ def select(date_str):
 
     # 计算startDate
     end_date = datetime.strptime(date_str, '%Y%m%d')
-    start_date = end_date - datetime.timedelta(days=200)
+    start_date = end_date - timedelta(days=200)
     start_str = start_date.strftime('%Y%m%d')
     stock_daily_df = getStockData(None, start_str, date_str)
 
@@ -67,7 +67,7 @@ def selectHk(date_str):
 
     # 计算startDate
     end_date = datetime.strptime(date_str, '%Y%m%d')
-    start_date = end_date - datetime.timedelta(days=200 - 1)
+    start_date = end_date - timedelta(days=200 - 1)
     start_str = start_date.strftime('%Y%m%d')
     stock_daily_df = getHkStockData(None, start_str, date_str)
 
@@ -81,19 +81,17 @@ def selectHk(date_str):
         sendMsg('日均线数据不存在')
         return
 
-    select_df = pd.merge(select_df, ta_df_daily, on='ts_code', how='left', suffixes=('_d', '_w'))
-    select_df = select_df[select_df['macd_gloden_d'] | select_df['kdj_gloden_d']]
+    select_df = pd.merge(select_df, ta_df_daily, on='ts_code', how='left', suffixes=('_d', '_d'))
+    select_df = select_df[select_df['macd_gloden'] | select_df['kdj_gloden']]
 
-    stock_df = getStockList()
+    stock_df = getHkStockList()
     join_df = pd.merge(select_df, stock_df[['ts_code', 'name']], on='ts_code', how='left')
-    join_df = join_df[['select_date_d', 'ts_code', 'name',
-                       'ma35_3_d', 'ma35_5_d','ma3_d', 'ma5_d',
-                       'macd_gloden_d', 'dif_d', 'dea_d', 'macd_d',
-                       'kdj_gloden_d', 'k_d', 'd_d', 'j_d']].round(2)
+    join_df = join_df[['select_date', 'ts_code', 'name',
+                       'ma35_3', 'ma35_5','ma3', 'ma5',
+                       'macd_gloden', 'dif', 'dea', 'macd',
+                       'kdj_gloden', 'k', 'd', 'j']].round(2)
 
-    join_df.rename(columns={'select_date_d': 'select_date'}, inplace=True)
-
-    saveStockTrendSelect(join_df)
+    # saveStockTrendSelect(join_df)
 
     file_name = date_str + '_hk_select.csv'
     join_df.to_csv(file_name, index=True)

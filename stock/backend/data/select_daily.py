@@ -6,7 +6,7 @@ from moduledir.chatutil import *
 from moduledir.dateutil import date_equal
 from moduledir.stockutil import getStockData, getStockList, saveStockSelect
 
-from hk.hkutil import getHkStockData
+from hk.hkutil import getHkStockData, getHkStockList
 
 logger = logging.getLogger('myapp')
 
@@ -24,6 +24,8 @@ def volmagnify(df):
     max = prev.max()
     latest = df.values[size-1]
     latest_prev = df.values[size-2]
+    if mean == 0:
+        return 0
     if (latest > mean * 1.5 and latest > latest_prev * 1.5 and latest > max):
         return latest / mean
     return 0
@@ -149,7 +151,7 @@ def selectHkVolMagnify(date_str, n):
                               'slope20': 'trend20',
                               'slope30': 'trend30',
                               'vol_magnify': 'vol'}, inplace=True)
-    stock_df = getStockList()
+    stock_df = getHkStockList()
     join_df = pd.merge(select_df, stock_df[['ts_code', 'name']], on='ts_code', how='left')
     final_df = join_df[['select_date', 'ts_code', 'name', 'vol', 'trend3', 'trend5', 'trend10', 'trend20', 'trend30']].round(3)
 
