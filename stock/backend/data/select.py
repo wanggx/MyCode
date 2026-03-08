@@ -82,7 +82,8 @@ def selectHk(date_str):
         return
 
     select_df = pd.merge(select_df, ta_df_daily, on='ts_code', how='left', suffixes=('_d', '_d'))
-    select_df = select_df[select_df['macd_gloden'] | select_df['kdj_gloden']]
+    select_df = select_df[select_df['macd_gloden'] | (select_df['macd'] > 0) | select_df['kdj_gloden'] |
+                          (select_df['k'] > select_df['d'])]
 
     stock_df = getHkStockList()
     join_df = pd.merge(select_df, stock_df[['ts_code', 'name']], on='ts_code', how='left')
