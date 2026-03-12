@@ -6,7 +6,7 @@
         <el-tab-pane label="成交量选股" name="volume">
           <VolSelect ref="volSelectRef" @date-change="handleDateChange" />
         </el-tab-pane>
-        <el-tab-pane label="成交量趋势" name="volLine">
+        <el-tab-pane label="成交量趋势" name="volLine" lazy>
           <VolLine ref="volLineRef" @date-change="handleDateChange"/>
         </el-tab-pane>
         <el-tab-pane label="趋势选股" name="trend">

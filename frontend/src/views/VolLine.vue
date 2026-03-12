@@ -45,6 +45,17 @@ const chart = ref(null)
 const loading = ref(false)
 const chartData = ref([])
 const chartContainer = ref(null)
+let resizeObserver = null
+
+const resizeChart = () => {
+  if (!chart.value) return
+  try {
+    chart.value.resize()
+  } catch (e) {
+    // 如果在 dispose/重建瞬间触发 resize，忽略本次异常即可
+    console.warn('echarts resize skipped:', e)
+  }
+}
 
 // 获取指定天数前的日期
 const getDateNDaysAgo = (n) => {
@@ -73,6 +84,7 @@ const initChart = () => {
     if (chartContainer.value) {
       if (chart.value) {
         chart.value.dispose()
+        chart.value = null
       }
       chart.value = echarts.init(chartContainer.value)
       // 初始化时显示空图表
@@ -94,6 +106,7 @@ const initChart = () => {
         }]
       }
       chart.value.setOption(emptyOption, true)
+      nextTick(resizeChart)
     }
   })
 }
@@ -146,17 +159,40 @@ const updateChart = () => {
     chartData.value = []
   }
 
-  // 准备图表数据，每个点包含日期信息
-  const chartSeriesData = chartData.value.map(item => {
-    return {
-      value: item && typeof item.count === 'number' ? item.count : 0,
-      date: item && item.select_date ? item.select_date : ''
-    }
-  })
+  // 过滤无效日期，确保 xAxis.data 与 series.data 一一对应（避免 ECharts 渲染异常）
+  const validItems = chartData.value.filter(
+    (item) => item && item.select_date && String(item.select_date).trim() !== ''
+  )
+  const dates = validItems.map((item) => String(item.select_date))
+  const values = validItems.map((item) =>
+    typeof item.count === 'number' && Number.isFinite(item.count) ? item.count : 0
+  )
 
-  const dates = chartData.value.map(item => {
-    return item && item.select_date ? item.select_date : ''
-  }).filter(date => date !== '')
+  // 如果无数据，显示友好提示
+  if (dates.length === 0) {
+    const emptyOption = {
+      title: {
+        text: '暂无数据',
+        left: 'center',
+        textStyle: {
+          color: '#999'
+        }
+      },
+      xAxis: {
+        type: 'category',
+        data: []
+      },
+      yAxis: {
+        type: 'value'
+      },
+      series: [{
+        data: [],
+        type: 'line'
+      }]
+    }
+    chart.value.setOption(emptyOption, true)
+    return
+  }
 
   const option = {
     title: {
@@ -190,10 +226,11 @@ const updateChart = () => {
     },
     yAxis: {
       type: 'value',
-      name: '数量'
+      name: '数量',
+      scale: true
     },
     series: [{
-      data: chartSeriesData.map(item => item.value),
+      data: values,
       type: 'line',
       smooth: true,
       areaStyle: {},
@@ -221,18 +258,34 @@ const updateChart = () => {
 
   // 使用 notMerge: true 避免配置合并问题
   chart.value.setOption(option, true)
+  nextTick(resizeChart)
 }
 
 // 组件挂载时初始化
 onMounted(() => {
+  console.log('chartContainer:', chartContainer.value)
   initDefaultDates()
   initChart()
+  if (typeof window !== 'undefined') {
+    window.addEventListener('resize', resizeChart)
+  }
+  if (chartContainer.value && typeof ResizeObserver !== 'undefined') {
+    resizeObserver = new ResizeObserver(() => resizeChart())
+    resizeObserver.observe(chartContainer.value)
+  }
   // 页面加载后自动查询一次数据
   fetchData()
 })
 
 // 组件卸载前销毁图表
 onBeforeUnmount(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('resize', resizeChart)
+  }
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+    resizeObserver = null
+  }
   if (chart.value) {
     chart.value.dispose()
     chart.value = null
@@ -243,16 +296,17 @@ onBeforeUnmount(() => {
 <style scoped>
 .vol-line-container {
   padding: 0px;
-  height: calc(100vh - 120px); /* 根据需要调整高度 */
+  height: 100vh; /* 占满整个视口高度 */
   display: flex;
   flex-direction: column;
 }
 
 .filter-bar {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 8px;
   padding-left: 16px;
+  padding-right: 16px;
 }
 
 .filter-bar-left {
@@ -268,6 +322,7 @@ onBeforeUnmount(() => {
 
 .chart-container {
   flex: 1;
+  min-height: 400px;
   border: 1px solid #ddd;
   border-radius: 4px;
   padding: 20px;
