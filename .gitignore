@@ -21,5 +21,8 @@ logs/
 *.pid
 *.csv
 
+# Claude Code
+.claude/
+
 # Frontend
 node_modules

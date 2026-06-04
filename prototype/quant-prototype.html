@@ -1,0 +1,1374 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>轻量量化投研平台 - 交互原型</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --panel: #ffffff;
+      --panel-soft: #f8fafb;
+      --line: #dde4ea;
+      --line-soft: #edf1f4;
+      --text: #1f2933;
+      --muted: #667481;
+      --weak: #98a3ad;
+      --primary: #147d77;
+      --primary-weak: #e6f4f2;
+      --green: #16885a;
+      --amber: #b7791f;
+      --red: #c2414b;
+      --blue: #2d6cdf;
+      --shadow: 0 12px 32px rgba(31, 41, 51, 0.08);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      letter-spacing: 0;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    .login {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background:
+        linear-gradient(rgba(20, 125, 119, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(20, 125, 119, 0.05) 1px, transparent 1px),
+        #f6f8fa;
+      background-size: 28px 28px;
+      padding: 24px;
+    }
+
+    .login-card {
+      width: min(420px, 100%);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 28px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .brand-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 7px;
+      background: linear-gradient(135deg, #147d77, #2d6cdf);
+      display: grid;
+      place-items: center;
+      color: white;
+      font-weight: 800;
+      font-size: 17px;
+    }
+
+    .brand-title {
+      font-size: 19px;
+      font-weight: 700;
+    }
+
+    .brand-subtitle {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 3px;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+      margin-bottom: 16px;
+    }
+
+    label {
+      color: #3d4a55;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    input,
+    select {
+      height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: white;
+      color: var(--text);
+      padding: 0 11px;
+      outline: none;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(20, 125, 119, 0.12);
+    }
+
+    .btn {
+      height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: white;
+      color: var(--text);
+      padding: 0 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: 0.16s ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      border-color: #b9c4cc;
+      background: #fbfcfd;
+    }
+
+    .btn.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+
+    .btn.primary:hover {
+      background: #0e6f6a;
+    }
+
+    .btn.ghost {
+      background: var(--panel-soft);
+    }
+
+    .btn.full {
+      width: 100%;
+    }
+
+    .demo-tip {
+      color: var(--weak);
+      font-size: 12px;
+      margin-top: 14px;
+      line-height: 1.7;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: none;
+      grid-template-columns: 184px 1fr;
+      grid-template-rows: 48px 1fr;
+    }
+
+    .app.is-authenticated {
+      display: grid;
+    }
+
+    .topbar {
+      grid-column: 1 / 3;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+      padding: 0 18px;
+      z-index: 2;
+    }
+
+    .topbar-left,
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 3px rgba(22, 136, 90, 0.13);
+    }
+
+    .date-pill,
+    .user-pill {
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0 11px;
+      background: var(--panel-soft);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .sidebar {
+      background: var(--panel);
+      border-right: 1px solid var(--line);
+      padding: 12px 10px;
+    }
+
+    .nav-section {
+      color: var(--weak);
+      font-size: 12px;
+      font-weight: 700;
+      margin: 12px 10px 8px;
+    }
+
+    .nav-item {
+      height: 38px;
+      width: 100%;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: #3d4a55;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 0 10px;
+      cursor: pointer;
+      text-align: left;
+      margin-bottom: 4px;
+    }
+
+    .nav-item:hover {
+      background: #f1f5f7;
+    }
+
+    .nav-item.active {
+      background: var(--primary-weak);
+      color: #0e6f6a;
+      font-weight: 700;
+    }
+
+    .nav-icon {
+      width: 18px;
+      text-align: center;
+      color: inherit;
+    }
+
+    .content {
+      padding: 16px;
+      min-width: 0;
+      overflow: auto;
+    }
+
+    .page {
+      display: none;
+      max-width: 1480px;
+      margin: 0 auto;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    .page-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .page-title {
+      font-size: 22px;
+      font-weight: 750;
+      margin: 0 0 5px;
+    }
+
+    .page-desc {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 0;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .cols-4 {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .cols-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .cols-main-side {
+      grid-template-columns: minmax(0, 1fr) 360px;
+    }
+
+    .cols-side-main {
+      grid-template-columns: 280px minmax(0, 1fr);
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 1px 1px rgba(31, 41, 51, 0.03);
+      min-width: 0;
+    }
+
+    .panel-head {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .panel-title {
+      font-size: 14px;
+      font-weight: 750;
+    }
+
+    .panel-body {
+      padding: 12px;
+    }
+
+    .kpi {
+      padding: 14px;
+    }
+
+    .kpi-label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .kpi-value {
+      font-size: 25px;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .kpi-note {
+      color: var(--weak);
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .positive {
+      color: var(--green);
+    }
+
+    .negative {
+      color: var(--red);
+    }
+
+    .warning {
+      color: var(--amber);
+    }
+
+    .chart {
+      height: 260px;
+      border: 1px solid var(--line-soft);
+      border-radius: 6px;
+      background:
+        linear-gradient(var(--line-soft) 1px, transparent 1px),
+        linear-gradient(90deg, var(--line-soft) 1px, transparent 1px),
+        #fff;
+      background-size: 100% 52px, 72px 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chart svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .chart-legend {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 12px;
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid var(--line-soft);
+      border-radius: 999px;
+      padding: 5px 9px;
+    }
+
+    .legend-line {
+      width: 18px;
+      height: 3px;
+      border-radius: 99px;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 5px;
+    }
+
+    .bar-chart {
+      height: 210px;
+      display: flex;
+      align-items: end;
+      gap: 12px;
+      padding: 18px 14px 28px;
+      border: 1px solid var(--line-soft);
+      border-radius: 6px;
+      background: #fff;
+    }
+
+    .bar {
+      flex: 1;
+      min-width: 16px;
+      border-radius: 5px 5px 0 0;
+      background: linear-gradient(180deg, #4fb3a9, #147d77);
+      position: relative;
+    }
+
+    .bar span {
+      position: absolute;
+      left: 50%;
+      bottom: -22px;
+      transform: translateX(-50%);
+      color: var(--weak);
+      font-size: 11px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      padding: 10px 9px;
+      border-bottom: 1px solid var(--line-soft);
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    th {
+      color: var(--muted);
+      background: #fafbfc;
+      font-weight: 650;
+    }
+
+    tbody tr:hover {
+      background: #fbfcfd;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      height: 22px;
+      border-radius: 999px;
+      padding: 0 8px;
+      font-size: 12px;
+      font-weight: 650;
+      background: #eef2f6;
+      color: #53616d;
+    }
+
+    .tag.green {
+      background: #e7f6ef;
+      color: var(--green);
+    }
+
+    .tag.amber {
+      background: #fff4dd;
+      color: var(--amber);
+    }
+
+    .tag.red {
+      background: #fdecee;
+      color: var(--red);
+    }
+
+    .tag.blue {
+      background: #eaf1ff;
+      color: var(--blue);
+    }
+
+    .tabs {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      border-bottom: 1px solid var(--line-soft);
+      padding: 0 10px;
+    }
+
+    .tab {
+      height: 40px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      padding: 0 10px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+
+    .tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      font-weight: 750;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .rule-box {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px;
+      min-height: 74px;
+      background: var(--panel-soft);
+      line-height: 1.7;
+      color: #3d4a55;
+      font-size: 13px;
+    }
+
+    .strategy-item {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: white;
+      border-radius: 6px;
+      padding: 11px;
+      text-align: left;
+      cursor: pointer;
+      margin-bottom: 9px;
+    }
+
+    .strategy-item.active {
+      border-color: var(--primary);
+      background: var(--primary-weak);
+    }
+
+    .strategy-name {
+      font-weight: 750;
+      margin-bottom: 5px;
+    }
+
+    .strategy-meta {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .run-log {
+      display: grid;
+      gap: 9px;
+    }
+
+    .log-item {
+      display: grid;
+      grid-template-columns: 72px 1fr auto;
+      gap: 8px;
+      align-items: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      padding: 12px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .filters select,
+    .filters input {
+      width: 140px;
+    }
+
+    .drawer {
+      position: fixed;
+      right: 0;
+      top: 48px;
+      bottom: 0;
+      width: min(420px, 100vw);
+      background: white;
+      border-left: 1px solid var(--line);
+      box-shadow: -14px 0 30px rgba(31, 41, 51, 0.12);
+      transform: translateX(100%);
+      transition: transform 0.2s ease;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .drawer.open {
+      transform: translateX(0);
+    }
+
+    .drawer-head {
+      height: 54px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+    }
+
+    .drawer-body {
+      padding: 14px;
+      overflow: auto;
+    }
+
+    .mini-chart {
+      height: 150px;
+      border: 1px solid var(--line-soft);
+      border-radius: 6px;
+      background:
+        linear-gradient(var(--line-soft) 1px, transparent 1px),
+        linear-gradient(90deg, var(--line-soft) 1px, transparent 1px),
+        #fff;
+      background-size: 100% 50px, 60px 100%;
+      margin: 12px 0;
+    }
+
+    .risk-list {
+      display: grid;
+      gap: 9px;
+    }
+
+    .risk-item {
+      border: 1px solid var(--line-soft);
+      border-radius: 6px;
+      padding: 10px;
+      display: grid;
+      gap: 5px;
+    }
+
+    .heatmap {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 5px;
+    }
+
+    .heat-cell {
+      height: 25px;
+      border-radius: 4px;
+      background: #dff3eb;
+      border: 1px solid #cbe9dd;
+    }
+
+    .heat-cell.warn {
+      background: #fff3d8;
+      border-color: #f1d499;
+    }
+
+    .heat-cell.bad {
+      background: #fdecef;
+      border-color: #f5bdc5;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%) translateY(20px);
+      background: #1f2933;
+      color: white;
+      border-radius: 6px;
+      padding: 10px 14px;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transition: 0.18s ease;
+      z-index: 10;
+      font-size: 13px;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .progress {
+      height: 7px;
+      border-radius: 999px;
+      background: #edf1f4;
+      overflow: hidden;
+    }
+
+    .progress span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--primary);
+    }
+
+    .split {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .small {
+      font-size: 12px;
+    }
+
+    .hide {
+      display: none !important;
+    }
+
+    @media (max-width: 1100px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        grid-column: 1;
+      }
+
+      .sidebar {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .nav-section {
+        display: none;
+      }
+
+      .nav-item {
+        width: auto;
+      }
+
+      .cols-4,
+      .cols-3,
+      .cols-main-side,
+      .cols-side-main {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="login" id="loginView">
+    <section class="login-card">
+      <div class="brand">
+        <div class="brand-mark">Q</div>
+        <div>
+          <div class="brand-title">轻量量化投研平台</div>
+          <div class="brand-subtitle">研究、信号、回测与模拟风控</div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="username">用户名</label>
+        <input id="username" value="admin" autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="password">密码</label>
+        <input id="password" type="password" value="123456" autocomplete="current-password">
+      </div>
+      <button class="btn primary full" id="loginBtn">登录</button>
+      <div class="demo-tip">原型仅保留简单登录态。默认账号：admin / 123456。后续实现可接入现有 JWT 登录接口。</div>
+    </section>
+  </main>
+
+  <section class="app" id="appView">
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="brand-mark">Q</div>
+        <div>
+          <div class="brand-title" style="font-size:16px;">轻量量化投研平台</div>
+        </div>
+        <span class="date-pill"><span class="status-dot"></span>数据日期 2026-06-04</span>
+      </div>
+      <div class="topbar-right">
+        <span class="date-pill">任务正常 7 / 8</span>
+        <span class="user-pill">admin</span>
+        <button class="btn ghost" id="logoutBtn">退出</button>
+      </div>
+    </header>
+
+    <aside class="sidebar">
+      <div class="nav-section">投研闭环</div>
+      <button class="nav-item active" data-page="dashboard"><span class="nav-icon">◎</span>总览</button>
+      <button class="nav-item" data-page="strategy"><span class="nav-icon">▣</span>策略研究</button>
+      <button class="nav-item" data-page="backtest"><span class="nav-icon">⌁</span>回测验证</button>
+      <button class="nav-item" data-page="signals"><span class="nav-icon">◆</span>信号中心</button>
+      <button class="nav-item" data-page="dataRisk"><span class="nav-icon">▤</span>数据风控</button>
+    </aside>
+
+    <section class="content">
+      <div class="page active" id="dashboard">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">总览</h1>
+            <p class="page-desc">今天先看数据完整性、策略运行、信号质量和模拟组合风险。</p>
+          </div>
+          <div class="toolbar">
+            <select><option>全市场</option><option>A股</option><option>港股</option></select>
+            <button class="btn">刷新</button>
+          </div>
+        </div>
+
+        <div class="grid cols-4">
+          <div class="panel kpi">
+            <div class="kpi-label">今日有效信号</div>
+            <div class="kpi-value">38</div>
+            <div class="kpi-note positive">高置信 12，只展示非实盘信号</div>
+          </div>
+          <div class="panel kpi">
+            <div class="kpi-label">运行策略</div>
+            <div class="kpi-value">12</div>
+            <div class="kpi-note">3 个策略今日有新结果</div>
+          </div>
+          <div class="panel kpi">
+            <div class="kpi-label">数据完整率</div>
+            <div class="kpi-value positive">98.6%</div>
+            <div class="kpi-note warning">港股缺失 2 个交易日</div>
+          </div>
+          <div class="panel kpi">
+            <div class="kpi-label">模拟组合最大回撤</div>
+            <div class="kpi-value negative">-6.2%</div>
+            <div class="kpi-note">低于预警线 -8%</div>
+          </div>
+        </div>
+
+        <div class="grid cols-main-side" style="margin-top:12px;">
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">策略收益 vs 沪深300</div>
+              <span class="tag green">近 6 个月 +18.4%</span>
+            </div>
+            <div class="panel-body">
+              <div class="chart">
+                <div class="chart-legend">
+                  <span><i class="legend-line" style="background:#147d77;"></i>策略</span>
+                  <span><i class="legend-line" style="background:#98a3ad;"></i>基准</span>
+                </div>
+                <svg viewBox="0 0 900 260" preserveAspectRatio="none" aria-label="收益曲线">
+                  <polyline points="20,205 120,188 220,176 320,150 420,158 520,116 620,105 720,72 880,58" fill="none" stroke="#147d77" stroke-width="4"/>
+                  <polyline points="20,210 120,202 220,190 320,184 420,172 520,165 620,150 720,145 880,130" fill="none" stroke="#98a3ad" stroke-width="3"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">任务状态</div>
+              <span class="tag green">正常</span>
+            </div>
+            <div class="panel-body run-log">
+              <div class="log-item"><span>16:35</span><span>A股日线同步</span><span class="tag green">完成</span></div>
+              <div class="log-item"><span>16:42</span><span>周线聚合</span><span class="tag green">完成</span></div>
+              <div class="log-item"><span>16:55</span><span>放量突破策略</span><span class="tag green">完成</span></div>
+              <div class="log-item"><span>17:02</span><span>港股行情补录</span><span class="tag amber">待补</span></div>
+              <div class="log-item"><span>17:10</span><span>企业微信通知</span><span class="tag green">完成</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid cols-main-side" style="margin-top:12px;">
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">今日信号排行</div>
+              <button class="btn" data-page-link="signals">进入信号中心</button>
+            </div>
+            <div class="panel-body" style="padding:0;">
+              <table>
+                <thead><tr><th>代码</th><th>名称</th><th>策略</th><th>信号分</th><th>核心原因</th><th>状态</th></tr></thead>
+                <tbody>
+                  <tr><td>300750.SZ</td><td>宁德时代</td><td>趋势共振</td><td class="positive">91</td><td>周线金叉，量能放大</td><td><span class="tag green">观察</span></td></tr>
+                  <tr><td>600519.SH</td><td>贵州茅台</td><td>均线修复</td><td class="positive">86</td><td>MA3 上穿 MA5</td><td><span class="tag blue">复核</span></td></tr>
+                  <tr><td>00700.HK</td><td>腾讯控股</td><td>港股趋势</td><td class="positive">84</td><td>KDJ 转强</td><td><span class="tag green">观察</span></td></tr>
+                  <tr><td>000651.SZ</td><td>格力电器</td><td>放量突破</td><td>79</td><td>成交量斜率改善</td><td><span class="tag amber">待确认</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">风险提醒</div>
+              <span class="tag amber">2 项</span>
+            </div>
+            <div class="panel-body risk-list">
+              <div class="risk-item">
+                <strong>行业集中度偏高</strong>
+                <span class="muted small">新能源持仓权重 31.4%，接近 35% 预警线。</span>
+              </div>
+              <div class="risk-item">
+                <strong>港股数据缺失</strong>
+                <span class="muted small">2 只标的缺失最近交易日行情，信号分已降权。</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="page" id="strategy">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">策略研究</h1>
+            <p class="page-desc">以现有选股逻辑为基础，先做参数化策略，不做在线代码编辑器。</p>
+          </div>
+          <div class="toolbar">
+            <button class="btn">复制策略</button>
+            <button class="btn primary" id="saveStrategyBtn">保存参数</button>
+          </div>
+        </div>
+
+        <div class="grid cols-side-main">
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">策略列表</div>
+              <span class="tag">4 个</span>
+            </div>
+            <div class="panel-body">
+              <button class="strategy-item active" data-strategy="volume">
+                <div class="strategy-name">放量突破</div>
+                <div class="strategy-meta">量能斜率 + 趋势过滤</div>
+              </button>
+              <button class="strategy-item" data-strategy="ma">
+                <div class="strategy-name">均线趋势</div>
+                <div class="strategy-meta">MA3 / MA5 日周共振</div>
+              </button>
+              <button class="strategy-item" data-strategy="macd">
+                <div class="strategy-name">MACD/KDJ 共振</div>
+                <div class="strategy-meta">技术指标金叉过滤</div>
+              </button>
+              <button class="strategy-item" data-strategy="hk">
+                <div class="strategy-name">港股趋势</div>
+                <div class="strategy-meta">港股日线趋势信号</div>
+              </button>
+            </div>
+          </div>
+
+          <div class="grid cols-main-side">
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title" id="strategyTitle">放量突破参数</div>
+                <span class="tag green">v1.3 已启用</span>
+              </div>
+              <div class="panel-body">
+                <div class="form-grid">
+                  <div class="field"><label>股票池</label><select><option>沪深A股</option><option>港股通</option><option>自选观察池</option></select></div>
+                  <div class="field"><label>调仓周期</label><select><option>每日收盘后</option><option>每周五</option><option>手动运行</option></select></div>
+                  <div class="field"><label>最大持仓</label><input value="20"></div>
+                  <div class="field"><label>单票权重上限</label><input value="8%"></div>
+                  <div class="field"><label>手续费</label><input value="0.03%"></div>
+                  <div class="field"><label>滑点</label><input value="0.05%"></div>
+                </div>
+                <div class="grid cols-2" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px;">
+                  <div>
+                    <label>买入条件</label>
+                    <div class="rule-box">vol_magnify &gt; 0；近 5 日趋势斜率 &gt; 0；收盘价高于 MA5；剔除数据缺失标的。</div>
+                  </div>
+                  <div>
+                    <label>卖出条件</label>
+                    <div class="rule-box">跌破 MA10；信号分低于 60；组合风控触发行业集中降权。</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">最近运行</div>
+                <button class="btn primary" id="runStrategyBtn">运行策略</button>
+              </div>
+              <div class="panel-body run-log" id="strategyLog">
+                <div class="log-item"><span>今日</span><span>生成 18 个信号</span><span class="tag green">完成</span></div>
+                <div class="log-item"><span>T-1</span><span>命中率 57.1%</span><span class="tag">复盘</span></div>
+                <div class="log-item"><span>T-5</span><span>参数版本 v1.2</span><span class="tag blue">归档</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="page" id="backtest">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">回测验证</h1>
+            <p class="page-desc">先支持日频、简单撮合、手续费滑点、收益曲线和交易明细。</p>
+          </div>
+          <div class="toolbar">
+            <select id="backtestStrategy"><option>放量突破</option><option>均线趋势</option><option>MACD/KDJ 共振</option></select>
+            <input value="2025-01-01">
+            <input value="2026-06-04">
+            <button class="btn primary" id="runBacktestBtn">开始回测</button>
+          </div>
+        </div>
+
+        <div class="grid cols-4">
+          <div class="panel kpi"><div class="kpi-label">年化收益</div><div class="kpi-value positive" id="annualReturn">24.8%</div><div class="kpi-note">基准 8.7%</div></div>
+          <div class="panel kpi"><div class="kpi-label">夏普比率</div><div class="kpi-value" id="sharpe">1.42</div><div class="kpi-note">日频模拟</div></div>
+          <div class="panel kpi"><div class="kpi-label">最大回撤</div><div class="kpi-value negative" id="drawdown">-6.2%</div><div class="kpi-note">2026-03 区间</div></div>
+          <div class="panel kpi"><div class="kpi-label">胜率</div><div class="kpi-value" id="winRate">56.8%</div><div class="kpi-note">交易 162 笔</div></div>
+        </div>
+
+        <div class="grid cols-main-side" style="margin-top:12px;">
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">净值曲线</div>
+              <span class="tag green" id="backtestStatus">已完成</span>
+            </div>
+            <div class="panel-body">
+              <div class="chart">
+                <div class="chart-legend">
+                  <span><i class="legend-line" style="background:#147d77;"></i>策略</span>
+                  <span><i class="legend-line" style="background:#98a3ad;"></i>沪深300</span>
+                </div>
+                <svg id="backtestChart" viewBox="0 0 900 260" preserveAspectRatio="none">
+                  <polyline points="20,210 140,185 260,176 380,132 500,148 620,94 740,80 880,52" fill="none" stroke="#147d77" stroke-width="4"/>
+                  <polyline points="20,214 140,204 260,195 380,188 500,174 620,164 740,150 880,138" fill="none" stroke="#98a3ad" stroke-width="3"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">回测任务</div>
+              <span class="tag">最近 3 次</span>
+            </div>
+            <div class="panel-body" style="padding:0;">
+              <table>
+                <thead><tr><th>策略</th><th>状态</th><th>年化</th></tr></thead>
+                <tbody id="taskRows">
+                  <tr><td>放量突破</td><td><span class="tag green">完成</span></td><td class="positive">24.8%</td></tr>
+                  <tr><td>均线趋势</td><td><span class="tag green">完成</span></td><td class="positive">18.3%</td></tr>
+                  <tr><td>港股趋势</td><td><span class="tag amber">待复核</span></td><td>11.6%</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid cols-3" style="margin-top:12px;">
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">当前持仓</div></div>
+            <div class="panel-body" style="padding:0;"><table><thead><tr><th>股票</th><th>权重</th><th>贡献</th></tr></thead><tbody><tr><td>宁德时代</td><td>7.8%</td><td class="positive">+2.1%</td></tr><tr><td>腾讯控股</td><td>6.4%</td><td class="positive">+1.5%</td></tr><tr><td>贵州茅台</td><td>5.9%</td><td class="negative">-0.3%</td></tr></tbody></table></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">交易明细</div></div>
+            <div class="panel-body" style="padding:0;"><table><thead><tr><th>日期</th><th>动作</th><th>标的</th></tr></thead><tbody><tr><td>06-03</td><td>调入</td><td>300750.SZ</td></tr><tr><td>06-03</td><td>调出</td><td>600036.SH</td></tr><tr><td>06-02</td><td>降权</td><td>00700.HK</td></tr></tbody></table></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">回撤分析</div></div>
+            <div class="panel-body">
+              <div class="bar-chart">
+                <div class="bar" style="height:32%;"><span>1月</span></div>
+                <div class="bar" style="height:48%;"><span>2月</span></div>
+                <div class="bar" style="height:72%;background:linear-gradient(180deg,#e27d84,#c2414b);"><span>3月</span></div>
+                <div class="bar" style="height:38%;"><span>4月</span></div>
+                <div class="bar" style="height:26%;"><span>5月</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="page" id="signals">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">信号中心</h1>
+            <p class="page-desc">把选股结果升级成可解释信号：分数、原因、K线核验和观察池动作。</p>
+          </div>
+          <div class="toolbar">
+            <button class="btn">重新计算</button>
+            <button class="btn primary">导出信号</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="tabs">
+            <button class="tab active" data-signal-tab="all">今日信号</button>
+            <button class="tab" data-signal-tab="volume">放量信号</button>
+            <button class="tab" data-signal-tab="trend">趋势信号</button>
+            <button class="tab" data-signal-tab="hk">港股信号</button>
+          </div>
+          <div class="filters">
+            <select id="marketFilter"><option value="all">全部市场</option><option value="A股">A股</option><option value="港股">港股</option></select>
+            <select id="scoreFilter"><option value="0">全部分数</option><option value="85">85分以上</option><option value="80">80分以上</option></select>
+            <input id="keywordFilter" placeholder="代码 / 名称">
+            <button class="btn" id="filterBtn">筛选</button>
+          </div>
+          <div style="overflow:auto;">
+            <table>
+              <thead><tr><th>日期</th><th>代码</th><th>名称</th><th>市场</th><th>策略</th><th>信号分</th><th>量能</th><th>趋势</th><th>MACD</th><th>KDJ</th><th>入选原因</th><th>操作</th></tr></thead>
+              <tbody id="signalRows"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="page" id="dataRisk">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">数据风控</h1>
+            <p class="page-desc">合并数据中心与组合风控，减少菜单，但保留上线前必须看的质量与风险。</p>
+          </div>
+          <div class="toolbar">
+            <button class="btn">同步股票列表</button>
+            <button class="btn primary" id="repairDataBtn">补录行情</button>
+          </div>
+        </div>
+
+        <div class="grid cols-4">
+          <div class="panel kpi"><div class="kpi-label">A股完整率</div><div class="kpi-value positive">99.2%</div><div class="kpi-note">最近交易日正常</div></div>
+          <div class="panel kpi"><div class="kpi-label">港股完整率</div><div class="kpi-value warning">96.8%</div><div class="kpi-note">缺失 2 个交易日</div></div>
+          <div class="panel kpi"><div class="kpi-label">模拟组合年化</div><div class="kpi-value positive">21.3%</div><div class="kpi-note">组合A</div></div>
+          <div class="panel kpi"><div class="kpi-label">风险预警</div><div class="kpi-value warning">2</div><div class="kpi-note">行业集中、数据缺失</div></div>
+        </div>
+
+        <div class="grid cols-main-side" style="margin-top:12px;">
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">数据完整性热力图</div>
+              <span class="tag amber">最近 60 日</span>
+            </div>
+            <div class="panel-body">
+              <div class="heatmap" id="heatmap"></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">风险提醒</div>
+              <span class="tag amber">需处理</span>
+            </div>
+            <div class="panel-body risk-list">
+              <div class="risk-item"><strong>新能源行业集中</strong><span class="muted small">组合A 权重 31.4%，建议回测降权阈值。</span><div class="progress"><span style="width:78%;"></span></div></div>
+              <div class="risk-item"><strong>港股行情缺失</strong><span class="muted small">00700.HK、03690.HK 最近交易日缺失。</span><div class="progress"><span style="width:46%;background:#b7791f;"></span></div></div>
+              <div class="risk-item"><strong>连续回撤未触线</strong><span class="muted small">近 5 日回撤 -2.4%，低于 -5% 预警线。</span><div class="progress"><span style="width:38%;background:#2d6cdf;"></span></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid cols-3" style="margin-top:12px;">
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">同步记录</div></div>
+            <div class="panel-body" style="padding:0;"><table><thead><tr><th>任务</th><th>时间</th><th>状态</th></tr></thead><tbody><tr><td>A股日线</td><td>16:35</td><td><span class="tag green">完成</span></td></tr><tr><td>周线聚合</td><td>16:42</td><td><span class="tag green">完成</span></td></tr><tr><td>港股日线</td><td>17:02</td><td><span class="tag amber">待补</span></td></tr></tbody></table></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">行业分布</div></div>
+            <div class="panel-body"><div class="bar-chart"><div class="bar" style="height:76%;"><span>新能源</span></div><div class="bar" style="height:42%;"><span>消费</span></div><div class="bar" style="height:36%;"><span>金融</span></div><div class="bar" style="height:31%;"><span>科技</span></div><div class="bar" style="height:24%;"><span>医药</span></div></div></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">组合持仓</div></div>
+            <div class="panel-body" style="padding:0;"><table><thead><tr><th>标的</th><th>权重</th><th>风险</th></tr></thead><tbody><tr><td>300750.SZ</td><td>7.8%</td><td><span class="tag amber">较高</span></td></tr><tr><td>00700.HK</td><td>6.4%</td><td><span class="tag">正常</span></td></tr><tr><td>600519.SH</td><td>5.9%</td><td><span class="tag">正常</span></td></tr></tbody></table></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+
+  <aside class="drawer" id="signalDrawer">
+    <div class="drawer-head">
+      <strong id="drawerTitle">信号详情</strong>
+      <button class="btn" id="closeDrawerBtn">关闭</button>
+    </div>
+    <div class="drawer-body">
+      <span class="tag green">研究信号，不构成实盘指令</span>
+      <div class="mini-chart">
+        <svg viewBox="0 0 420 150" preserveAspectRatio="none">
+          <polyline points="15,115 65,108 115,95 165,102 215,76 265,70 315,48 405,35" fill="none" stroke="#147d77" stroke-width="3"/>
+          <polyline points="15,126 65,122 115,112 165,108 215,98 265,88 315,78 405,69" fill="none" stroke="#98a3ad" stroke-width="2"/>
+        </svg>
+      </div>
+      <div class="grid" style="gap:10px;">
+        <div class="risk-item"><strong>入选原因</strong><span id="drawerReason" class="muted small">周线趋势向上，成交量斜率改善。</span></div>
+        <div class="risk-item"><strong>指标拆解</strong><span class="muted small">量能 88 / 趋势 91 / MACD 金叉 / KDJ 转强</span></div>
+        <div class="risk-item"><strong>风控检查</strong><span class="muted small">行业权重未超过上限，最近 20 日波动率处于中位。</span></div>
+      </div>
+      <div class="split" style="margin-top:12px;">
+        <button class="btn primary" id="watchBtn">加入观察池</button>
+        <button class="btn">加入模拟组合</button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="toast" id="toast">已完成</div>
+
+  <script>
+    const signals = [
+      {date: "2026-06-04", code: "300750.SZ", name: "宁德时代", market: "A股", strategy: "趋势共振", score: 91, volume: "强", trend: "上行", macd: "金叉", kdj: "转强", reason: "周线金叉，成交量连续放大"},
+      {date: "2026-06-04", code: "600519.SH", name: "贵州茅台", market: "A股", strategy: "均线趋势", score: 86, volume: "中", trend: "修复", macd: "走平", kdj: "金叉", reason: "MA3 上穿 MA5，回撤收敛"},
+      {date: "2026-06-04", code: "00700.HK", name: "腾讯控股", market: "港股", strategy: "港股趋势", score: 84, volume: "中", trend: "上行", macd: "金叉", kdj: "转强", reason: "港股趋势信号恢复，KDJ 转强"},
+      {date: "2026-06-04", code: "000651.SZ", name: "格力电器", market: "A股", strategy: "放量突破", score: 79, volume: "强", trend: "横盘", macd: "走平", kdj: "转强", reason: "成交量斜率改善，价格接近突破位"},
+      {date: "2026-06-04", code: "03690.HK", name: "美团-W", market: "港股", strategy: "港股趋势", score: 76, volume: "弱", trend: "修复", macd: "走平", kdj: "金叉", reason: "趋势修复但数据完整性降权"}
+    ];
+
+    const loginView = document.getElementById("loginView");
+    const appView = document.getElementById("appView");
+    const toast = document.getElementById("toast");
+
+    function showToast(text) {
+      toast.textContent = text;
+      toast.classList.add("show");
+      window.setTimeout(() => toast.classList.remove("show"), 1800);
+    }
+
+    function setPage(pageId) {
+      document.querySelectorAll(".nav-item").forEach(item => {
+        item.classList.toggle("active", item.dataset.page === pageId);
+      });
+      document.querySelectorAll(".page").forEach(page => {
+        page.classList.toggle("active", page.id === pageId);
+      });
+    }
+
+    document.getElementById("loginBtn").addEventListener("click", () => {
+      loginView.classList.add("hide");
+      appView.classList.add("is-authenticated");
+      showToast("登录成功，已进入投研工作台");
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      appView.classList.remove("is-authenticated");
+      loginView.classList.remove("hide");
+      showToast("已退出");
+    });
+
+    document.querySelectorAll(".nav-item").forEach(item => {
+      item.addEventListener("click", () => setPage(item.dataset.page));
+    });
+
+    document.querySelectorAll("[data-page-link]").forEach(item => {
+      item.addEventListener("click", () => setPage(item.dataset.pageLink));
+    });
+
+    document.querySelectorAll(".strategy-item").forEach(item => {
+      item.addEventListener("click", () => {
+        document.querySelectorAll(".strategy-item").forEach(next => next.classList.remove("active"));
+        item.classList.add("active");
+        document.getElementById("strategyTitle").textContent = item.querySelector(".strategy-name").textContent + "参数";
+      });
+    });
+
+    document.getElementById("saveStrategyBtn").addEventListener("click", () => {
+      showToast("策略参数已保存为新版本");
+    });
+
+    document.getElementById("runStrategyBtn").addEventListener("click", () => {
+      const log = document.getElementById("strategyLog");
+      log.insertAdjacentHTML("afterbegin", '<div class="log-item"><span>刚刚</span><span>手动运行，生成 21 个信号</span><span class="tag green">完成</span></div>');
+      showToast("策略运行完成");
+    });
+
+    document.getElementById("runBacktestBtn").addEventListener("click", () => {
+      document.getElementById("backtestStatus").textContent = "运行中";
+      document.getElementById("backtestStatus").className = "tag amber";
+      showToast("回测任务已提交");
+      window.setTimeout(() => {
+        document.getElementById("annualReturn").textContent = "27.1%";
+        document.getElementById("sharpe").textContent = "1.55";
+        document.getElementById("drawdown").textContent = "-5.8%";
+        document.getElementById("winRate").textContent = "58.2%";
+        document.getElementById("backtestStatus").textContent = "已完成";
+        document.getElementById("backtestStatus").className = "tag green";
+        document.getElementById("taskRows").insertAdjacentHTML("afterbegin", '<tr><td>放量突破</td><td><span class="tag green">刚完成</span></td><td class="positive">27.1%</td></tr>');
+        showToast("回测完成，指标已刷新");
+      }, 900);
+    });
+
+    function renderSignals() {
+      const market = document.getElementById("marketFilter").value;
+      const minScore = Number(document.getElementById("scoreFilter").value);
+      const keyword = document.getElementById("keywordFilter").value.trim();
+      const rows = signals.filter(item => {
+        const marketOk = market === "all" || item.market === market;
+        const scoreOk = item.score >= minScore;
+        const keywordOk = !keyword || item.code.includes(keyword) || item.name.includes(keyword);
+        return marketOk && scoreOk && keywordOk;
+      });
+      document.getElementById("signalRows").innerHTML = rows.map(item => `
+        <tr>
+          <td>${item.date}</td><td>${item.code}</td><td>${item.name}</td><td>${item.market}</td>
+          <td>${item.strategy}</td><td class="${item.score >= 85 ? "positive" : ""}">${item.score}</td>
+          <td>${item.volume}</td><td>${item.trend}</td><td>${item.macd}</td><td>${item.kdj}</td>
+          <td>${item.reason}</td>
+          <td><button class="btn" data-detail="${item.code}">详情</button></td>
+        </tr>
+      `).join("");
+      document.querySelectorAll("[data-detail]").forEach(btn => {
+        btn.addEventListener("click", () => openSignal(btn.dataset.detail));
+      });
+    }
+
+    function openSignal(code) {
+      const item = signals.find(next => next.code === code);
+      document.getElementById("drawerTitle").textContent = `${item.name} ${item.code}`;
+      document.getElementById("drawerReason").textContent = item.reason;
+      document.getElementById("signalDrawer").classList.add("open");
+    }
+
+    document.getElementById("filterBtn").addEventListener("click", () => {
+      renderSignals();
+      showToast("筛选条件已应用");
+    });
+
+    document.querySelectorAll("[data-signal-tab]").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll("[data-signal-tab]").forEach(next => next.classList.remove("active"));
+        tab.classList.add("active");
+        showToast(`已切换到${tab.textContent}`);
+      });
+    });
+
+    document.getElementById("closeDrawerBtn").addEventListener("click", () => {
+      document.getElementById("signalDrawer").classList.remove("open");
+    });
+
+    document.getElementById("watchBtn").addEventListener("click", () => {
+      showToast("已加入观察池");
+    });
+
+    document.getElementById("repairDataBtn").addEventListener("click", () => {
+      showToast("补录任务已提交");
+    });
+
+    const heatmap = document.getElementById("heatmap");
+    for (let i = 0; i < 60; i += 1) {
+      const div = document.createElement("div");
+      div.className = "heat-cell" + (i % 23 === 0 ? " bad" : (i % 11 === 0 ? " warn" : ""));
+      heatmap.appendChild(div);
+    }
+
+    renderSignals();
+  </script>
+</body>
+</html>

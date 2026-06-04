@@ -8,7 +8,7 @@ from flask import jsonify
 
 def success(data=None, message="success", status_code=200):
     """成功响应"""
-    response = {"message": message}
+    response = {"success": True, "message": message}
     if data is not None:
         response["data"] = data
     return jsonify(response), status_code

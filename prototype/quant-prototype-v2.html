@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>轻量量化投研平台 - 高保真交互原型 v2</title>
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --panel: #fff;
+      --soft: #f8fafc;
+      --line: #dfe6ee;
+      --line2: #edf1f5;
+      --text: #172033;
+      --sub: #5d6b7a;
+      --muted: #8a97a6;
+      --teal: #007f7a;
+      --teal2: #e6f5f3;
+      --blue: #2764d9;
+      --green: #0f9f6e;
+      --red: #d84a57;
+      --amber: #d28a17;
+      --radius: 6px;
+      --shadow: 0 8px 24px rgba(21, 32, 51, .07);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+      font-size: 13px;
+      letter-spacing: 0;
+    }
+
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+
+    .login {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background:
+        linear-gradient(rgba(0,127,122,.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,127,122,.045) 1px, transparent 1px),
+        #f7f9fb;
+      background-size: 30px 30px;
+      padding: 24px;
+    }
+
+    .login-card {
+      width: 420px;
+      max-width: 100%;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 30px;
+    }
+
+    .login-title {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 800;
+      margin: 0 0 28px;
+    }
+
+    .form-row { display: grid; gap: 7px; margin-bottom: 16px; }
+    label { color: #334155; font-weight: 650; }
+    input, select {
+      height: 34px;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 4px;
+      padding: 0 10px;
+      color: var(--text);
+      outline: none;
+    }
+    input:focus, select:focus {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(0,127,122,.12);
+    }
+
+    .btn {
+      height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 0 12px;
+      background: #fff;
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .btn:hover { background: #f8fafc; border-color: #c8d2dc; }
+    .btn.primary { background: var(--teal); color: #fff; border-color: var(--teal); }
+    .btn.primary:hover { background: #006c68; }
+    .btn.text { border: 0; background: transparent; color: var(--blue); padding: 0 4px; height: 26px; }
+    .btn.full { width: 100%; }
+
+    .app {
+      min-height: 100vh;
+      display: none;
+      grid-template-columns: 220px 1fr;
+      grid-template-rows: 46px 1fr;
+    }
+    .app.on { display: grid; }
+
+    .topbar {
+      grid-column: 1 / 3;
+      height: 46px;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      position: sticky;
+      top: 0;
+      z-index: 4;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 18px; }
+    .hamburger { border: 0; background: transparent; color: var(--sub); font-size: 18px; }
+    .top-right { display: flex; align-items: center; gap: 18px; color: var(--sub); }
+    .user { display: flex; align-items: center; gap: 8px; }
+    .avatar {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: #e7efff; color: var(--blue);
+      display: grid; place-items: center; font-weight: 800;
+    }
+
+    .sidebar {
+      background: #fff;
+      border-right: 1px solid var(--line);
+      padding: 10px 8px;
+    }
+    .nav {
+      display: grid;
+      gap: 4px;
+    }
+    .nav button {
+      height: 40px;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: #233044;
+      display: grid;
+      grid-template-columns: 22px 1fr 12px;
+      align-items: center;
+      gap: 8px;
+      padding: 0 11px;
+      text-align: left;
+    }
+    .nav button:hover { background: #f3f6f9; }
+    .nav button.active {
+      background: var(--teal);
+      color: #fff;
+      font-weight: 750;
+      box-shadow: 0 4px 10px rgba(0,127,122,.18);
+    }
+    .nav .arrow { color: inherit; opacity: .7; text-align: right; }
+    .nav-icon { width: 20px; text-align: center; }
+
+    .main {
+      padding: 14px;
+      min-width: 0;
+      overflow: auto;
+    }
+    .page { display: none; max-width: 1500px; margin: 0 auto; }
+    .page.active { display: block; }
+    .page-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    h1 { font-size: 22px; margin: 0 0 4px; }
+    .desc { color: var(--sub); margin: 0; }
+    .toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    .grid { display: grid; gap: 12px; }
+    .kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .two { grid-template-columns: minmax(0, 1fr) 330px; }
+    .three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .side-main { grid-template-columns: 300px minmax(0, 1fr); }
+    .main-side { grid-template-columns: minmax(0, 1fr) 360px; }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      min-width: 0;
+      box-shadow: 0 1px 1px rgba(21,32,51,.03);
+    }
+    .card-head {
+      min-height: 42px;
+      border-bottom: 1px solid var(--line2);
+      padding: 10px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .card-title { font-weight: 800; }
+    .card-body { padding: 12px; }
+    .kpi { padding: 16px; position: relative; overflow: hidden; }
+    .kpi::after {
+      content: "";
+      position: absolute;
+      right: 14px; top: 16px;
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: var(--teal2);
+    }
+    .kpi-label { color: var(--sub); margin-bottom: 8px; }
+    .kpi-value { font-size: 28px; font-weight: 850; line-height: 1.05; }
+    .kpi-note { margin-top: 8px; color: var(--muted); font-size: 12px; }
+    .green { color: var(--green); }
+    .red { color: var(--red); }
+    .amber { color: var(--amber); }
+    .blue { color: var(--blue); }
+
+    .tag {
+      display: inline-flex;
+      height: 22px;
+      align-items: center;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: #eef2f6;
+      color: #526170;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .tag.green { background: #e7f7ef; color: var(--green); }
+    .tag.red { background: #fdecef; color: var(--red); }
+    .tag.amber { background: #fff5df; color: var(--amber); }
+    .tag.blue { background: #edf4ff; color: var(--blue); }
+
+    .chart {
+      height: 260px;
+      border: 1px solid var(--line2);
+      border-radius: 5px;
+      background:
+        linear-gradient(var(--line2) 1px, transparent 1px),
+        linear-gradient(90deg, var(--line2) 1px, transparent 1px),
+        #fff;
+      background-size: 100% 52px, 72px 100%;
+      position: relative;
+      overflow: hidden;
+    }
+    .chart.small { height: 170px; }
+    .chart svg { width: 100%; height: 100%; display: block; }
+    .legend {
+      position: absolute;
+      right: 10px; top: 10px;
+      background: rgba(255,255,255,.9);
+      border: 1px solid var(--line2);
+      border-radius: 999px;
+      padding: 5px 10px;
+      display: flex;
+      gap: 12px;
+      color: var(--sub);
+      font-size: 12px;
+    }
+    .line-dot { width: 18px; height: 3px; border-radius: 999px; display: inline-block; margin-right: 5px; vertical-align: middle; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td {
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--line2);
+      text-align: left;
+      white-space: nowrap;
+    }
+    th { background: #fafbfd; color: var(--sub); font-weight: 750; }
+    tbody tr:hover { background: #fbfcfd; }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid var(--line2);
+      padding: 0 10px;
+    }
+    .tab {
+      height: 40px;
+      border: 0;
+      background: transparent;
+      color: var(--sub);
+      border-bottom: 2px solid transparent;
+      padding: 0 12px;
+    }
+    .tab.active { color: var(--teal); border-color: var(--teal); font-weight: 800; }
+
+    .filters {
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--line2);
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filters input, .filters select { width: 136px; }
+
+    .strategy-list { display: grid; gap: 10px; }
+    .strategy-card {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 5px;
+      padding: 12px;
+      text-align: left;
+      display: grid;
+      gap: 6px;
+    }
+    .strategy-card.active { border-color: var(--teal); background: #f0fbf9; }
+    .strategy-top { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .rule-box {
+      min-height: 86px;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      background: var(--soft);
+      padding: 10px;
+      color: #334155;
+      line-height: 1.75;
+    }
+
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+    }
+    .day {
+      height: 30px;
+      border-radius: 4px;
+      background: #e7f7ef;
+      border: 1px solid #d2ecdf;
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      color: #415160;
+    }
+    .day.warn { background: #fff3d6; border-color: #ecd59c; }
+    .day.bad { background: #fdecef; border-color: #f3c1c8; }
+    .heatmap {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      height: 170px;
+    }
+    .heat {
+      border-radius: 4px;
+      border: 1px solid #e1c4c7;
+      background: #f8dddd;
+    }
+    .heat:nth-child(2n) { background: #d8f0ec; border-color: #bee1dc; }
+    .heat:nth-child(3n) { background: #f7eeee; }
+    .donut {
+      height: 230px;
+      display: grid;
+      place-items: center;
+      background:
+        conic-gradient(#007f7a 0 24%, #2d6cdf 24% 41%, #00a68a 41% 56%, #86b7ff 56% 69%, #c8d7e5 69% 100%);
+      border-radius: 50%;
+      width: 230px;
+      margin: 0 auto;
+      position: relative;
+    }
+    .donut::after {
+      content: "行业分布";
+      position: absolute;
+      inset: 54px;
+      background: #fff;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: var(--sub);
+      font-weight: 800;
+    }
+
+    .drawer {
+      position: fixed;
+      right: 0; top: 46px; bottom: 0;
+      width: min(390px, 100vw);
+      background: #fff;
+      border-left: 1px solid var(--line);
+      box-shadow: -14px 0 30px rgba(21,32,51,.12);
+      transform: translateX(100%);
+      transition: transform .22s ease;
+      z-index: 8;
+      display: flex;
+      flex-direction: column;
+    }
+    .drawer.open { transform: translateX(0); }
+    .drawer-head {
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      border-bottom: 1px solid var(--line);
+    }
+    .drawer-body { padding: 14px; overflow: auto; }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%) translateY(15px);
+      opacity: 0;
+      background: #172033;
+      color: #fff;
+      border-radius: 5px;
+      padding: 10px 14px;
+      box-shadow: var(--shadow);
+      transition: .18s ease;
+      z-index: 12;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .hide { display: none !important; }
+
+    @media (max-width: 1180px) {
+      .app { grid-template-columns: 1fr; }
+      .topbar { grid-column: 1; }
+      .sidebar { display: flex; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--line); padding: 8px; }
+      .nav { display: flex; gap: 6px; }
+      .nav button { min-width: 118px; grid-template-columns: 18px 1fr; }
+      .nav .arrow { display: none; }
+      .kpis, .two, .three, .side-main, .main-side { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <section class="login" id="login">
+    <div class="login-card">
+      <h1 class="login-title">轻量量化投研平台</h1>
+      <div class="form-row"><label>用户名</label><input value="admin"></div>
+      <div class="form-row"><label>密码</label><input type="password" value="123456"></div>
+      <button class="btn primary full" id="loginBtn">登录</button>
+      <p class="desc" style="text-align:center;margin-top:18px;">投研演示环境，仅保留简单登录态</p>
+    </div>
+  </section>
+
+  <section class="app" id="app">
+    <header class="topbar">
+      <div class="brand"><span>轻量量化投研平台</span><button class="hamburger">☰</button></div>
+      <div class="top-right">
+        <span>数据日期： <strong>2026-06-04</strong></span>
+        <span>▣</span>
+        <span class="user"><span class="avatar">●</span>admin⌄</span>
+        <button class="btn" id="logoutBtn">退出</button>
+      </div>
+    </header>
+
+    <aside class="sidebar">
+      <nav class="nav">
+        <button class="active" data-page="dashboard"><span class="nav-icon">⌂</span><span>总览</span><span class="arrow">›</span></button>
+        <button data-page="data"><span class="nav-icon">▣</span><span>数据中心</span><span class="arrow">›</span></button>
+        <button data-page="factor"><span class="nav-icon">△</span><span>因子实验室</span><span class="arrow">›</span></button>
+        <button data-page="strategy"><span class="nav-icon">◇</span><span>策略工作台</span><span class="arrow">›</span></button>
+        <button data-page="backtest"><span class="nav-icon">◎</span><span>回测中心</span><span class="arrow">›</span></button>
+        <button data-page="signals"><span class="nav-icon">▤</span><span>选股信号</span><span class="arrow">›</span></button>
+        <button data-page="portfolio"><span class="nav-icon">♡</span><span>组合风控</span><span class="arrow">›</span></button>
+        <button data-page="tasks"><span class="nav-icon">▧</span><span>任务中心</span><span class="arrow">›</span></button>
+        <button data-page="settings"><span class="nav-icon">⚙</span><span>系统设置</span><span class="arrow">›</span></button>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <section class="page active" id="dashboard">
+        <div class="page-head">
+          <div><h1>总览</h1><p class="desc">跟踪今日信号、策略表现、数据质量和系统提示。</p></div>
+          <div class="toolbar"><button class="btn">近1年</button><button class="btn">近2年</button><button class="btn primary">刷新</button></div>
+        </div>
+        <div class="grid kpis">
+          <div class="card kpi"><div class="kpi-label">今日信号</div><div class="kpi-value">38</div><div class="kpi-note green">较昨日 +12 / 46.15%</div></div>
+          <div class="card kpi"><div class="kpi-label">运行策略</div><div class="kpi-value">12</div><div class="kpi-note green">较昨日 +1 / 9.09%</div></div>
+          <div class="card kpi"><div class="kpi-label">数据完整率</div><div class="kpi-value">98.6%</div><div class="kpi-note green">较昨日 +0.3pp</div></div>
+          <div class="card kpi"><div class="kpi-label">最大回撤</div><div class="kpi-value green">-6.2%</div><div class="kpi-note red">历史最大 -18.7%</div></div>
+        </div>
+        <div class="grid two" style="margin-top:12px;">
+          <div class="card">
+            <div class="card-head"><div class="card-title">策略收益 vs 沪深300</div><div class="toolbar"><span class="tag green">组合综合</span><span class="tag">沪深300</span></div></div>
+            <div class="card-body">
+              <div class="chart">
+                <div class="legend"><span><i class="line-dot" style="background:var(--teal)"></i>策略组合</span><span><i class="line-dot" style="background:#a9b4c0"></i>沪深300</span></div>
+                <svg viewBox="0 0 900 260" preserveAspectRatio="none"><polyline points="20,210 130,175 240,124 350,92 460,128 570,117 680,80 790,72 880,44" fill="none" stroke="#007f7a" stroke-width="4"/><polyline points="20,210 130,196 240,176 350,160 460,170 570,156 680,151 790,142 880,120" fill="none" stroke="#a9b4c0" stroke-width="3"/></svg>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">今日信号排行</div><button class="btn text" data-jump="signals">查看全部 ›</button></div>
+            <div class="card-body" style="padding:0;"><table><thead><tr><th>排名</th><th>策略</th><th>信号数</th><th>信号分均值</th></tr></thead><tbody><tr><td class="amber">1</td><td>放量突破</td><td>14</td><td>82.1</td></tr><tr><td class="amber">2</td><td>均线趋势</td><td>10</td><td>78.3</td></tr><tr><td>3</td><td>MACD/KDJ共振</td><td>8</td><td>73.6</td></tr><tr><td>4</td><td>港股趋势</td><td>6</td><td>69.2</td></tr></tbody></table></div>
+          </div>
+        </div>
+        <div class="grid two" style="margin-top:12px;">
+          <div class="card"><div class="card-head"><div class="card-title">任务状态</div></div><div class="card-body" style="padding:0;"><table><tbody><tr><td>数据同步</td><td>今日 08:45:32</td><td><span class="tag green">成功</span></td></tr><tr><td>策略运行</td><td>今日 09:15:07</td><td><span class="tag green">运行中</span></td></tr><tr><td>通知</td><td>今日 09:15:05</td><td><span class="tag green">已发送</span></td></tr></tbody></table></div></div>
+          <div class="card"><div class="card-head"><div class="card-title">系统提示</div></div><div class="card-body" style="padding:0;"><table><tbody><tr><td>沪深股票日线数据已更新至 2026-06-04</td><td>08:45</td></tr><tr><td>港股日线数据已更新至 2026-06-04</td><td>08:46</td></tr><tr><td class="amber">部分因子IC异常，请检查：动量因子</td><td>08:40</td></tr></tbody></table></div></div>
+        </div>
+      </section>
+
+      <section class="page" id="data">
+        <div class="page-head"><div><h1>数据中心</h1><p class="desc">关注行情、缺失、补录和同步质量，不把数据问题带进策略。</p></div></div>
+        <div class="card">
+          <div class="filters"><select><option>全部市场</option><option>A股</option><option>港股</option></select><select><option>行情数据</option><option>基础资料</option><option>财务数据</option></select><input value="2026-05-05"><span>至</span><input value="2026-06-04"><input placeholder="输入股票代码"><button class="btn primary">查询</button><button class="btn">重置</button></div>
+          <div class="card-body grid three">
+            <div class="card"><div class="card-head"><div class="card-title">数据完整率趋势</div><span class="green">98.60%</span></div><div class="card-body"><div class="chart small"><svg viewBox="0 0 420 170" preserveAspectRatio="none"><polyline points="10,96 45,80 80,84 115,72 150,118 185,102 220,72 255,88 290,78 325,94 360,80 410,68" fill="none" stroke="#007f7a" stroke-width="3"/></svg></div></div></div>
+            <div class="card"><div class="card-head"><div class="card-title">缺失数据日历</div></div><div class="card-body"><div class="calendar" id="calendar"></div></div></div>
+            <div class="card"><div class="card-head"><div class="card-title">最新同步记录</div><button class="btn primary" id="syncBtn">同步股票列表</button></div><div class="card-body" style="padding:0;"><table><thead><tr><th>开始时间</th><th>类型</th><th>状态</th><th>完整率</th></tr></thead><tbody><tr><td>08:45</td><td>行情数据</td><td><span class="tag green">成功</span></td><td class="green">98.72%</td></tr><tr><td>08:10</td><td>基础资料</td><td><span class="tag green">成功</span></td><td class="green">98.41%</td></tr><tr><td>07:35</td><td>行情数据</td><td><span class="tag green">成功</span></td><td class="green">98.21%</td></tr></tbody></table></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="factor">
+        <div class="page-head"><div><h1>因子实验室</h1><p class="desc">因子库、IC、分层收益和相关性，是策略上线前的研究台。</p></div><div class="toolbar"><button class="btn primary" id="analyzeFactorBtn">分析</button><button class="btn">重置</button></div></div>
+        <div class="grid side-main">
+          <div class="card"><div class="card-head"><div class="card-title">因子分类</div></div><div class="card-body"><div class="strategy-list"><div><strong>技术类 (128)</strong><p class="desc">MA20突破、RSI(14)、MACD、KDJ</p></div><div><strong>价量类 (86)</strong><p class="desc">成交量斜率、量价背离、换手率</p></div><div><strong>风险类 (34)</strong><p class="desc">波动率、Beta、下行风险</p></div></div></div></div>
+          <div class="grid">
+            <div class="card"><div class="filters"><select><option>MA20_突破</option><option>成交量变化率</option><option>RSI(14)</option></select><select><option>沪深A股</option><option>港股通</option></select><input value="2023-06-01"><span>至</span><input value="2026-06-04"><select><option>20日</option><option>60日</option></select><select><option>5组</option><option>10组</option></select></div></div>
+            <div class="grid three">
+              <div class="card"><div class="card-head"><div class="card-title">IC曲线</div></div><div class="card-body"><div class="chart small"><svg viewBox="0 0 420 170" preserveAspectRatio="none"><polyline points="10,86 35,60 60,108 85,76 110,115 135,50 160,80 185,128 210,82 235,46 260,112 285,94 310,62 335,120 360,78 410,66" fill="none" stroke="#007f7a" stroke-width="3"/></svg></div></div></div>
+              <div class="card"><div class="card-head"><div class="card-title">分层收益</div></div><div class="card-body"><div class="chart small"><svg viewBox="0 0 420 170" preserveAspectRatio="none"><rect x="40" y="112" width="48" height="38" fill="#aaccc8"/><rect x="116" y="98" width="48" height="52" fill="#65b7af"/><rect x="192" y="70" width="48" height="80" fill="#319d96"/><rect x="268" y="42" width="48" height="108" fill="#007f7a"/><rect x="344" y="20" width="48" height="130" fill="#006c68"/></svg></div></div></div>
+              <div class="card"><div class="card-head"><div class="card-title">相关性热力图</div></div><div class="card-body"><div class="heatmap"><div class="heat"></div><div class="heat"></div><div class="heat"></div><div class="heat"></div><div class="heat"></div><div class="heat"></div><div class="heat"></div><div class="heat"></div><div class="heat"></div><div class="heat"></div><div class="heat"></div><div class="heat"></div><div class="heat"></div><div class="heat"></div><div class="heat"></div></div></div></div>
+            </div>
+            <div class="card"><div class="card-head"><div class="card-title">因子覆盖率</div></div><div class="card-body" style="padding:0;"><table><thead><tr><th>因子</th><th>覆盖股票数</th><th>覆盖率</th><th>IC均值</th><th>IR</th><th>多空年化</th><th>信息比率</th></tr></thead><tbody><tr><td>MA20_突破</td><td>5,210</td><td class="green">98.02%</td><td>0.062</td><td>1.18</td><td>13.42%</td><td>1.21</td></tr><tr><td>成交量变化率</td><td>5,198</td><td class="green">97.79%</td><td>0.057</td><td>1.07</td><td>11.28%</td><td>1.03</td></tr><tr><td>RSI(14)</td><td>5,206</td><td class="green">97.94%</td><td>-0.032</td><td>-0.61</td><td>-5.14%</td><td>-0.55</td></tr></tbody></table></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="strategy">
+        <div class="page-head"><div><h1>策略工作台</h1><p class="desc">配置策略参数、查看运行记录和版本，不做在线代码 IDE。</p></div><button class="btn primary">+ 新建策略</button></div>
+        <div class="grid main-side">
+          <div class="grid side-main">
+            <div class="card"><div class="card-head"><div class="card-title">策略列表</div></div><div class="card-body strategy-list"><button class="strategy-card active" data-strategy="放量突破"><div class="strategy-top"><strong>放量突破</strong><span class="tag green">运行中</span></div><span class="desc">v2.1</span></button><button class="strategy-card" data-strategy="均线趋势"><div class="strategy-top"><strong>均线趋势</strong><span class="tag green">运行中</span></div><span class="desc">v3.4</span></button><button class="strategy-card" data-strategy="MACD/KDJ共振"><div class="strategy-top"><strong>MACD/KDJ共振</strong><span class="tag">运行中</span></div><span class="desc">v1.8</span></button><button class="strategy-card" data-strategy="港股趋势"><div class="strategy-top"><strong>港股趋势</strong><span class="tag red">已停止</span></div><span class="desc">v2.0</span></button></div></div>
+            <div class="card"><div class="card-head"><div class="card-title" id="strategyName">策略设置 - 放量突破</div></div><div class="card-body"><div class="form-grid"><div class="form-row"><label>股票池</label><select><option>沪深A股（剔除ST）</option><option>港股通</option></select></div><div class="form-row"><label>调仓周期</label><select><option>周</option><option>日</option></select></div><div class="form-row"><label>最大持仓</label><input value="20"></div><div class="form-row"><label>手续费</label><input value="0.03%"></div><div class="form-row"><label>滑点</label><input value="0.02%"></div></div><div class="grid" style="grid-template-columns:1fr 1fr;gap:12px;"><div><label>买入条件</label><div class="rule-box">当日成交量 &gt; 过去20日均量 * 2.0；收盘价突破近20日最高价；成交额 &gt; 1亿元；换手率 &gt; 3%。</div></div><div><label>卖出条件</label><div class="rule-box">收盘价跌破10日均线；盈利回撤超8%；持仓超过20个交易日；触发组合风险线。</div></div></div><div class="toolbar" style="margin-top:12px;"><button class="btn">保存草稿</button><button class="btn primary" id="saveRunBtn">保存并运行</button><button class="btn">回测</button></div></div></div>
+          </div>
+          <div class="grid">
+            <div class="card"><div class="card-head"><div class="card-title">最近运行</div><button class="btn text">更多 ›</button></div><div class="card-body" style="padding:0;"><table><thead><tr><th>运行时间</th><th>状态</th><th>收益率</th><th>最大回撤</th></tr></thead><tbody id="strategyRuns"><tr><td>2026-06-04 09:10</td><td><span class="tag green">运行中</span></td><td>--</td><td>--</td></tr><tr><td>2026-06-03 09:05</td><td><span class="tag green">完成</span></td><td class="red">1.32%</td><td class="red">-2.11%</td></tr><tr><td>2026-06-02 09:05</td><td><span class="tag green">完成</span></td><td class="red">-0.43%</td><td class="red">-2.87%</td></tr></tbody></table></div></div>
+            <div class="card"><div class="card-head"><div class="card-title">参数版本</div></div><div class="card-body strategy-list"><div class="strategy-card active"><strong>v2.1（当前）</strong><span class="desc">更新：2026-06-01 14:20</span></div><div class="strategy-card"><strong>v2.0</strong><span class="desc">优化止损保护线</span></div><div class="strategy-card"><strong>v1.0</strong><span class="desc">初始版本</span></div></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="backtest">
+        <div class="page-head"><div><h1>回测中心</h1><p class="desc">回测任务、净值曲线、风险指标、持仓和交易明细集中查看。</p></div></div>
+        <div class="card"><div class="tabs"><button class="tab active">回测任务</button><button class="tab">回测报告库</button></div><div class="filters"><input value="2020-01-01"><span>至</span><input value="2026-06-04"><select><option>沪深A股（剔除ST）</option></select><select><option>全部状态</option></select><button class="btn primary" id="runBacktest">查询</button><button class="btn">新建回测</button></div><div style="overflow:auto;"><table><thead><tr><th>策略</th><th>区间</th><th>股票池</th><th>状态</th><th>年化收益</th><th>夏普</th><th>最大回撤</th><th>操作</th></tr></thead><tbody id="backtestRows"><tr><td>放量突破</td><td>2020-01-01 ~ 2026-06-04</td><td>沪深A股</td><td><span class="tag green">完成</span></td><td class="red">16.72%</td><td>1.12</td><td class="green">-6.21%</td><td><button class="btn text">查看</button></td></tr><tr><td>均线趋势</td><td>2020-01-01 ~ 2026-06-04</td><td>沪深A股</td><td><span class="tag green">完成</span></td><td class="red">12.48%</td><td>0.96</td><td class="green">-7.83%</td><td><button class="btn text">查看</button></td></tr></tbody></table></div></div>
+        <div class="grid main-side" style="margin-top:12px;"><div class="card"><div class="card-head"><div class="card-title">净值曲线（放量突破）</div></div><div class="card-body"><div class="chart"><div class="legend"><span><i class="line-dot" style="background:var(--teal)"></i>策略净值</span><span><i class="line-dot" style="background:#a9b4c0"></i>基准</span></div><svg viewBox="0 0 900 260" preserveAspectRatio="none"><polyline points="20,210 130,160 240,130 350,145 460,120 570,100 680,72 790,54 880,36" fill="none" stroke="#007f7a" stroke-width="4"/><polyline points="20,210 130,196 240,184 350,176 460,170 570,166 680,152 790,138 880,128" fill="none" stroke="#a9b4c0" stroke-width="3"/></svg></div></div></div><div class="card"><div class="card-head"><div class="card-title">风险指标</div></div><div class="card-body grid" style="grid-template-columns:1fr 1fr;"><div><span class="desc">年化收益</span><h1 class="red">16.72%</h1></div><div><span class="desc">年化波动</span><h1>14.91%</h1></div><div><span class="desc">夏普</span><h1>1.12</h1></div><div><span class="desc">卡玛比率</span><h1>2.69</h1></div><div><span class="desc">胜率</span><h1>61.58%</h1></div><div><span class="desc">最大回撤</span><h1 class="green">-6.21%</h1></div></div></div></div>
+      </section>
+
+      <section class="page" id="signals">
+        <div class="page-head"><div><h1>选股信号</h1><p class="desc">展示今日信号、策略来源、指标拆解和单股解释。</p></div></div>
+        <div class="card"><div class="tabs"><button class="tab active">今日信号</button><button class="tab">放量信号</button><button class="tab">趋势信号</button><button class="tab">港股信号</button><button class="tab">信号解释</button></div><div class="filters"><select id="marketFilter"><option value="全部">全部</option><option value="沪市">沪市</option><option value="深市">深市</option><option value="港股">港股</option></select><select id="strategyFilter"><option value="全部">全部</option><option value="放量突破">放量突破</option><option value="均线趋势">均线趋势</option><option value="港股趋势">港股趋势</option></select><input value="2026-06-04"><select id="scoreFilter"><option value="0">≥0</option><option value="80">≥80</option><option value="90">≥90</option></select><button class="btn primary" id="filterSignals">查询</button><button class="btn">重置</button></div><div style="overflow:auto;"><table><thead><tr><th>日期</th><th>代码</th><th>名称</th><th>市场</th><th>策略</th><th>信号分</th><th>量能</th><th>趋势</th><th>MACD</th><th>KDJ</th><th>入选原因</th><th>操作</th></tr></thead><tbody id="signalRows"></tbody></table></div></div>
+      </section>
+
+      <section class="page" id="portfolio">
+        <div class="page-head"><div><h1>组合风控</h1><p class="desc">模拟组合净值、持仓、行业分布和风险预警。</p></div></div>
+        <div class="grid main-side">
+          <div class="grid">
+            <div class="card"><div class="tabs"><button class="tab active">模拟组合A</button><button class="tab">观察池</button><button class="tab">自定义组合</button></div><div class="card-body"><div class="chart"><div class="legend"><span><i class="line-dot" style="background:var(--teal)"></i>组合净值</span><span><i class="line-dot" style="background:#a9b4c0"></i>沪深300</span></div><svg viewBox="0 0 900 260" preserveAspectRatio="none"><polyline points="20,205 120,174 220,138 320,112 420,122 520,96 620,102 720,76 880,54" fill="none" stroke="#007f7a" stroke-width="4"/><polyline points="20,210 120,198 220,184 320,172 420,168 520,158 620,148 720,142 880,130" fill="none" stroke="#a9b4c0" stroke-width="3"/></svg></div></div></div>
+            <div class="card"><div class="card-head"><div class="card-title">持仓明细</div></div><div style="overflow:auto;"><table><thead><tr><th>代码</th><th>名称</th><th>行业</th><th>持仓市值(万)</th><th>占比</th><th>较上期变化</th></tr></thead><tbody><tr><td>300750</td><td>宁德时代</td><td>电力设备</td><td>1,222.45</td><td>9.82%</td><td class="red">↑ 0.42%</td></tr><tr><td>200519</td><td>贵州茅台</td><td>食品饮料</td><td>987.32</td><td>7.94%</td><td class="green">↓ -0.21%</td></tr><tr><td>601318</td><td>中国平安</td><td>非银金融</td><td>752.18</td><td>6.04%</td><td>0.00%</td></tr></tbody></table></div></div>
+          </div>
+          <div class="grid">
+            <div class="card"><div class="card-head"><div class="card-title">风险预警</div></div><div class="card-body strategy-list"><div class="strategy-card"><div class="strategy-top"><strong>行业集中</strong><span class="tag amber">中</span></div><span class="desc">前3行业占比 48.27%</span></div><div class="strategy-card"><div class="strategy-top"><strong>单股过重</strong><span class="tag red">高</span></div><span class="desc">最大持仓占比 9.82%</span></div><div class="strategy-card"><div class="strategy-top"><strong>选股质量</strong><span class="tag green">低</span></div><span class="desc">缺失股票数 2</span></div></div></div>
+            <div class="card"><div class="card-head"><div class="card-title">行业分布</div></div><div class="card-body"><div class="donut"></div></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="tasks">
+        <div class="page-head"><div><h1>任务中心</h1><p class="desc">统一查看数据同步、策略运行、回测和通知任务。</p></div><button class="btn primary" id="runTaskBtn">立即执行</button></div>
+        <div class="card"><div style="overflow:auto;"><table><thead><tr><th>任务</th><th>类型</th><th>计划时间</th><th>最近运行</th><th>状态</th><th>耗时</th><th>操作</th></tr></thead><tbody id="taskRows"><tr><td>A股日线同步</td><td>数据</td><td>16:30</td><td>2026-06-04 16:35</td><td><span class="tag green">成功</span></td><td>5m12s</td><td><button class="btn text">日志</button></td></tr><tr><td>策略批量运行</td><td>策略</td><td>17:00</td><td>2026-06-04 17:03</td><td><span class="tag green">成功</span></td><td>2m45s</td><td><button class="btn text">日志</button></td></tr><tr><td>港股数据补录</td><td>数据</td><td>手动</td><td>2026-06-04 17:12</td><td><span class="tag amber">待补</span></td><td>--</td><td><button class="btn text">执行</button></td></tr></tbody></table></div></div>
+      </section>
+
+      <section class="page" id="settings">
+        <div class="page-head"><div><h1>系统设置</h1><p class="desc">保留简单配置项，权限登录先轻量实现。</p></div></div>
+        <div class="grid three">
+          <div class="card"><div class="card-head"><div class="card-title">数据源</div></div><div class="card-body"><div class="form-row"><label>Tushare Token</label><input value="**************"></div><div class="form-row"><label>默认市场</label><select><option>A股 + 港股</option></select></div><button class="btn primary">保存</button></div></div>
+          <div class="card"><div class="card-head"><div class="card-title">通知</div></div><div class="card-body"><div class="form-row"><label>企业微信 Webhook</label><input value="https://qyapi.weixin.qq.com/..."></div><div class="form-row"><label>通知级别</label><select><option>成功 + 异常</option></select></div><button class="btn primary">发送测试</button></div></div>
+          <div class="card"><div class="card-head"><div class="card-title">权限</div></div><div class="card-body"><p class="desc">第一阶段只保留普通用户和管理员。复杂团队权限暂缓。</p><button class="btn">修改密码</button></div></div>
+        </div>
+      </section>
+    </main>
+  </section>
+
+  <aside class="drawer" id="drawer">
+    <div class="drawer-head"><strong id="drawerTitle">300774 倍杰特</strong><button class="btn" id="closeDrawer">关闭</button></div>
+    <div class="drawer-body">
+      <h1 class="red" style="margin-bottom:0;">19.46 <span style="font-size:16px;">+0.82 (+4.39%)</span></h1>
+      <p class="desc">深市  06-04 15:00:00</p>
+      <div class="chart small"><svg viewBox="0 0 420 170" preserveAspectRatio="none"><polyline points="10,120 50,126 90,96 130,102 170,80 210,88 250,58 290,66 330,40 410,30" fill="none" stroke="#007f7a" stroke-width="3"/><rect x="20" y="132" width="10" height="24" fill="#0f9f6e"/><rect x="55" y="140" width="10" height="16" fill="#d84a57"/><rect x="90" y="124" width="10" height="32" fill="#0f9f6e"/><rect x="125" y="116" width="10" height="40" fill="#0f9f6e"/><rect x="160" y="130" width="10" height="26" fill="#d84a57"/><rect x="195" y="108" width="10" height="48" fill="#0f9f6e"/></svg></div>
+      <div class="card"><div class="card-head"><div class="card-title">信号解释</div></div><div class="card-body"><ol style="line-height:1.9;margin-top:0;padding-left:18px;"><li>当日成交量 3.21 倍于 20 日均量，量能显著放大。</li><li>收盘价 19.46 突破 20 日最高价 18.92。</li><li>成交额 6.52 亿元 &gt; 1亿元。</li><li>换手率 8.47% &gt; 3%。</li></ol><h2 class="red" style="font-size:18px;">综合评分：92</h2><p class="desc">本信号仅供研究参考，不构成任何投资建议。</p></div></div>
+    </div>
+  </aside>
+  <div class="toast" id="toast">已完成</div>
+
+  <script>
+    const signals = [
+      ["2026-06-04","300774","倍杰特","深市","放量突破",92,"3.21倍","多头","金叉","金叉","量能放大，突破前高"],
+      ["2026-06-04","601138","工业富联","沪市","均线趋势",88,"1.85倍","多头","金叉","金叉","站上均线，趋势向上"],
+      ["2026-06-04","002236","大华股份","深市","MACD/KDJ共振",85,"1.62倍","多头","金叉","金叉","指标共振，强势上行"],
+      ["2026-06-04","000858","五粮液","深市","趋势信号",81,"1.34倍","多头","金叉","金叉","突破平台，量价齐升"],
+      ["2026-06-04","600276","恒瑞医药","沪市","均线趋势",79,"1.41倍","多头","金叉","金叉","均线多头排列"],
+      ["2026-06-04","300502","新易盛","深市","放量突破",77,"2.58倍","多头","金叉","金叉","放量突破，资金流入"],
+      ["2026-06-04","01810","小米集团","港股","港股趋势",75,"1.73倍","多头","金叉","金叉","突破均线，动能增强"],
+      ["2026-06-04","00700","腾讯控股","港股","港股趋势",74,"1.28倍","多头","金叉","金叉","企稳上行，趋势良好"]
+    ];
+
+    const login = document.getElementById("login");
+    const app = document.getElementById("app");
+    const toast = document.getElementById("toast");
+    const drawer = document.getElementById("drawer");
+
+    function msg(text) {
+      toast.textContent = text;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 1600);
+    }
+
+    function page(id) {
+      document.querySelectorAll(".nav button").forEach(b => b.classList.toggle("active", b.dataset.page === id));
+      document.querySelectorAll(".page").forEach(p => p.classList.toggle("active", p.id === id));
+    }
+
+    document.getElementById("loginBtn").onclick = () => { login.classList.add("hide"); app.classList.add("on"); msg("登录成功"); };
+    document.getElementById("logoutBtn").onclick = () => { app.classList.remove("on"); login.classList.remove("hide"); msg("已退出"); };
+    document.querySelectorAll(".nav button").forEach(b => b.onclick = () => page(b.dataset.page));
+    document.querySelectorAll("[data-jump]").forEach(b => b.onclick = () => page(b.dataset.jump));
+
+    document.querySelectorAll(".strategy-card[data-strategy]").forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll(".strategy-card[data-strategy]").forEach(x => x.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById("strategyName").textContent = "策略设置 - " + btn.dataset.strategy;
+      };
+    });
+    document.getElementById("saveRunBtn").onclick = () => {
+      document.getElementById("strategyRuns").insertAdjacentHTML("afterbegin", '<tr><td>刚刚</td><td><span class="tag green">已提交</span></td><td>--</td><td>--</td></tr>');
+      msg("策略已保存并提交运行");
+    };
+    document.getElementById("runBacktest").onclick = () => {
+      document.getElementById("backtestRows").insertAdjacentHTML("afterbegin", '<tr><td>放量突破</td><td>2024-01-01 ~ 2026-06-04</td><td>沪深A股</td><td><span class="tag amber">运行中</span></td><td>--</td><td>--</td><td>--</td><td><button class="btn text">查看</button></td></tr>');
+      msg("回测任务已提交");
+    };
+    document.getElementById("syncBtn").onclick = () => msg("同步任务已提交");
+    document.getElementById("analyzeFactorBtn").onclick = () => msg("因子分析已刷新");
+    document.getElementById("runTaskBtn").onclick = () => {
+      document.getElementById("taskRows").insertAdjacentHTML("afterbegin", '<tr><td>手动任务</td><td>策略</td><td>立即</td><td>刚刚</td><td><span class="tag amber">运行中</span></td><td>--</td><td><button class="btn text">日志</button></td></tr>');
+      msg("任务已开始执行");
+    };
+
+    function renderSignals() {
+      const market = document.getElementById("marketFilter").value;
+      const strategy = document.getElementById("strategyFilter").value;
+      const minScore = Number(document.getElementById("scoreFilter").value);
+      const rows = signals.filter(s => (market === "全部" || s[3] === market) && (strategy === "全部" || s[4] === strategy) && s[5] >= minScore);
+      document.getElementById("signalRows").innerHTML = rows.map(s => `<tr><td>${s[0]}</td><td>${s[1]}</td><td>${s[2]}</td><td>${s[3]}</td><td>${s[4]}</td><td class="${s[5] >= 85 ? "red" : ""}">${s[5]}</td><td>${s[6]}</td><td>${s[7]}</td><td>${s[8]}</td><td>${s[9]}</td><td>${s[10]}</td><td><button class="btn text" data-detail="${s[1]}">详情</button></td></tr>`).join("");
+      document.querySelectorAll("[data-detail]").forEach(b => b.onclick = () => {
+        const s = signals.find(x => x[1] === b.dataset.detail);
+        document.getElementById("drawerTitle").textContent = `${s[1]} ${s[2]}`;
+        drawer.classList.add("open");
+      });
+    }
+    document.getElementById("filterSignals").onclick = () => { renderSignals(); msg("筛选已应用"); };
+    document.getElementById("closeDrawer").onclick = () => drawer.classList.remove("open");
+
+    const cal = document.getElementById("calendar");
+    for (let i = 1; i <= 30; i++) {
+      const d = document.createElement("div");
+      d.className = "day" + (i === 22 || i === 25 ? " warn" : (i === 27 ? " bad" : ""));
+      d.textContent = i;
+      cal.appendChild(d);
+    }
+    renderSignals();
+  </script>
+</body>
+</html>

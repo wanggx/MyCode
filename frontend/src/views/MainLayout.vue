@@ -1,45 +1,43 @@
 <template>
-  <el-container class="main-layout-vertical">
-    <el-header class="main-header-bar">
-      <div class="header-left">
-        <img src="@/assets/logo.png" alt="平台Logo" class="finance-logo" />
-        <span class="logo-title">平台</span>
+  <el-container class="main-layout">
+    <el-aside width="180px" class="sidebar">
+      <div class="sidebar-logo">
+        <img src="@/assets/logo.png" alt="Logo" class="logo-img" />
+        <span class="logo-title">量化平台</span>
       </div>
-      <div class="header-right">
-        <a href="http://tushare.pro/" target="_blank" class="tushare-link">Tushare官网</a>
-        <el-dropdown @command="handleCommand" trigger="click">
-          <span class="account-dropdown">
-            {{ user ? user.username : '' }}
-            <el-icon class="el-icon--right"><arrow-down /></el-icon>
-          </span>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item command="changePassword">修改密码</el-dropdown-item>
-              <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-      </div>
-    </el-header>
-    <el-main class="main-content-vertical">
-      <div class="menu-content-wrapper">
-        <el-menu :default-active="activeMenu" @select="onMenuSelect" class="main-menu-vertical">
-          <el-menu-item v-for="item in menus" :key="item.key" :index="item.key">
-            <span>{{ item.title }}</span>
-          </el-menu-item>
-        </el-menu>
-        <div class="main-view-content">
-          <transition name="fade" mode="out-in">
-            <StockList v-if="activeMenu === 'table'" :key="'table'" />
-            <StockSelect v-else-if="activeMenu === 'stockselect'" :key="'stockselect'" />
-            <DataCheck v-else-if="activeMenu === 'datacheck'" :key="'datacheck'" />
-            <SystemSettings v-else-if="activeMenu === 'settings'" :key="'settings'" />
-          </transition>
+      <el-menu :default-active="activeMenu" router class="sidebar-menu" :collapse="false" background-color="#001529" text-color="#ffffffb3" active-text-color="#ffffff">
+        <el-menu-item v-for="item in menuItems" :key="item.path" :index="item.path">
+          <span class="menu-icon">{{ item.icon }}</span>
+          <span class="menu-text">{{ item.title }}</span>
+        </el-menu-item>
+      </el-menu>
+    </el-aside>
+    <el-container class="main-right">
+      <el-header class="top-header" height="40px">
+        <div class="header-left">
+          <span class="data-date">数据日期: {{ dataDate }}</span>
         </div>
-      </div>
-    </el-main>
+        <div class="header-right">
+          <a href="http://tushare.pro/" target="_blank" class="tushare-link">Tushare官网</a>
+          <el-dropdown @command="handleCommand" trigger="click">
+            <span class="account-dropdown">
+              {{ user ? user.username : '' }}
+              <el-icon class="el-icon--right"><arrow-down /></el-icon>
+            </span>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="changePassword">修改密码</el-dropdown-item>
+                <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </div>
+      </el-header>
+      <el-main class="main-content">
+        <router-view />
+      </el-main>
+    </el-container>
 
-    <!-- 修改密码对话框 -->
     <el-dialog v-model="passwordDialogVisible" title="修改密码" width="400px" :close-on-click-modal="false">
       <el-form :model="passwordForm" :rules="passwordRules" ref="passwordFormRef" label-width="100px">
         <el-form-item label="原密码" prop="oldPassword">
@@ -65,21 +63,11 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 import { ArrowDown } from '@element-plus/icons-vue'
-import StockList from './StockList.vue'
-import StockSelect from './StockSelect.vue'
-import DataCheck from './DataCheck.vue'
-import SystemSettings from './SystemSettings.vue'
 import axios from '@/config/axios'
 
 export default {
   name: 'MainLayout',
-  components: {
-    StockList,
-    StockSelect,
-    DataCheck,
-    SystemSettings,
-    ArrowDown
-  },
+  components: { ArrowDown },
   data() {
     const validateConfirmPassword = (rule, value, callback) => {
       if (value !== this.passwordForm.newPassword) {
@@ -89,13 +77,17 @@ export default {
       }
     }
     return {
-      menus: [
-        { key: 'table', title: '股票列表' },
-        { key: 'stockselect', title: '选股列表' },
-        { key: 'datacheck', title: '数据补录' },
-        { key: 'settings', title: '系统设置' }
+      menuItems: [
+        { path: '/dashboard/overview', title: '总览', icon: '⌂' },
+        { path: '/dashboard/data', title: '数据中心', icon: '▣' },
+        { path: '/dashboard/factors', title: '因子实验室', icon: '△' },
+        { path: '/dashboard/strategies', title: '策略工作台', icon: '◇' },
+        { path: '/dashboard/backtest', title: '回测中心', icon: '◎' },
+        { path: '/dashboard/signals', title: '选股信号', icon: '▤' },
+        { path: '/dashboard/portfolio', title: '组合风控', icon: '♡' },
+        { path: '/dashboard/tasks', title: '任务中心', icon: '▧' },
+        { path: '/dashboard/settings', title: '系统设置', icon: '⚙' }
       ],
-      activeMenu: 'table',
       passwordDialogVisible: false,
       changePasswordLoading: false,
       passwordForm: {
@@ -104,9 +96,7 @@ export default {
         confirmPassword: ''
       },
       passwordRules: {
-        oldPassword: [
-          { required: true, message: '请输入原密码', trigger: 'blur' }
-        ],
+        oldPassword: [{ required: true, message: '请输入原密码', trigger: 'blur' }],
         newPassword: [
           { required: true, message: '请输入新密码', trigger: 'blur' },
           { min: 6, message: '密码长度不能少于6位', trigger: 'blur' }
@@ -119,20 +109,21 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['user'])
+    ...mapGetters(['user']),
+    activeMenu() {
+      return this.$route.path
+    },
+    dataDate() {
+      const d = new Date()
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    }
   },
   methods: {
     ...mapActions(['logout']),
-    handleLogout() {
-      this.logout()
-      this.$router.push('/login')
-    },
-    onMenuSelect(key) {
-      this.activeMenu = key
-    },
     handleCommand(command) {
       if (command === 'logout') {
-        this.handleLogout()
+        this.logout()
+        this.$router.push('/login')
       } else if (command === 'changePassword') {
         this.passwordDialogVisible = true
       }
@@ -141,12 +132,10 @@ export default {
       try {
         await this.$refs.passwordFormRef.validate()
         this.changePasswordLoading = true
-        
         const res = await axios.post('/api/user/change-password', {
           old_password: this.passwordForm.oldPassword,
           new_password: this.passwordForm.newPassword
         })
-        
         if (res.data && res.data.success) {
           this.$message.success('密码修改成功')
           this.passwordDialogVisible = false
@@ -165,11 +154,7 @@ export default {
       }
     },
     resetPasswordForm() {
-      this.passwordForm = {
-        oldPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      }
+      this.passwordForm = { oldPassword: '', newPassword: '', confirmPassword: '' }
       this.$refs.passwordFormRef.resetFields()
     }
   },
@@ -182,99 +167,26 @@ export default {
 </script>
 
 <style scoped>
-.main-layout-vertical {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-.main-header-bar {
-  width: 100%;
-  height: 30px !important;
-  min-height: 30px !important;
-  max-height: 30px !important;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #fff;
-  border-bottom: 1px solid #e4e7ed;
-  padding: 0 24px;
-  box-sizing: border-box;
-}
-.header-left {
-  display: flex;
-  align-items: center;
-}
-.finance-logo {
-  width: 22px;
-  height: 22px;
-  margin-right: 8px;
-}
-.logo-title {
-  font-size: 15px;
-  font-weight: bold;
-  color: #409eff;
-  letter-spacing: 1px;
-}
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.account-dropdown {
-  font-size: 14px;
-  color: #409eff;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.account-dropdown:hover {
-  color: #66b1ff;
-}
-.main-content-vertical {
-  flex: 1;
-  padding: 0;
-  background: #f8f9fa;
-  height: 100%;
-}
-.menu-content-wrapper {
-  display: flex;
-  flex-direction: row;
-  height: 100%;
-}
-.main-menu-vertical {
-  width: 180px;
-  min-width: 120px;
-  background: #fff !important;
-  border-right: 1px solid #e4e7ed;
-  height: 100%;
-}
-.main-view-content {
-  flex: 1;
-  padding: 3px;
-  min-width: 0;
-}
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-.fade-enter-from, .fade-leave-to {
-  opacity: 0;
-}
-
-.tushare-link {
-  font-size: 14px;
-  color: #409eff;
-  text-decoration: none;
-  margin-right: 8px;
-}
-.tushare-link:hover {
-  text-decoration: underline;
-}
-
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-}
+.main-layout { height: 100vh; }
+.sidebar { background: #001529; overflow-y: auto; overflow-x: hidden; }
+.sidebar-logo { display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid #ffffff1a; }
+.logo-img { width: 24px; height: 24px; margin-right: 8px; }
+.logo-title { font-size: 16px; font-weight: 700; color: #fff; letter-spacing: 1px; }
+.sidebar-menu { border-right: none; }
+.sidebar-menu .el-menu-item { height: 44px; line-height: 44px; }
+.sidebar-menu .el-menu-item .menu-icon { font-size: 16px; margin-right: 10px; }
+.sidebar-menu .el-menu-item .menu-text { font-size: 14px; }
+.sidebar-menu .el-menu-item.is-active { background-color: #007f7a !important; }
+.sidebar-menu .el-menu-item:hover { background-color: #ffffff1a !important; }
+.main-right { display: flex; flex-direction: column; overflow: hidden; }
+.top-header { display: flex; align-items: center; justify-content: space-between; background: #fff; border-bottom: 1px solid #e4e7ed; padding: 0 20px; }
+.header-left { display: flex; align-items: center; }
+.data-date { font-size: 13px; color: #909399; }
+.header-right { display: flex; align-items: center; gap: 8px; }
+.tushare-link { font-size: 13px; color: #007f7a; text-decoration: none; }
+.tushare-link:hover { text-decoration: underline; }
+.account-dropdown { font-size: 14px; color: #007f7a; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+.account-dropdown:hover { color: #00a39e; }
+.main-content { flex: 1; overflow-y: auto; background: #f5f7fa; padding: 0; }
+.dialog-footer { display: flex; justify-content: flex-end; gap: 12px; }
 </style>

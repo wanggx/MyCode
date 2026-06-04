@@ -23,5 +23,5 @@ if __name__ == "__main__":
     scheduler_thread.start()
 
     print("启动Flask服务...")
-    print("服务地址: http://localhost:8080")
-    app.run(debug=False, host="0.0.0.0", port=8080)
+    print("服务地址: http://localhost:5000")
+    app.run(debug=False, host="0.0.0.0", port=5000)

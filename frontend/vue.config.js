@@ -6,11 +6,11 @@ const getBackendUrl = () => {
   
   switch (env) {
     case 'development':
-      return process.env.VUE_APP_BACKEND_URL || 'http://localhost:8080'
+      return process.env.VUE_APP_BACKEND_URL || 'http://localhost:5000'
     case 'test':
-      return process.env.VUE_APP_BACKEND_URL || 'http://test-backend:8080'
+      return process.env.VUE_APP_BACKEND_URL || 'http://test-backend:5000'
     case 'production':
-      return process.env.VUE_APP_BACKEND_URL || 'http://production-backend:8080'
+      return process.env.VUE_APP_BACKEND_URL || 'http://production-backend:5000'
     default:
       return 'http://localhost:8080'
   }
