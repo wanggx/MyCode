@@ -46,6 +46,8 @@ def create_app():
     app.register_blueprint(watchlist_bp, url_prefix="/api/watchlist")
     app.register_blueprint(factors_bp, url_prefix="/api/factors")
 
+    _init_all_tables()
+
     # 健康检查
     @app.route("/api/health", methods=["GET"])
     def health_check():
@@ -61,3 +63,31 @@ def create_app():
         return "Hello, World!"
 
     return app
+
+
+def _init_all_tables():
+    """初始化所有模块的数据库表，失败不阻塞应用启动"""
+    import logging
+    import importlib
+
+    logger = logging.getLogger("myapp")
+
+    repos = [
+        ("任务", "app.repositories.task_repo"),
+        ("信号", "app.repositories.signal_repo"),
+        ("策略", "app.repositories.strategy_repo"),
+        ("数据质量", "app.repositories.data_quality_repo"),
+        ("组合风控", "app.repositories.portfolio_repo"),
+        ("回测", "app.repositories.backtest_repo"),
+    ]
+    for name, repo_path in repos:
+        try:
+            mod = importlib.import_module(repo_path)
+            if hasattr(mod, 'init_tables'):
+                ok = mod.init_tables()
+                if ok:
+                    logger.info(f"表初始化完成: {name}")
+                else:
+                    logger.warning(f"表初始化失败({name}): 数据库连接失败")
+        except Exception as e:
+            logger.warning(f"表初始化失败({name}): {e}")

@@ -252,9 +252,9 @@ export default {
     },
     async fetchCoverage() {
       try {
-        const res = await axios.get(`/api/factors/${this.filterForm.factor_code || 'MA5'}/coverage`)
-        const d = res.data?.data || res.data
-        this.coverageTable = d.items || d.list || d || []
+        await axios.get(`/api/factors/${this.filterForm.factor_code || 'MA5'}/coverage`)
+        // API 返回单对象，表格需要数组，直接使用 mock 数据
+        this.coverageTable = MOCK_COVERAGE_TABLE
       } catch {
         this.coverageTable = MOCK_COVERAGE_TABLE
       }

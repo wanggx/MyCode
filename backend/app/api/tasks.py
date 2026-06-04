@@ -47,3 +47,9 @@ def cancel_task(job_id):
         return error("取消失败，任务不存在或非 pending 状态", 400)
     job = task_service.get_task(job_id)
     return success(job, message="任务已取消")
+
+
+@tasks_bp.route("/api/tasks/run-now", methods=["POST"])
+def run_task_now():
+    """立即执行任务（mock）"""
+    return success({"job_id": None, "status": "running"}, message="任务已开始执行")

@@ -21,7 +21,7 @@ def init_tables():
     try:
         with conn.cursor() as cursor:
             cursor.execute("""
-                CREATE TABLE IF NOT EXISTS signal (
+                CREATE TABLE IF NOT EXISTS `signal` (
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     trade_date VARCHAR(8) NOT NULL,
                     ts_code VARCHAR(20) NOT NULL,
@@ -60,7 +60,7 @@ def create_signals(signals: list) -> int:
     try:
         with conn.cursor() as cursor:
             sql = """
-                INSERT INTO signal (
+                INSERT INTO `signal` (
                     trade_date, ts_code, name, market,
                     strategy_id, strategy_version_id, strategy_run_id,
                     score, reason_text, factor_snapshot_json, risk_snapshot_json,
@@ -105,7 +105,7 @@ def get_signal(signal_id: int) -> dict:
         return None
     try:
         with conn.cursor() as cursor:
-            cursor.execute("SELECT * FROM signal WHERE id = %s", [signal_id])
+            cursor.execute("SELECT * FROM `signal` WHERE id = %s", [signal_id])
             return cursor.fetchone()
     finally:
         conn.close()
@@ -135,8 +135,8 @@ def get_signals(trade_date=None, strategy_id=None, market=None, min_score=0,
                 params.append(min_score)
             where = (" WHERE " + " AND ".join(conditions)) if conditions else ""
 
-            base_sql = f"SELECT * FROM signal{where} ORDER BY score DESC, created_at DESC"
-            count_sql = f"SELECT COUNT(*) AS total FROM signal{where}"
+            base_sql = f"SELECT * FROM `signal`{where} ORDER BY score DESC, created_at DESC"
+            count_sql = f"SELECT COUNT(*) AS total FROM `signal`{where}"
             return paginate_sql(base_sql, count_sql, params, page, page_size, cursor)
     finally:
         conn.close()
@@ -149,7 +149,7 @@ def update_signal_status(signal_id: int, status: str) -> bool:
         return False
     try:
         with conn.cursor() as cursor:
-            sql = "UPDATE signal SET status = %s WHERE id = %s"
+            sql = "UPDATE `signal` SET status = %s WHERE id = %s"
             cursor.execute(sql, [status, signal_id])
             affected = cursor.rowcount
         conn.commit()

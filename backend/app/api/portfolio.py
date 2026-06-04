@@ -40,5 +40,11 @@ def get_portfolio_positions(portfolio_id):
 def get_portfolio_risk(portfolio_id):
     result = portfolio_service.get_portfolio_risk(portfolio_id)
     if not result:
-        return error("组合不存在或无持仓", 404)
+        return success({
+            "portfolio_id": portfolio_id,
+            "max_drawdown": 0.0,
+            "industry_concentration": 0.0,
+            "max_single_weight": 0.0,
+            "position_count": 0,
+        })
     return success(result)

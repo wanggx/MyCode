@@ -56,7 +56,7 @@ def load_settings() -> Settings:
     from dotenv import load_dotenv
 
     # 查找 .env 文件：优先 backend/.env，再找项目根目录
-    env_path = Path(__file__).resolve().parent.parent.parent.parent / ".env"
+    env_path = Path(__file__).resolve().parent.parent.parent / ".env"
     if env_path.exists():
         load_dotenv(dotenv_path=env_path, override=True)
     else:

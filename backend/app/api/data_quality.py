@@ -64,3 +64,11 @@ def quality_scan():
 
     issues = data_quality_service.scan_date_range(market, start_date, end_date)
     return success(issues, message="扫描完成")
+
+
+@data_quality_bp.route("/api/data/sync-records", methods=["GET"])
+def list_sync_records():
+    """获取同步记录（mock：数据库无此表时返回空列表）"""
+    page = int(request.args.get("page", 1))
+    page_size = int(request.args.get("page_size", 20))
+    return success({"items": [], "total": 0, "page": page, "page_size": page_size, "total_pages": 0})
