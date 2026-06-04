@@ -3,16 +3,10 @@
 日线/周线/月线数据访问
 """
 
-from app.core.config import settings
-from app.core.database import get_db_connection
-from sqlalchemy import create_engine, text
-from sqlalchemy.engine import Engine
+from app.core.database import get_db_connection, get_engine
+from sqlalchemy import text
 
 
-def _get_engine() -> Engine:
-    return create_engine(
-        f"mysql+pymysql://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
-    )
 
 
 TABLE_MAP = {"d": "stock_daily", "w": "stock_week", "m": "stock_month"}
@@ -60,7 +54,7 @@ def query_daily_data(ts_code, start_date, end_date, page, page_size, data_type="
 
 def query_stock_data_df(ts_code, start_date, end_date):
     """查询日线数据 DataFrame（用于分析算法）"""
-    engine = _get_engine()
+    engine = get_engine()
     import pandas as pd
 
     if ts_code:
@@ -78,7 +72,7 @@ def query_stock_data_df(ts_code, start_date, end_date):
 
 def query_stock_week_data_df(ts_code, start_date, end_date):
     """查询周线数据 DataFrame"""
-    engine = _get_engine()
+    engine = get_engine()
     import pandas as pd
 
     if ts_code:
@@ -101,13 +95,13 @@ def save_stock_daily_batch(ts_codes, daily_date, replace):
     ts.set_token(settings.TUSHARE_TOKEN)
     pro = ts.pro_api()
     df = pro.daily(ts_code=ts_codes, trade_date=daily_date)
-    engine = _get_engine()
+    engine = get_engine()
     df.to_sql("stock_daily_temp", con=engine, if_exists="replace" if replace else "append", index=False)
 
 
 def merge_daily_data():
     """合并临时表到正式表"""
-    engine = _get_engine()
+    engine = get_engine()
     sql = text(
         "INSERT INTO stock_daily SELECT t.* FROM stock_daily_temp t "
         "LEFT JOIN stock_daily d ON t.ts_code = d.ts_code AND t.trade_date = d.trade_date "
@@ -122,7 +116,7 @@ def save_week_data(week_df):
     """保存周线数据（先删重复再追加）"""
     import pandas as pd
 
-    engine = _get_engine()
+    engine = get_engine()
     week_df.to_sql("stock_week_temp", con=engine, if_exists="replace", index=False)
     with engine.connect() as conn:
         conn.execute(
@@ -137,7 +131,7 @@ def save_week_data(week_df):
 
 def delete_week_data(start_date, end_date):
     """删除指定范围的周线数据"""
-    engine = _get_engine()
+    engine = get_engine()
     with engine.connect() as conn:
         conn.execute(
             text(
@@ -152,7 +146,7 @@ def save_month_data(month_df):
     """保存月线数据"""
     import pandas as pd
 
-    engine = _get_engine()
+    engine = get_engine()
     month_df.to_sql("stock_month_temp", con=engine, if_exists="replace", index=False)
     with engine.connect() as conn:
         conn.execute(
@@ -167,7 +161,7 @@ def save_month_data(month_df):
 
 def delete_month_data(start_date, end_date):
     """删除指定范围的月线数据"""
-    engine = _get_engine()
+    engine = get_engine()
     with engine.connect() as conn:
         conn.execute(
             text(

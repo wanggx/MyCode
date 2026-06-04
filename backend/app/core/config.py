@@ -28,6 +28,13 @@ class Settings:
     # WeChat
     WECHAT_WEBHOOK_KEY: str = ""
 
+    # MySQL 连接池
+    DB_POOL_SIZE: int = 10
+    DB_POOL_OVERFLOW: int = 5
+    DB_POOL_TIMEOUT: int = 30
+    DB_POOL_RECYCLE: int = 3600
+    DB_POOL_PRE_PING: bool = True
+
     def __post_init__(self):
         # 支持从环境变量覆盖（.env 加载后自动注入环境变量）
         env_overrides = {
@@ -40,13 +47,18 @@ class Settings:
             "JWT_EXPIRY_HOURS": os.environ.get("JWT_EXPIRY_HOURS"),
             "TUSHARE_TOKEN": os.environ.get("TUSHARE_TOKEN"),
             "WECHAT_WEBHOOK_KEY": os.environ.get("WECHAT_WEBHOOK_KEY"),
+            "DB_POOL_SIZE": os.environ.get("DB_POOL_SIZE"),
+            "DB_POOL_OVERFLOW": os.environ.get("DB_POOL_OVERFLOW"),
+            "DB_POOL_TIMEOUT": os.environ.get("DB_POOL_TIMEOUT"),
+            "DB_POOL_RECYCLE": os.environ.get("DB_POOL_RECYCLE"),
+            "DB_POOL_PRE_PING": os.environ.get("DB_POOL_PRE_PING"),
         }
         for key, value in env_overrides.items():
             if value is not None:
-                if key == "DB_PORT":
+                if key in ("DB_PORT", "JWT_EXPIRY_HOURS", "DB_POOL_SIZE", "DB_POOL_OVERFLOW", "DB_POOL_TIMEOUT", "DB_POOL_RECYCLE"):
                     setattr(self, key, int(value))
-                elif key == "JWT_EXPIRY_HOURS":
-                    setattr(self, key, int(value))
+                elif key == "DB_POOL_PRE_PING":
+                    setattr(self, key, value.lower() in ("true", "1", "yes"))
                 else:
                     setattr(self, key, value)
 
