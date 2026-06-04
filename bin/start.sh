@@ -15,7 +15,7 @@ echo -e "${GREEN}🚀 正在启动 Vue + Python 项目...${NC}"
 # 启动后端 Python 应用
 start_backend() {
     APP_NAME="my_stock_app"
-    MAIN_PY="$PROJECT_ROOT/stock/main.py"  # 使用 PROJECT_ROOT 变量
+    MAIN_PY="$PROJECT_ROOT/backend/run.py"  # 使用 PROJECT_ROOT 变量
     LOG_FILE="${APP_NAME}.log"
 
     # 检查是否已经运行
@@ -26,7 +26,7 @@ start_backend() {
     fi
 
     # 启动应用并记录日志
-    nohup python3.11 "$MAIN_PY" > "$LOG_FILE" 2>&1 &
+    nohup "$PROJECT_ROOT/backend/.venv/bin/python" "$MAIN_PY" > "$LOG_FILE" 2>&1 &
     echo $! > "$PROJECT_ROOT/.backend_pid"
     echo "$APP_NAME started with PID: $!"
 }

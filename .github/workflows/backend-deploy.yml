@@ -5,7 +5,7 @@ on:
     branches:
       - stock  # 监听 main 分支推送
     paths:
-      - 'stock/**'
+      - 'backend/**'
       - 'bin/**'
       - '.github/workflows/backend-deploy.yml'
 
