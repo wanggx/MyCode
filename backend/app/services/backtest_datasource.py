@@ -100,6 +100,9 @@ class QtDataSource(BaseDataSource):
         with h5py.File(os.path.join(tmpdir, "yield_curve.h5"), "w") as f:
             dt = np.dtype([('date', 'int64'), ('rate', 'float64')])
             f.create_dataset("data", data=np.array([(20050101, 0.03)], dtype=dt))
+        # trading_dates.npy: required by rqalpha _adjust_start_date
+        s_int = int(start_date.replace('-', '')); e_int = int(end_date.replace('-', ''))
+        np.save(os.path.join(tmpdir, "trading_dates.npy"), np.array([s_int, e_int], dtype='int32'))
 
         cfg = _FakeBaseConfig()
         cfg.data_bundle_path = tmpdir
@@ -142,8 +145,11 @@ class QtDataSource(BaseDataSource):
         self.register_instruments(iter(instruments))
 
     def available_data_range(self, frequency):
-        return self._start_date, self._end_date
+        from datetime import date
+        s = date.fromisoformat(self._start_date)
+        e = date.fromisoformat(self._end_date)
+        return s, e
 
     def get_yield_curve(self, start_date=None, end_date=None, tenor=None):
-        return np.array([(np.datetime64(start_date) if start_date else np.datetime64("now"), 0.03)],
-                        dtype=[('date', 'datetime64[D]'), ('rate', 'float64')])
+        # Return None — rqalpha handles None by using a default 3% risk-free rate
+        return None

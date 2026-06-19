@@ -77,13 +77,25 @@ def _start_backtest_thread(backtest_id, config, source_code, strategy_key):
 
 
 def get_backtests(page=1, page_size=20, strategy_id=None, status=None, user_id=None):
-    return list_jobs(page, page_size, strategy_id, status, user_id)
+    result, err = list_jobs(page, page_size, strategy_id, status, user_id)
+    if result and result.get("items"):
+        for item in result["items"]:
+            if item.get("config") and isinstance(item["config"], str):
+                try: item["config"] = json.loads(item["config"])
+                except Exception: pass
+    return result, err
 
+
+import json
 
 def get_backtest_detail(backtest_id):
     row = get_job(backtest_id)
     if not row:
         return None
+    # Parse JSON fields
+    if row.get("config") and isinstance(row["config"], str):
+        try: row["config"] = json.loads(row["config"])
+        except Exception: pass
     # 兼容 datetime 序列化
     for k in ["start_time", "end_time", "created_at", "updated_at"]:
         if row.get(k):

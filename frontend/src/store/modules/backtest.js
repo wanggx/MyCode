@@ -50,22 +50,27 @@ export default {
     async loadNav({ commit }, id) {
       const res = await fetchNav(id, { format: 'full' })
       if (res.data?.success) commit('SET_NAV', res.data.data)
+      return res.data?.data
     },
-    async loadTrades({ commit }, { id, page, pageSize }) {
-      const res = await fetchTrades(id, { page: page || 1, page_size: pageSize || 50 })
+    async loadTrades({ commit }, { id, page, pageSize } = {}) {
+      const res = await fetchTrades(id, { page: page || 1, page_size: pageSize || 200 })
       if (res.data?.success) commit('SET_TRADES', res.data.data)
+      return res.data?.data
     },
     async loadPositions({ commit }, id) {
       const res = await fetchPositions(id)
       if (res.data?.success) commit('SET_POSITIONS', res.data.data)
+      return res.data?.data
     },
     async loadRiskMetrics({ commit }, id) {
       const res = await fetchRiskMetrics(id)
       if (res.data?.success) commit('SET_RISK', res.data.data)
+      return res.data?.data
     },
     async loadLogs({ commit }, id) {
       const res = await fetchLogs(id)
       if (res.data?.success) commit('SET_LOGS', res.data.data)
+      return res.data?.data
     }
   }
 }

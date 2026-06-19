@@ -164,7 +164,7 @@ def _build_rqalpha_config(bt_config, backtest_id, strategy_key):
             "end_date": bt_config["end_date"],
             "frequency": bt_config.get("frequency", "1d"),
             "accounts": {"stock": bt_config.get("initial_capital", 100000)},
-            "benchmark": bt_config.get("benchmark", "000300.XSHG"),
+            "benchmark": bt_config.get("benchmark") or None,
             "strategy_type": "stock",
         },
         "extra": {
@@ -172,7 +172,7 @@ def _build_rqalpha_config(bt_config, backtest_id, strategy_key):
             "log_file": os.path.join(settings.LOG_DIR, strategy_key, f"{backtest_id}.log"),
         },
         "mod": {
-            "sys_analyser": {"enabled": True, "plot": False, "benchmark": bt_config.get("benchmark", "000300.XSHG")},
+            "sys_analyser": {"enabled": True, "plot": False, "benchmark": bt_config.get("benchmark") or None},
             "sys_progress": {"enabled": False},
             "sys_simulation": {
                 "enabled": True,

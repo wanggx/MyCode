@@ -74,7 +74,7 @@
       </div>
       <el-form :model="btForm" label-width="80px" style="margin-top:12px">
         <el-row :gutter="12"><el-col :span="12"><el-form-item label="起始日期"><el-date-picker v-model="btForm.start_date" type="date" value-format="YYYY-MM-DD" style="width:100%" /></el-form-item></el-col><el-col :span="12"><el-form-item label="结束日期"><el-date-picker v-model="btForm.end_date" type="date" value-format="YYYY-MM-DD" style="width:100%" /></el-form-item></el-col></el-row>
-        <el-row :gutter="12"><el-col :span="12"><el-form-item label="起始资金"><el-input-number v-model="btForm.initial_capital" :min="10000" style="width:100%" /></el-form-item></el-col><el-col :span="12"><el-form-item label="基准"><el-select v-model="btForm.benchmark" style="width:100%"><el-option label="沪深300" value="000300.XSHG" /><el-option label="中证500" value="000905.XSHG" /></el-select></el-form-item></el-col></el-row>
+        <el-row :gutter="12"><el-col :span="12"><el-form-item label="起始资金"><el-input-number v-model="btForm.initial_capital" :min="10000" style="width:100%" /></el-form-item></el-col><el-col :span="12"><el-form-item label="基准"><el-select v-model="btForm.benchmark" style="width:100%"><el-option label="无" value="" /><el-option label="沪深300" value="000300.XSHG" /><el-option label="中证500" value="000905.XSHG" /></el-select></el-form-item></el-col></el-row>
       </el-form>
       <template #footer><el-button @click="btDialogVisible=false">取消</el-button><el-button type="primary" @click="runBacktest">⚡ 开始回测</el-button></template>
     </el-dialog>
@@ -99,7 +99,12 @@ export default {
   computed: { ...mapState('strategy', ['list', 'loading']), strategies() { return this.list } },
   methods: {
     ...mapActions('strategy', ['loadList', 'create', 'remove', 'loadVersions', 'saveVersion', 'loadVersionCode']),
-    async loadListData() { await this.loadList({ keyword: this.keyword }) },
+    async loadListData() {
+      await this.loadList({ keyword: this.keyword })
+      if (this.strategies.length > 0 && !this.current) {
+        this.selectStrategy(this.strategies[0])
+      }
+    },
     async selectStrategy(s) {
       this.current = s; this.editing = false
       const vers = await this.loadVersions(s.id)

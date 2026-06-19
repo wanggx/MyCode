@@ -4,5 +4,8 @@
     "element-plus": "^2.10.3",
     "vue-router": "^4.5.1",
     "vuex": "^4.1.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.0"
   }
 }
