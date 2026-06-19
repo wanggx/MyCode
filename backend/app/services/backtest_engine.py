@@ -11,10 +11,8 @@ import traceback
 
 sys.path.insert(0, "/Users/gxwang/QT/rqalpha")
 import rqalpha
-from rqalpha.utils.config import parse_config as rq_parse_config
 
 from app.core.config import settings
-from app.services.backtest_datasource import QtDataSource
 
 logger = logging.getLogger("myapp")
 
@@ -49,11 +47,11 @@ def run_backtest(backtest_id, bt_config, strategy_code, strategy_key, socketio=N
     bt_logger.info(f"QT Backtest Engine Starting - Backtest #{backtest_id}")
     bt_logger.info(f"Strategy: {strategy_key}, Config: {json.dumps(bt_config)}")
 
-    update_job_status(backtest_id, "running", start_time=True)
+    update_job_status(backtest_id, "running", start_time=True, log_path=log_path)
     start_ts = time.time()
 
     try:
-        # 2. Build rqalpha config
+        # 2. Build rqalpha config（使用 rqalpha 自带数据包，不走平台数据源）
         rq_config = _build_rqalpha_config(bt_config, backtest_id, strategy_key)
 
         # 3. Setup progress callback
@@ -78,35 +76,16 @@ def run_backtest(backtest_id, bt_config, strategy_code, strategy_key, socketio=N
         builtins._BT_TOTAL_BARS_ = total_bars
         builtins._BT_LOGGER_ = bt_logger
 
-        # 4. Create custom data source (with temp bundle dir for BaseDataSource init)
-        bt_logger.info(f"Loading data: {bt_config['start_date']} ~ {bt_config['end_date']}")
-        ds = QtDataSource(bt_config["start_date"], bt_config["end_date"])
-        instruments = list(ds.get_instruments())
-        bt_logger.info(f"Loaded {len(instruments)} instruments")
+        # 4. Setup rqalpha 默认数据包路径
+        rq_config["base"]["data_bundle_path"] = os.path.expanduser("~/.rqalpha/bundle")
+        bt_logger.info(f"Using rqalpha bundle: {rq_config['base']['data_bundle_path']}")
 
-        # Set bundle path in config to our temp dir so BaseDataSource init succeeds
-        rq_config["base"]["data_bundle_path"] = ds._tmpdir
-
-        # 5. Monkey-patch Environment to inject custom datasource
-        from rqalpha.environment import Environment
-        _orig_env_init = Environment.__init__
-
-        def _patched_env_init(self, config, *args, **kwargs):
-            _orig_env_init(self, config, *args, **kwargs)
-            self.set_data_source(ds)
-            bt_logger.info("Custom QtDataSource injected into rqalpha Environment")
-
-        Environment.__init__ = _patched_env_init
-
-        # 6. Build strategy wrapper code
+        # 5. Build strategy wrapper code
         wrapped_code = _wrap_strategy_code(strategy_code)
 
-        # 7. Run rqalpha
+        # 6. Run rqalpha（走 rqalpha 默认流程，自动使用 bundle 数据源）
         bt_logger.info("Starting rqalpha main loop...")
         result = rqalpha.run_code(code=wrapped_code, config=rq_config)
-
-        # 8. Restore original init
-        Environment.__init__ = _orig_env_init
 
         # 7. Extract results
         elapsed = (time.time() - start_ts) * 1000

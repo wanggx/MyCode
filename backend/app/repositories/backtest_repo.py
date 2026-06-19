@@ -68,7 +68,7 @@ def count_running_jobs(user_id=None):
         conn.close()
 
 
-def update_job_status(backtest_id, status, error_message=None, start_time=False):
+def update_job_status(backtest_id, status, error_message=None, start_time=False, log_path=None):
     conn = get_db_connection()
     if not conn: return
     try:
@@ -77,6 +77,7 @@ def update_job_status(backtest_id, status, error_message=None, start_time=False)
             params = [status]
             if error_message: extra += ", error_message = %s"; params.append(error_message)
             if start_time: extra += ", start_time = NOW()"
+            if log_path: extra += ", log_path = %s"; params.append(log_path)
             params.append(backtest_id)
             c.execute(f"UPDATE backtest_job SET status = %s{extra} WHERE id = %s", params)
             conn.commit()
@@ -134,6 +135,19 @@ def delete_job_full(backtest_id):
             for t in ["backtest_nav", "backtest_trade", "backtest_position", "backtest_daily_metrics", "backtest_risk_metrics"]:
                 c.execute(f"DELETE FROM {t} WHERE backtest_id = %s", (backtest_id,))
             c.execute("DELETE FROM backtest_job WHERE id = %s", (backtest_id,))
+            conn.commit()
+    finally:
+        conn.close()
+
+
+def clear_results(backtest_id):
+    """清除回测结果数据（保留 job 记录），供 re-run 使用"""
+    conn = get_db_connection()
+    if not conn: return
+    try:
+        with conn.cursor() as c:
+            for t in ["backtest_nav", "backtest_trade", "backtest_position", "backtest_daily_metrics", "backtest_risk_metrics"]:
+                c.execute(f"DELETE FROM {t} WHERE backtest_id = %s", (backtest_id,))
             conn.commit()
     finally:
         conn.close()

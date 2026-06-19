@@ -5,7 +5,7 @@ from app.core.response import success, error
 from app.core.security import require_auth
 from app.services.backtest_service import (
     create_backtest, get_backtests, get_backtest_detail,
-    cancel_backtest, delete_backtest,
+    rerun_backtest, cancel_backtest, delete_backtest,
     get_backtest_nav, get_backtest_trades, get_backtest_positions,
     get_backtest_daily_metrics, get_backtest_risk_metrics,
     get_backtest_logs, get_backtest_report,
@@ -55,6 +55,14 @@ def cancel_backtest_route(bid):
     ok, err = cancel_backtest(bid)
     if not ok: return error(err, code=40001)
     return success(None, message="回测已取消")
+
+
+@backtests_bp.route("/api/backtests/<int:bid>/rerun", methods=["POST"])
+@require_auth
+def rerun_backtest_route(bid):
+    result, err = rerun_backtest(bid, user_id=request.user.get("user_id"))
+    if err: return error(err, code=40001 if "不存在" in err or "没有" in err else 40900 if "上限" in err else 50001)
+    return success(result, message="回测已重新启动")
 
 
 @backtests_bp.route("/api/backtests/<int:bid>", methods=["DELETE"])

@@ -103,6 +103,48 @@ def get_backtest_detail(backtest_id):
     return row
 
 
+def rerun_backtest(backtest_id, user_id=None):
+    """重新运行回测：复用原配置和源码，清除旧结果，重启线程"""
+    from app.repositories.backtest_repo import update_job_status, clear_results
+    from app.repositories.strategy_repo import get_version
+
+    job = get_job(backtest_id)
+    if not job:
+        return None, "回测不存在"
+
+    # 检查并发限制
+    if user_id:
+        running = count_running_jobs(user_id)
+        if running >= settings.MAX_CONCURRENT_BACKTESTS:
+            return None, f"已达到并发上限（{settings.MAX_CONCURRENT_BACKTESTS} 个/用户），请等待已有回测完成"
+
+    # 获取原始版本源码
+    ver_row = get_version(job["strategy_id"], job.get("strategy_version"))
+    if not ver_row:
+        return None, "策略版本源码不存在"
+    source_code = ver_row["source_code"]
+
+    # 解析 config
+    config = job.get("config")
+    if isinstance(config, str):
+        import json
+        try: config = json.loads(config)
+        except Exception: config = {}
+    if not config:
+        return None, "回测配置缺失"
+
+    # 清除旧结果数据
+    clear_results(backtest_id)
+
+    # 重置状态
+    update_job_status(backtest_id, "pending", error_message=None)
+
+    # 启动新线程
+    _start_backtest_thread(backtest_id, config, source_code, job["strategy_key"])
+
+    return {"id": backtest_id, "status": "pending"}, None
+
+
 def cancel_backtest(backtest_id):
     job = get_job(backtest_id)
     if not job:
@@ -123,9 +165,16 @@ def delete_backtest(backtest_id):
     if job["status"] == "running":
         return False, "请先取消运行中的回测"
     # 删除日志文件
-    if job.get("log_path"):
+    log_path = job.get("log_path")
+    if not log_path:
+        # Fallback: glob 查找
+        import glob
+        matches = glob.glob(os.path.join(settings.LOG_DIR, f"*/{backtest_id}.log"))
+        if matches:
+            log_path = matches[0]
+    if log_path:
         try:
-            os.remove(job["log_path"])
+            os.remove(log_path)
         except Exception:
             pass
     delete_job_full(backtest_id)
@@ -154,21 +203,34 @@ def get_backtest_risk_metrics(backtest_id):
 
 def get_backtest_logs(backtest_id, mode="full", lines=100):
     """读取回测日志"""
-    log_path = None
-    if mode == "full":
-        log_path = os.path.join(settings.LOG_DIR, f"*/{backtest_id}.log")
-    if not log_path:
-        return None, "日志文件不存在"
+    # 1. 先查 job 记录，按 strategy_key 定位日志
+    job = get_job(backtest_id)
+    if job and job.get("strategy_key"):
+        log_path = os.path.join(settings.LOG_DIR, job["strategy_key"], f"{backtest_id}.log")
+        if os.path.isfile(log_path):
+            return _read_log_file(log_path, mode, lines)
+
+    # 2. Fallback: glob 通配搜索
+    pattern = os.path.join(settings.LOG_DIR, f"*/{backtest_id}.log")
     try:
         import glob
-        matches = glob.glob(log_path)
-        if not matches:
-            return None, "日志文件不存在"
-        with open(matches[0], "r") as f:
+        matches = glob.glob(pattern)
+        if matches:
+            return _read_log_file(matches[0], mode, lines)
+    except Exception as e:
+        return None, f"读取日志失败: {str(e)}"
+
+    return None, f"日志文件不存在: {pattern}"
+
+
+def _read_log_file(log_path, mode, lines):
+    """读取日志文件内容"""
+    try:
+        with open(log_path, "r", encoding="utf-8", errors="replace") as f:
             all_lines = f.readlines()
         if mode == "tail":
             all_lines = all_lines[-lines:]
-        return {"log_path": matches[0], "lines": all_lines, "size_bytes": len("".join(all_lines))}, None
+        return {"log_path": log_path, "lines": all_lines, "size_bytes": len("".join(all_lines))}, None
     except Exception as e:
         return None, f"读取日志失败: {str(e)}"
 

@@ -159,10 +159,10 @@ export default {
           this.$message.success('回测已创建')
           this.$router.push('/backtest')
         } else {
-          this.$message.error(res?.message || '创建回测失败')
+          this.$message.error(res?.message || res?.error || '创建回测失败')
         }
       } catch (e) {
-        const msg = e.response?.data?.message || e.response?.data?.error || '创建回测失败'
+        const msg = e.response?.data?.message || e.response?.data?.error || e.message || '创建回测失败'
         this.$message.error(msg)
       }
     }

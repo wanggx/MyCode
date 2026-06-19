@@ -50,9 +50,12 @@
           <div>
             <span class="summary-title">{{ selected.strategy_name || '回测 #'+selected.id }}</span>
             <el-tag :type="selected.status==='completed'?'success':selected.status==='running'?'warning':selected.status==='failed'?'danger':'info'" size="small" style="margin-left:8px">{{ statusText(selected.status) }}</el-tag>
+            <el-tooltip v-if="selected.status==='failed' && selected.error_message" effect="dark" :content="selected.error_message" placement="bottom-start" raw-content>
+              <span class="error-help-icon">❓</span>
+            </el-tooltip>
           </div>
           <div class="summary-actions">
-            <el-button v-if="selected.status==='completed'" size="small" type="primary" @click="handleRerun">🔄 重新运行</el-button>
+            <el-button v-if="selected.status==='completed' || selected.status==='failed'" size="small" type="primary" @click="handleRerun">🔄 重新运行</el-button>
             <el-button v-if="selected.status==='completed'" size="small" @click="handleExport">📥 导出报告</el-button>
             <el-button v-if="selected.status!=='running'" size="small" type="danger" @click="handleDelete">🗑 删除</el-button>
           </div>
@@ -63,7 +66,6 @@
           <span class="sep">·</span> 基准: {{ selected.config?.benchmark || '沪深300' }}
           <span v-if="selected.duration_ms" class="sep">·</span> 耗时: {{ (selected.duration_ms/1000).toFixed(1) }}s
         </div>
-        <div v-if="selected.error_message" class="summary-error">❌ {{ selected.error_message }}</div>
       </div>
 
       <!-- Metrics Grid (12 items, always visible) -->
@@ -203,19 +205,45 @@ export default {
         try { bt.config = JSON.parse(bt.config) } catch(e) { bt.config = {} }
       }
       this.selected = bt; this.activeTab = 'nav'; this.trades = null; this.risk = null; this.logs = null; this.navData = null
-      if (bt.status === 'completed') {
+
+      // Always refresh detail from server (gets latest error_message, metrics, etc.)
+      try {
+        const detail = await this.loadDetail(bt.id)
+        if (detail) {
+          if (detail.config && typeof detail.config === 'string') {
+            try { detail.config = JSON.parse(detail.config) } catch { /* ignore parse error */ }
+          }
+          this.selected = detail
+        }
+      } catch(e) { console.error('loadDetail failed:', e) }
+
+      // Load logs for ALL statuses (useful for debugging)
+      try {
+        this.logs = await this.loadLogs(bt.id)
+      } catch(e) { console.error('loadLogs failed:', e) }
+
+      // Load detail data for completed/failed backtests
+      if (bt.status === 'completed' || bt.status === 'failed') {
         try {
-          const [nav, trades, risk, logs] = await Promise.all([
-            this.loadNav(bt.id), this.loadTrades({ id: bt.id, pageSize: 200 }),
-            this.loadRiskMetrics(bt.id), this.loadLogs(bt.id)
+          const [nav, trades, risk] = await Promise.all([
+            this.loadNav(bt.id),
+            this.loadTrades({ id: bt.id, pageSize: 200 }),
+            this.loadRiskMetrics(bt.id)
           ])
-          this.trades = trades; this.risk = risk; this.logs = logs; this.navData = nav
+          this.trades = trades; this.risk = risk; this.navData = nav
           this.$nextTick(() => { this.renderAllCharts() })
-        } catch(e) { console.error(e) }
+        } catch(e) { console.error('loadDetailData failed:', e) }
       }
       if (bt.status === 'running') { this.startPolling(bt.id) }
     },
-    switchTab(key) { this.activeTab = key; this.$nextTick(() => { this.renderAllCharts() }) },
+    switchTab(key) {
+      this.activeTab = key
+      this.$nextTick(() => { this.renderAllCharts() })
+      // Lazy-load logs when switching to logs tab
+      if (key === 'logs' && !this.logs && this.selected) {
+        this.loadLogs(this.selected.id).then(logs => { this.logs = logs }).catch(() => {})
+      }
+    },
     renderAllCharts() {
       if (this.activeTab==='nav' && this.navData) this.renderNavChart()
       if (this.activeTab==='positions') { this.renderPieChart(); this.renderIndustryChart() }
@@ -300,11 +328,27 @@ export default {
       }, 2000)
     },
     async handleCancel() { if (this.selected) { await this.cancel(this.selected.id); clearInterval(this._pollTimer); this.$message.info('已取消'); this.loadListData() } },
-    handleRerun() {
+    async handleRerun() {
       if (!this.selected) return
-      const s = this.selected
-      this.btForm = { start_date: s.config?.start_date||'2024-01-01', end_date: s.config?.end_date||'2024-12-31', initial_capital: s.config?.initial_capital||100000, benchmark: s.config?.benchmark||'', frequency: s.config?.frequency||'1d', commission: s.config?.commission||0.0003 }
-      this.newBtVisible = true
+      const btId = this.selected.id
+      try {
+        const res = await axios.post(`/api/backtests/${btId}/rerun`)
+        if (res.data?.success) {
+          this.$message.success('回测已重新启动')
+          // Update local status immediately so polling works visually
+          this.selected.status = 'running'
+          this.selected.progress = 0
+          this.selected.error_message = null
+          await this.loadListData()
+          // Re-select this backtest
+          const bt = this.backtests.find(b => b.id === btId)
+          if (bt) this.selectBacktest(bt)
+        } else {
+          this.$message.error(res.data?.message || res.data?.error || '重新运行失败')
+        }
+      } catch (e) {
+        this.$message.error(e.response?.data?.message || e.response?.data?.error || e.message || '重新运行失败')
+      }
     },
     handleExport() { this.$message.success('报告已导出（功能开发中）') },
     async handleDelete() {
@@ -372,6 +416,8 @@ export default {
 .summary-meta .sep { margin: 0 4px; color: #ddd; }
 .summary-actions { display: flex; gap: 6px; }
 .summary-error { margin-top: 8px; padding: 6px 12px; background: #fff2f0; border: 1px solid #ffccc7; border-radius: 4px; font-size: 12px; color: #ff4d4f; }
+.error-help-icon { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: #ffccc7; color: #ff4d4f; font-size: 12px; cursor: help; margin-left: 6px; transition: all .2s; flex-shrink: 0; }
+.error-help-icon:hover { background: #ff4d4f; color: #fff; transform: scale(1.1); }
 
 .metrics { display: grid; grid-template-columns: repeat(6,1fr); gap: 8px; padding: 12px 20px; border-bottom: 1px solid #eee; }
 .m-item { text-align: center; padding: 8px 4px; background: #fafafa; border-radius: 6px; }
@@ -393,7 +439,7 @@ export default {
 .log-panel { display: flex; flex-direction: column; height: 100%; }
 .log-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #2d2d2d; border-radius: 6px 6px 0 0; }
 .log-path { color: #ccc; font-size: 12px; font-family: monospace; }
-.log-body { flex: 1; background: #1e1e1e; color: #d4d4d4; padding: 12px; font-size: 12px; line-height: 1.7; border-radius: 0 0 6px 6px; overflow-y: auto; white-space: pre-wrap; margin: 0; max-height: 400px; }
+.log-body { flex: 1; background: #1e1e1e; color: #d4d4d4; padding: 12px; font-size: 13px; line-height: 1.65; border-radius: 0 0 6px 6px; overflow: auto; white-space: pre; margin: 0; text-align: left; font-family: 'SF Mono','Fira Code','Menlo','Consolas',monospace; }
 
 .bt-strategy-banner { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #fafafa; border: 1px solid #e8e8e8; border-radius: 8px; }
 .st-icon { width: 36px; height: 36px; border-radius: 6px; background: linear-gradient(135deg,#1890ff,#6f42c1); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
