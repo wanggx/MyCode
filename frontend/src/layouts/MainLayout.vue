@@ -78,15 +78,11 @@ export default {
     }
     return {
       menuItems: [
-        { path: '/dashboard/overview', title: '总览', icon: '⌂' },
-        { path: '/dashboard/data', title: '数据中心', icon: '▣' },
-        { path: '/dashboard/factors', title: '因子实验室', icon: '△' },
-        { path: '/dashboard/strategies', title: '策略工作台', icon: '◇' },
-        { path: '/dashboard/backtest', title: '回测中心', icon: '◎' },
-        { path: '/dashboard/signals', title: '选股信号', icon: '▤' },
-        { path: '/dashboard/portfolio', title: '组合风控', icon: '♡' },
-        { path: '/dashboard/tasks', title: '任务中心', icon: '▧' },
-        { path: '/dashboard/settings', title: '系统设置', icon: '⚙' }
+        { path: '/workspace', title: '工作台', icon: '📊' },
+        { path: '/strategies', title: '策略研究', icon: '📝' },
+        { path: '/backtest', title: '回测中心', icon: '⚡' },
+        { path: '/data', title: '数据中心', icon: '📈' },
+        { path: '/settings', title: '系统设置', icon: '⚙' }
       ],
       passwordDialogVisible: false,
       changePasswordLoading: false,

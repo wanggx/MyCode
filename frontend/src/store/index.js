@@ -1,24 +1,18 @@
 import { createStore } from 'vuex'
 import axios from 'axios'
+import strategy from './modules/strategy'
+import backtest from './modules/backtest'
 
 export default createStore({
+  modules: { strategy, backtest },
   state: {
     user: null,
     token: localStorage.getItem('token') || ''
   },
   mutations: {
-    setUser(state, user) {
-      state.user = user
-    },
-    setToken(state, token) {
-      state.token = token
-      localStorage.setItem('token', token)
-    },
-    logout(state) {
-      state.user = null
-      state.token = ''
-      localStorage.removeItem('token')
-    }
+    setUser(state, user) { state.user = user },
+    setToken(state, token) { state.token = token; localStorage.setItem('token', token) },
+    logout(state) { state.user = null; state.token = ''; localStorage.removeItem('token') }
   },
   actions: {
     async login({ commit }, { username, password }) {
@@ -26,27 +20,18 @@ export default createStore({
       if (res.data.message === '登录成功') {
         commit('setToken', res.data.data.token)
         commit('setUser', res.data.data.user)
-      } else {
-        throw new Error(res.data.error || '登录失败')
-      }
+      } else { throw new Error(res.data.error || '登录失败') }
     },
     async fetchUser({ commit, state }) {
       if (!state.token) return
-      const res = await axios.get('/api/user/info', {
-        headers: { Authorization: `Bearer ${state.token}` }
-      })
-      if (res.data.message === '获取成功') {
-        commit('setUser', res.data.data)
-      } else {
-        throw new Error(res.data.error || '获取用户信息失败')
-      }
+      const res = await axios.get('/api/user/info', { headers: { Authorization: `Bearer ${state.token}` } })
+      if (res.data.message === '获取成功') commit('setUser', res.data.data)
+      else throw new Error(res.data.error || '获取用户信息失败')
     },
-    logout({ commit }) {
-      commit('logout')
-    }
+    logout({ commit }) { commit('logout') }
   },
   getters: {
     isAuthenticated: state => !!state.token,
     user: state => state.user
   }
-}) 
+})

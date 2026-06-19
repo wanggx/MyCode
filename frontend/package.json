@@ -19,6 +19,8 @@
     "core-js": "^3.8.3",
     "echarts": "^6.1.0",
     "element-plus": "^2.14.1",
+    "monaco-editor": "^0.45.0",
+    "socket.io-client": "^4.8.3",
     "vue": "^3.2.13",
     "vue-router": "^4.6.4",
     "vuex": "^4.1.0"

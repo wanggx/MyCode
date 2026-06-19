@@ -1,79 +1,105 @@
 # -*- coding: utf-8 -*-
-"""
-策略 API 路由
-"""
-
+"""策略管理 API"""
 from flask import Blueprint, request
-
-from app.services import strategy_service
 from app.core.response import success, error
+from app.core.security import require_auth
+from app.services.strategy_service import (
+    get_strategies, get_strategy_detail, create_strategy_svc,
+    update_strategy_svc, change_strategy_status, delete_strategy_svc,
+    get_versions, get_version_detail, create_version_svc
+)
 
 strategies_bp = Blueprint("strategies", __name__)
 
 
 @strategies_bp.route("/api/strategies", methods=["GET"])
-def list_strategies():
-    enabled_only = request.args.get("enabled_only", "").lower() in ("true", "1")
-    page = int(request.args.get("page", 1))
-    page_size = int(request.args.get("page_size", 20))
-
-    result = strategy_service.get_strategies(enabled_only, page, page_size)
-    if result is None:
-        return error("查询失败", 500)
+@require_auth
+def list_strategies_route():
+    page = request.args.get("page", 1, type=int)
+    page_size = request.args.get("page_size", 20, type=int)
+    status = request.args.get("status")
+    keyword = request.args.get("keyword")
+    user_id = request.user.get("user_id")
+    result, err = get_strategies(page, page_size, status, keyword, user_id)
+    if err: return error(err, code=50001)
     return success(result)
-
-
-@strategies_bp.route("/api/strategies/<int:strategy_id>", methods=["GET"])
-def get_strategy(strategy_id):
-    detail = strategy_service.get_strategy_detail(strategy_id)
-    if not detail:
-        return error("策略不存在", 404)
-    return success(detail)
 
 
 @strategies_bp.route("/api/strategies", methods=["POST"])
-def create_strategy():
+@require_auth
+def create_strategy_route():
     body = request.get_json(silent=True) or {}
-    strategy = strategy_service.create_strategy(body)
-    if not strategy:
-        return error("创建策略失败", 400)
-    return success(strategy, message="策略已创建", status_code=201)
+    name = body.get("name", "").strip()
+    if not name: return error("策略名称不能为空", code=40001)
+    result, err = create_strategy_svc(
+        name, body.get("description", ""), body.get("strategy_type", "stock"),
+        request.user["user_id"], body.get("default_config")
+    )
+    if err: return error(err, code=40001)
+    return success(result, message="策略创建成功")
 
 
-@strategies_bp.route("/api/strategies/<int:strategy_id>", methods=["PUT"])
-def update_strategy(strategy_id):
+@strategies_bp.route("/api/strategies/<int:sid>", methods=["GET"])
+@require_auth
+def get_strategy_route(sid):
+    data = get_strategy_detail(sid)
+    if not data: return error("策略不存在", code=40400)
+    return success(data)
+
+
+@strategies_bp.route("/api/strategies/<int:sid>", methods=["PUT"])
+@require_auth
+def update_strategy_route(sid):
     body = request.get_json(silent=True) or {}
-    strategy = strategy_service.update_strategy(strategy_id, body)
-    if not strategy:
-        return error("策略不存在或更新失败", 400)
-    return success(strategy, message="策略已更新")
+    allowed = {"name", "description", "strategy_type", "default_config", "tags", "strategy_key"}
+    updates = {k: v for k, v in body.items() if k in allowed}
+    if not updates: return error("无有效更新字段", code=40001)
+    if not update_strategy_svc(sid, **updates):
+        return error("更新失败", code=50001)
+    return success(None, message="更新成功")
 
 
-@strategies_bp.route("/api/strategies/<int:strategy_id>/versions", methods=["POST"])
-def create_version(strategy_id):
+@strategies_bp.route("/api/strategies/<int:sid>/status", methods=["PATCH"])
+@require_auth
+def patch_strategy_status(sid):
     body = request.get_json(silent=True) or {}
-    version = strategy_service.create_version(strategy_id, body)
-    if not version:
-        return error("版本创建失败", 400)
-    return success(version, message="版本已创建", status_code=201)
+    status = body.get("status", "").strip()
+    ok, err = change_strategy_status(sid, status)
+    if not ok: return error(err, code=40001)
+    return success(None, message="状态已更新")
 
 
-@strategies_bp.route("/api/strategies/<int:strategy_id>/run", methods=["POST"])
-def run_strategy(strategy_id):
+@strategies_bp.route("/api/strategies/<int:sid>", methods=["DELETE"])
+@require_auth
+def delete_strategy_route(sid):
+    ok, err = delete_strategy_svc(sid)
+    if not ok: return error(err, code=40900)
+    return success(None, message="删除成功")
+
+
+# === Versions ===
+
+@strategies_bp.route("/api/strategies/<int:sid>/versions", methods=["GET"])
+@require_auth
+def list_versions_route(sid):
+    return success(get_versions(sid))
+
+
+@strategies_bp.route("/api/strategies/<int:sid>/versions", methods=["POST"])
+@require_auth
+def create_version_route(sid):
     body = request.get_json(silent=True) or {}
-    version_id = body.get("version_id")
-    result = strategy_service.run_strategy(strategy_id, version_id)
-    if not result:
-        return error("策略运行失败", 400)
-    return success(result, message="策略运行任务已提交")
+    source_code = body.get("source_code", "")
+    change_log = body.get("change_log", "")
+    config = body.get("config")
+    result, err = create_version_svc(sid, source_code, change_log, config)
+    if err: return error(err, code=40001)
+    return success(result, message="版本创建成功")
 
 
-@strategies_bp.route("/api/strategies/<int:strategy_id>/runs", methods=["GET"])
-def list_runs(strategy_id):
-    page = int(request.args.get("page", 1))
-    page_size = int(request.args.get("page_size", 20))
-
-    result = strategy_service.get_runs(strategy_id, page, page_size)
-    if result is None:
-        return error("查询失败", 500)
-    return success(result)
+@strategies_bp.route("/api/strategies/<int:sid>/versions/<int:version>", methods=["GET"])
+@require_auth
+def get_version_route(sid, version):
+    data = get_version_detail(sid, version)
+    if not data: return error("版本不存在", code=40400)
+    return success(data)

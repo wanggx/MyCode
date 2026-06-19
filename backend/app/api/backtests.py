@@ -1,80 +1,120 @@
 # -*- coding: utf-8 -*-
-"""
-回测 API 路由
-"""
-
+"""回测中心 API"""
 from flask import Blueprint, request
-
-from app.services import backtest_service
 from app.core.response import success, error
+from app.core.security import require_auth
+from app.services.backtest_service import (
+    create_backtest, get_backtests, get_backtest_detail,
+    cancel_backtest, delete_backtest,
+    get_backtest_nav, get_backtest_trades, get_backtest_positions,
+    get_backtest_daily_metrics, get_backtest_risk_metrics,
+    get_backtest_logs, get_backtest_report,
+)
 
 backtests_bp = Blueprint("backtests", __name__)
 
 
-@backtests_bp.route("", methods=["POST"])
-def create_backtest():
-    """创建回测任务"""
+@backtests_bp.route("/api/backtests", methods=["POST"])
+@require_auth
+def create_backtest_route():
     body = request.get_json(silent=True) or {}
-    strategy_id = body.get("strategy_id")
-    version_id = body.get("version_id")
-    start_date = body.get("start_date")
-    end_date = body.get("end_date")
-    params = body.get("params")
-
-    if not strategy_id or not version_id or not start_date or not end_date:
-        return error("缺少必要参数: strategy_id, version_id, start_date, end_date", 400)
-
-    result = backtest_service.create_backtest(strategy_id, version_id, start_date, end_date, params)
-    if not result:
-        return error("创建回测任务失败", 400)
-    return success(result, message="回测任务已创建", status_code=201)
+    sid = body.get("strategy_id")
+    ver = body.get("version")
+    cfg = body.get("config", {})
+    if not sid: return error("缺少 strategy_id", code=40001)
+    if not cfg.get("start_date") or not cfg.get("end_date"):
+        return error("缺少 start_date / end_date", code=40001)
+    result, err = create_backtest(request.user["user_id"], int(sid), ver, cfg)
+    if err: return error(err, code=40001 if "不存在" in err or "没有" in err else 40900 if "上限" in err else 50001)
+    return success(result, message="回测已创建")
 
 
-@backtests_bp.route("", methods=["GET"])
-def list_backtests():
-    """分页查询"""
-    strategy_id = request.args.get("strategy_id", type=int)
+@backtests_bp.route("/api/backtests", methods=["GET"])
+@require_auth
+def list_backtests_route():
+    page = request.args.get("page", 1, type=int)
+    page_size = request.args.get("page_size", 20, type=int)
+    sid = request.args.get("strategy_id", type=int)
     status = request.args.get("status")
-    page = int(request.args.get("page", 1))
-    page_size = int(request.args.get("page_size", 20))
-
-    result = backtest_service.get_backtests(strategy_id, status, page, page_size)
-    if result is None:
-        return error("查询失败", 500)
+    result, err = get_backtests(page, page_size, sid, status, request.user.get("user_id"))
+    if err: return error(err, code=50001)
     return success(result)
 
 
-@backtests_bp.route("/<int:backtest_id>", methods=["GET"])
-def get_backtest(backtest_id):
-    """回测详情"""
-    detail = backtest_service.get_backtest_detail(backtest_id)
-    if not detail:
-        return error("回测任务不存在", 404)
-    return success(detail)
+@backtests_bp.route("/api/backtests/<int:bid>", methods=["GET"])
+@require_auth
+def get_backtest_route(bid):
+    data = get_backtest_detail(bid)
+    if not data: return error("回测不存在", code=40400)
+    return success(data)
 
 
-@backtests_bp.route("/<int:backtest_id>/nav", methods=["GET"])
-def get_nav(backtest_id):
-    """净值列表"""
-    nav = backtest_service.get_nav(backtest_id)
-    return success(nav)
+@backtests_bp.route("/api/backtests/<int:bid>/cancel", methods=["POST"])
+@require_auth
+def cancel_backtest_route(bid):
+    ok, err = cancel_backtest(bid)
+    if not ok: return error(err, code=40001)
+    return success(None, message="回测已取消")
 
 
-@backtests_bp.route("/<int:backtest_id>/positions", methods=["GET"])
-def get_positions(backtest_id):
-    """持仓列表"""
+@backtests_bp.route("/api/backtests/<int:bid>", methods=["DELETE"])
+@require_auth
+def delete_backtest_route(bid):
+    ok, err = delete_backtest(bid)
+    if not ok: return error(err, code=40001)
+    return success(None, message="删除成功")
+
+
+@backtests_bp.route("/api/backtests/<int:bid>/nav", methods=["GET"])
+@require_auth
+def nav_route(bid):
+    data = get_backtest_nav(bid)
+    return success(data)
+
+
+@backtests_bp.route("/api/backtests/<int:bid>/trades", methods=["GET"])
+@require_auth
+def trades_route(bid):
+    page = request.args.get("page", 1, type=int)
+    page_size = request.args.get("page_size", 50, type=int)
+    result, err = get_backtest_trades(bid, page, page_size)
+    if err: return error(err, code=50001)
+    return success(result)
+
+
+@backtests_bp.route("/api/backtests/<int:bid>/positions", methods=["GET"])
+@require_auth
+def positions_route(bid):
     trade_date = request.args.get("trade_date")
-    positions = backtest_service.get_positions(backtest_id, trade_date)
-    return success(positions)
+    return success(get_backtest_positions(bid, trade_date))
 
 
-@backtests_bp.route("/<int:backtest_id>/trades", methods=["GET"])
-def get_trades(backtest_id):
-    """交易明细"""
-    page = int(request.args.get("page", 1))
-    page_size = int(request.args.get("page_size", 20))
+@backtests_bp.route("/api/backtests/<int:bid>/daily-metrics", methods=["GET"])
+@require_auth
+def daily_metrics_route(bid):
+    return success(get_backtest_daily_metrics(bid))
 
-    result = backtest_service.get_trades(backtest_id, page, page_size)
-    if result is None:
-        return error("查询失败", 500)
+
+@backtests_bp.route("/api/backtests/<int:bid>/risk-metrics", methods=["GET"])
+@require_auth
+def risk_metrics_route(bid):
+    data = get_backtest_risk_metrics(bid)
+    return success(data)
+
+
+@backtests_bp.route("/api/backtests/<int:bid>/logs", methods=["GET"])
+@require_auth
+def logs_route(bid):
+    mode = request.args.get("mode", "full")
+    lines = request.args.get("lines", 100, type=int)
+    result, err = get_backtest_logs(bid, mode, lines)
+    if err: return error(err, code=40400)
     return success(result)
+
+
+@backtests_bp.route("/api/backtests/<int:bid>/report", methods=["GET"])
+@require_auth
+def report_route(bid):
+    data = get_backtest_report(bid)
+    if not data: return error("回测不存在", code=40400)
+    return success(data)

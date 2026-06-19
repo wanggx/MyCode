@@ -56,7 +56,7 @@ export default {
       this.loginError = ''
       try {
         await this.login(this.loginForm)
-        this.$router.push('/dashboard/overview')
+        this.$router.push('/workspace')
       } catch (e) {
         this.loginError = '登录失败，请检查用户名和密码'
       }

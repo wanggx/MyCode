@@ -1,79 +1,56 @@
 # -*- coding: utf-8 -*-
 """
-A 股基本数据访问
+A 股基础数据访问（qt_dev.stock_basic + stock_daily）
 """
-
 from app.core.database import get_db_connection
-from app.core.config import settings
-from sqlalchemy import create_engine, text
 
 
-def query_stocks(page=1, page_size=10, keyword="", area="", industry=""):
+def query_stocks(page=1, page_size=10, keyword="", area="", industry="", market=""):
     """查询股票列表（分页 + 筛选）"""
     conn = get_db_connection()
     if not conn:
         return None, "数据库连接失败"
-
     try:
         with conn.cursor() as cursor:
-            where_conditions = []
+            where = []
             params = []
-
             if keyword:
-                where_conditions.append(
-                    "(ts_code LIKE %s OR symbol LIKE %s OR name LIKE %s)"
-                )
+                where.append("(ts_code LIKE %s OR symbol LIKE %s OR name LIKE %s)")
                 kw = f"%{keyword}%"
                 params.extend([kw, kw, kw])
-
             if area:
-                where_conditions.append("area = %s")
+                where.append("area = %s")
                 params.append(area)
-
             if industry:
-                where_conditions.append("industry = %s")
+                where.append("industry = %s")
                 params.append(industry)
+            if market:
+                where.append("market = %s")
+                params.append(market)
+            wc = ("WHERE " + " AND ".join(where)) if where else ""
 
-            where_clause = ""
-            if where_conditions:
-                where_clause = "WHERE " + " AND ".join(where_conditions)
-
-            count_sql = f"SELECT COUNT(*) as total FROM stock {where_clause}"
-            cursor.execute(count_sql, params)
+            cursor.execute(f"SELECT COUNT(*) as total FROM stock_basic {wc}", params)
             total = cursor.fetchone()["total"] or 0
 
             offset = (page - 1) * page_size
-            sql = f"""
-                SELECT ts_code, symbol, name, area, industry, cnspell,
-                       market, list_date, act_name, act_ent_type
-                FROM stock {where_clause}
-                ORDER BY ts_code
-                LIMIT %s OFFSET %s
-            """
-            cursor.execute(sql, params + [page_size, offset])
-            rows = cursor.fetchall()
-
-            stocks = []
-            for r in rows:
-                stocks.append({
-                    "ts_code": r["ts_code"],
-                    "symbol": str(r["symbol"]) if r["symbol"] else "",
-                    "name": r["name"],
-                    "area": r["area"],
-                    "industry": r["industry"],
-                    "cnspell": r["cnspell"],
-                    "market": r["market"],
+            cursor.execute(
+                f"SELECT ts_code, symbol, name, area, industry, market, list_date, exchange, board_type "
+                f"FROM stock_basic {wc} ORDER BY ts_code LIMIT %s OFFSET %s",
+                params + [page_size, offset]
+            )
+            items = []
+            for r in cursor.fetchall():
+                items.append({
+                    "ts_code": r["ts_code"], "symbol": r["symbol"], "name": r["name"],
+                    "area": r["area"] or "", "industry": r["industry"] or "",
+                    "market": r["market"] or "", "exchange": r["exchange"] or "",
+                    "board_type": r["board_type"] or "",
                     "list_date": str(r["list_date"]) if r["list_date"] else "",
-                    "act_name": r["act_name"],
-                    "act_ent_type": r["act_ent_type"],
                 })
-
             return {
-                "stocks": stocks,
-                "total": total,
-                "page": page,
-                "page_size": page_size,
-                "total_pages": (total + page_size - 1) // page_size,
+                "stocks": items, "total": total,
+                "page": page, "page_size": page_size,
+                "total_pages": max((total + page_size - 1) // page_size, 1),
             }, None
     except Exception as e:
         return None, f"查询失败: {str(e)}"
@@ -82,58 +59,49 @@ def query_stocks(page=1, page_size=10, keyword="", area="", industry=""):
 
 
 def query_areas():
-    """查询所有地域列表"""
     conn = get_db_connection()
-    if not conn:
-        return []
+    if not conn: return []
     try:
-        with conn.cursor() as cursor:
-            cursor.execute(
-                "SELECT DISTINCT area FROM stock WHERE area IS NOT NULL AND area != '' ORDER BY area"
-            )
-            return [r["area"] for r in cursor.fetchall()]
+        with conn.cursor() as c:
+            c.execute("SELECT DISTINCT area FROM stock_basic WHERE area IS NOT NULL AND area != '' ORDER BY area")
+            return [r["area"] for r in c.fetchall()]
     finally:
         conn.close()
 
 
 def query_industries():
-    """查询所有行业列表"""
     conn = get_db_connection()
-    if not conn:
-        return []
+    if not conn: return []
     try:
-        with conn.cursor() as cursor:
-            cursor.execute(
-                "SELECT DISTINCT industry FROM stock WHERE industry IS NOT NULL AND industry != '' ORDER BY industry"
-            )
-            return [r["industry"] for r in cursor.fetchall()]
+        with conn.cursor() as c:
+            c.execute("SELECT DISTINCT industry FROM stock_basic WHERE industry IS NOT NULL AND industry != '' ORDER BY industry")
+            return [r["industry"] for r in c.fetchall()]
+    finally:
+        conn.close()
+
+
+def query_stock_by_code(ts_code):
+    conn = get_db_connection()
+    if not conn: return None
+    try:
+        with conn.cursor() as c:
+            c.execute("SELECT * FROM stock_basic WHERE ts_code = %s", (ts_code,))
+            return c.fetchone()
     finally:
         conn.close()
 
 
 def query_stock_list_df():
     """获取股票列表 DataFrame（排除科创板/北交所/ST）"""
-    engine = create_engine(
-        f"mysql+pymysql://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
-    )
+    from app.core.config import settings
+    from sqlalchemy import create_engine
     import pandas as pd
-
-    stock_df = pd.read_sql_table("stock", con=engine)
-    return stock_df[
-        (stock_df["ts_code"].str.startswith("68") == False)
-        & (stock_df["ts_code"].str.endswith("BJ") == False)
-        & (stock_df["name"].str.contains("ST") == False)
-    ]
-
-
-def refresh_stock_list_from_tushare():
-    """从 Tushare 刷新股票列表（替换式）"""
-    import tushare as ts
-
-    ts.set_token(settings.TUSHARE_TOKEN)
-    pro = ts.pro_api()
-    data = pro.stock_basic(exchange="", list_status="L")
     engine = create_engine(
         f"mysql+pymysql://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
     )
-    data.to_sql("stock", con=engine, if_exists="replace", index=False)
+    df = pd.read_sql_table("stock_basic", con=engine)
+    return df[
+        (~df["ts_code"].str.startswith("68"))
+        & (~df["ts_code"].str.endswith("BJ"))
+        & (~df["name"].str.contains("ST"))
+    ]

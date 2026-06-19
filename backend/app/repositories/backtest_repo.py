@@ -1,335 +1,287 @@
 # -*- coding: utf-8 -*-
-"""
-回测数据访问层：backtest_job / backtest_nav / backtest_position / backtest_trade 的 CRUD
-"""
-
+"""回测数据访问层：backtest_job + 5 张结果表的 CRUD"""
 import json
-import logging
 from datetime import datetime
-
 from app.core.database import get_db_connection
-from app.repositories.base import paginate_sql
-
-logger = logging.getLogger(__name__)
 
 
-def init_tables():
-    """确保回测相关 4 张表存在"""
+# === Job CRUD ===
+
+def create_job(user_id, strategy_id, strategy_version, strategy_name, strategy_key, config):
     conn = get_db_connection()
-    if not conn:
-        logger.error("数据库连接失败，无法初始化回测表")
-        return False
+    if not conn: return None
     try:
-        with conn.cursor() as cursor:
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS backtest_job (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    strategy_id INT NOT NULL,
-                    version_id INT NOT NULL,
-                    task_job_id INT NULL,
-                    start_date VARCHAR(8) NOT NULL,
-                    end_date VARCHAR(8) NOT NULL,
-                    benchmark VARCHAR(10) DEFAULT '000300.SH',
-                    status VARCHAR(20) DEFAULT 'pending' COMMENT 'pending/running/success/failed',
-                    params_json JSON COMMENT '回测参数(手续费/滑点/最大持仓等)',
-                    metrics_json JSON COMMENT '风险指标(年化收益/夏普/最大回撤等)',
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    started_at DATETIME NULL,
-                    finished_at DATETIME NULL
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-            """)
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS backtest_nav (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    job_id INT NOT NULL,
-                    trade_date VARCHAR(8) NOT NULL,
-                    nav DECIMAL(12,4) NOT NULL,
-                    benchmark_nav DECIMAL(12,4) DEFAULT NULL,
-                    drawdown DECIMAL(8,4) DEFAULT 0,
-                    UNIQUE KEY uk_job_date (job_id, trade_date)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-            """)
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS backtest_position (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    job_id INT NOT NULL,
-                    trade_date VARCHAR(8) NOT NULL,
-                    ts_code VARCHAR(20) NOT NULL,
-                    weight DECIMAL(8,4) DEFAULT 0,
-                    market_value DECIMAL(16,2) DEFAULT 0,
-                    close_price DECIMAL(12,4) DEFAULT 0,
-                    INDEX idx_job_date (job_id, trade_date)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-            """)
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS backtest_trade (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    job_id INT NOT NULL,
-                    trade_date VARCHAR(8) NOT NULL,
-                    ts_code VARCHAR(20) NOT NULL,
-                    side VARCHAR(4) NOT NULL COMMENT 'buy/sell',
-                    price DECIMAL(12,4) NOT NULL,
-                    quantity INT NOT NULL,
-                    amount DECIMAL(16,2) NOT NULL,
-                    fee DECIMAL(10,4) DEFAULT 0,
-                    reason VARCHAR(200) COMMENT '交易原因'
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-            """)
-        conn.commit()
-        logger.info("回测表已就绪")
-        return True
-    finally:
-        conn.close()
-
-
-def create_job(data: dict) -> int:
-    """创建回测任务，返回 job_id"""
-    conn = get_db_connection()
-    if not conn:
-        return None
-    try:
-        with conn.cursor() as cursor:
-            params_str = json.dumps(data.get("params_json"), ensure_ascii=False) if data.get("params_json") else None
-            sql = """
-                INSERT INTO backtest_job (strategy_id, version_id, task_job_id, start_date, end_date,
-                    benchmark, status, params_json, metrics_json)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """
-            cursor.execute(sql, [
-                data.get("strategy_id"),
-                data.get("version_id"),
-                data.get("task_job_id"),
-                data.get("start_date"),
-                data.get("end_date"),
-                data.get("benchmark", "000300.SH"),
-                data.get("status", "pending"),
-                params_str,
-                data.get("metrics_json"),
-            ])
-            job_id = cursor.lastrowid
-        conn.commit()
-        return job_id
-    finally:
-        conn.close()
-
-
-def get_job(job_id: int) -> dict:
-    """获取单个回测任务"""
-    conn = get_db_connection()
-    if not conn:
-        return None
-    try:
-        with conn.cursor() as cursor:
-            cursor.execute("SELECT * FROM backtest_job WHERE id = %s", [job_id])
-            return cursor.fetchone()
-    finally:
-        conn.close()
-
-
-def get_jobs(strategy_id=None, status=None, page=1, page_size=20) -> dict:
-    """分页查询回测任务列表，按 created_at DESC"""
-    conn = get_db_connection()
-    if not conn:
-        return None
-    try:
-        with conn.cursor() as cursor:
-            conditions = []
-            params = []
-            if strategy_id:
-                conditions.append("strategy_id = %s")
-                params.append(strategy_id)
-            if status:
-                conditions.append("status = %s")
-                params.append(status)
-            where = (" WHERE " + " AND ".join(conditions)) if conditions else ""
-
-            base_sql = f"SELECT * FROM backtest_job{where} ORDER BY created_at DESC"
-            count_sql = f"SELECT COUNT(*) AS total FROM backtest_job{where}"
-            return paginate_sql(base_sql, count_sql, params, page, page_size, cursor)
-    finally:
-        conn.close()
-
-
-def update_job(job_id: int, data: dict) -> bool:
-    """更新回测任务"""
-    conn = get_db_connection()
-    if not conn:
-        return False
-    try:
-        with conn.cursor() as cursor:
-            allowed = {"task_job_id", "status", "params_json", "metrics_json", "started_at", "finished_at"}
-            sets = []
-            params = []
-            for key, value in data.items():
-                if key in allowed:
-                    if key in ("params_json", "metrics_json") and isinstance(value, (dict, list)):
-                        value = json.dumps(value, ensure_ascii=False)
-                    sets.append(f"{key} = %s")
-                    params.append(value)
-            if not sets:
-                return False
-
-            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            status = data.get("status")
-            if status == "running" and "started_at" not in data:
-                sets.append("started_at = %s")
-                params.append(now)
-            elif status in ("success", "failed") and "finished_at" not in data:
-                sets.append("finished_at = %s")
-                params.append(now)
-
-            params.append(job_id)
-            sql = f"UPDATE backtest_job SET {', '.join(sets)} WHERE id = %s"
-            cursor.execute(sql, params)
-            affected = cursor.rowcount
-        conn.commit()
-        return affected > 0
-    finally:
-        conn.close()
-
-
-def claim_pending_job() -> dict:
-    """原子性地抢占一条 pending 回测任务"""
-    conn = get_db_connection()
-    if not conn:
-        return None
-    try:
-        with conn.cursor() as cursor:
-            cursor.execute(
-                "SELECT * FROM backtest_job WHERE status = 'pending' "
-                "ORDER BY created_at ASC LIMIT 1 FOR UPDATE"
+        with conn.cursor() as c:
+            c.execute(
+                "INSERT INTO backtest_job (user_id, strategy_id, strategy_version, strategy_name, strategy_key, status, config) VALUES (%s,%s,%s,%s,%s,'pending',%s)",
+                (user_id, strategy_id, strategy_version, strategy_name, strategy_key, json.dumps(config))
             )
-            job = cursor.fetchone()
-            if not job:
-                return None
-            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            cursor.execute(
-                "UPDATE backtest_job SET status = 'running', started_at = %s WHERE id = %s",
-                [now, job["id"]],
-            )
-        conn.commit()
-        job["status"] = "running"
-        job["started_at"] = now
-        return job
+            conn.commit()
+            return c.lastrowid
     finally:
         conn.close()
 
 
-def batch_insert_nav(items: list) -> int:
-    """INSERT IGNORE 批量写入净值数据"""
-    if not items:
-        return 0
+def get_job(backtest_id):
     conn = get_db_connection()
-    if not conn:
-        return 0
+    if not conn: return None
     try:
-        with conn.cursor() as cursor:
-            sql = """
-                INSERT IGNORE INTO backtest_nav (job_id, trade_date, nav, benchmark_nav, drawdown)
-                VALUES (%s, %s, %s, %s, %s)
-            """
-            rows = [(i["job_id"], i["trade_date"], i["nav"], i.get("benchmark_nav"), i.get("drawdown", 0)) for i in items]
-            cursor.executemany(sql, rows)
-            affected = cursor.rowcount
-        conn.commit()
-        return affected
+        with conn.cursor() as c:
+            c.execute("SELECT * FROM backtest_job WHERE id = %s", (backtest_id,))
+            return c.fetchone()
     finally:
         conn.close()
 
 
-def get_navs(job_id: int) -> list:
-    """获取净值列表"""
+def list_jobs(page=1, page_size=20, strategy_id=None, status=None, user_id=None):
     conn = get_db_connection()
-    if not conn:
-        return []
+    if not conn: return None, "DB error"
     try:
-        with conn.cursor() as cursor:
-            cursor.execute(
-                "SELECT * FROM backtest_nav WHERE job_id = %s ORDER BY trade_date",
-                [job_id],
-            )
-            return cursor.fetchall()
+        with conn.cursor() as c:
+            where, params = [], []
+            if strategy_id: where.append("strategy_id = %s"); params.append(strategy_id)
+            if status: where.append("status = %s"); params.append(status)
+            if user_id: where.append("user_id = %s"); params.append(user_id)
+            wc = ("WHERE " + " AND ".join(where)) if where else ""
+            c.execute(f"SELECT COUNT(*) as total FROM backtest_job {wc}", params)
+            total = c.fetchone()["total"] or 0
+            off = (page - 1) * page_size
+            c.execute(f"SELECT * FROM backtest_job {wc} ORDER BY created_at DESC LIMIT %s OFFSET %s", params + [page_size, off])
+            return {"items": list(c.fetchall()), "total": total, "page": page, "page_size": page_size}, None
+    except Exception as e:
+        return None, str(e)
     finally:
         conn.close()
 
 
-def batch_insert_positions(items: list) -> int:
-    """先按 job_id 删除再批量插入持仓"""
-    if not items:
-        return 0
+def count_running_jobs(user_id=None):
     conn = get_db_connection()
-    if not conn:
-        return 0
+    if not conn: return 0
     try:
-        with conn.cursor() as cursor:
-            job_id = items[0]["job_id"]
-            cursor.execute("DELETE FROM backtest_position WHERE job_id = %s", [job_id])
-            sql = """
-                INSERT INTO backtest_position (job_id, trade_date, ts_code, weight, market_value, close_price)
-                VALUES (%s, %s, %s, %s, %s, %s)
-            """
-            rows = [(i["job_id"], i["trade_date"], i["ts_code"], i.get("weight", 0), i.get("market_value", 0), i.get("close_price", 0)) for i in items]
-            cursor.executemany(sql, rows)
-            affected = cursor.rowcount
-        conn.commit()
-        return affected
-    finally:
-        conn.close()
-
-
-def get_positions(job_id: int, trade_date: str = None) -> list:
-    """获取持仓列表"""
-    conn = get_db_connection()
-    if not conn:
-        return []
-    try:
-        with conn.cursor() as cursor:
-            if trade_date:
-                cursor.execute(
-                    "SELECT * FROM backtest_position WHERE job_id = %s AND trade_date = %s ORDER BY ts_code",
-                    [job_id, trade_date],
-                )
+        with conn.cursor() as c:
+            if user_id:
+                c.execute("SELECT COUNT(*) as cnt FROM backtest_job WHERE status='running' AND user_id=%s", (user_id,))
             else:
-                cursor.execute(
-                    "SELECT * FROM backtest_position WHERE job_id = %s ORDER BY trade_date, ts_code",
-                    [job_id],
-                )
-            return cursor.fetchall()
+                c.execute("SELECT COUNT(*) as cnt FROM backtest_job WHERE status='running'")
+            return c.fetchone()["cnt"] or 0
     finally:
         conn.close()
 
 
-def batch_insert_trades(items: list) -> int:
-    """批量插入交易记录"""
-    if not items:
-        return 0
+def update_job_status(backtest_id, status, error_message=None, start_time=False):
     conn = get_db_connection()
-    if not conn:
-        return 0
+    if not conn: return
     try:
-        with conn.cursor() as cursor:
-            sql = """
-                INSERT INTO backtest_trade (job_id, trade_date, ts_code, side, price, quantity, amount, fee, reason)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """
-            rows = [(i["job_id"], i["trade_date"], i["ts_code"], i["side"], i["price"], i["quantity"], i["amount"], i.get("fee", 0), i.get("reason")) for i in items]
-            cursor.executemany(sql, rows)
-            affected = cursor.rowcount
-        conn.commit()
-        return affected
+        with conn.cursor() as c:
+            extra = ""
+            params = [status]
+            if error_message: extra += ", error_message = %s"; params.append(error_message)
+            if start_time: extra += ", start_time = NOW()"
+            params.append(backtest_id)
+            c.execute(f"UPDATE backtest_job SET status = %s{extra} WHERE id = %s", params)
+            conn.commit()
     finally:
         conn.close()
 
 
-def get_trades(job_id: int, page=1, page_size=20) -> dict:
-    """获取交易明细（分页）"""
+def update_job_progress(backtest_id, progress, current_date=None):
     conn = get_db_connection()
-    if not conn:
-        return None
+    if not conn: return
     try:
-        with conn.cursor() as cursor:
-            base_sql = "SELECT * FROM backtest_trade WHERE job_id = %s ORDER BY trade_date, id"
-            count_sql = "SELECT COUNT(*) AS total FROM backtest_trade WHERE job_id = %s"
-            return paginate_sql(base_sql, count_sql, [job_id], page, page_size, cursor)
+        with conn.cursor() as c:
+            c.execute("UPDATE backtest_job SET progress = %s, `current_date` = %s WHERE id = %s",
+                      (progress, current_date, backtest_id))
+            conn.commit()
+    finally:
+        conn.close()
+
+
+def update_job_result(backtest_id, summary):
+    conn = get_db_connection()
+    if not conn: return
+    try:
+        with conn.cursor() as c:
+            c.execute("""
+                UPDATE backtest_job SET status='completed', progress=100,
+                    total_return=%s, annualized_return=%s, max_drawdown=%s,
+                    sharpe_ratio=%s, sortino_ratio=%s, win_rate=%s,
+                    profit_loss_ratio=%s, annual_volatility=%s,
+                    alpha=%s, beta=%s, final_value=%s, total_trades=%s,
+                    benchmark_return=%s, excess_return=%s,
+                    end_time=NOW(), duration_ms=%s
+                WHERE id=%s
+            """, (
+                summary.get("total_return"), summary.get("annualized_return"),
+                summary.get("max_drawdown"), summary.get("sharpe_ratio"),
+                summary.get("sortino_ratio"), summary.get("win_rate"),
+                summary.get("profit_loss_ratio"), summary.get("annual_volatility"),
+                summary.get("alpha"), summary.get("beta"),
+                summary.get("final_value"), summary.get("total_trades", 0),
+                summary.get("benchmark_return"), summary.get("excess_return"),
+                summary.get("duration_ms"), backtest_id
+            ))
+            conn.commit()
+    finally:
+        conn.close()
+
+
+def delete_job_full(backtest_id):
+    """级联删除回测及所有关联数据"""
+    conn = get_db_connection()
+    if not conn: return
+    try:
+        with conn.cursor() as c:
+            for t in ["backtest_nav", "backtest_trade", "backtest_position", "backtest_daily_metrics", "backtest_risk_metrics"]:
+                c.execute(f"DELETE FROM {t} WHERE backtest_id = %s", (backtest_id,))
+            c.execute("DELETE FROM backtest_job WHERE id = %s", (backtest_id,))
+            conn.commit()
+    finally:
+        conn.close()
+
+
+# === Result Tables Writes ===
+
+def batch_insert_nav(backtest_id, daily_nav):
+    conn = get_db_connection()
+    if not conn: return
+    try:
+        with conn.cursor() as c:
+            if isinstance(daily_nav, dict):
+                for date_str, nav_val in daily_nav.items():
+                    c.execute(
+                        "INSERT INTO backtest_nav (backtest_id, trade_date, unit_net_value) VALUES (%s,%s,%s)",
+                        (backtest_id, date_str, nav_val))
+            elif isinstance(daily_nav, list):
+                for item in daily_nav:
+                    if isinstance(item, dict):
+                        c.execute(
+                            "INSERT INTO backtest_nav (backtest_id, trade_date, unit_net_value, daily_return, benchmark_nav) VALUES (%s,%s,%s,%s,%s)",
+                            (backtest_id, item.get("date"), item.get("nav"), item.get("daily_return"), item.get("benchmark_nav")))
+            conn.commit()
+    finally:
+        conn.close()
+
+
+def batch_insert_trades(backtest_id, trades):
+    conn = get_db_connection()
+    if not conn: return
+    try:
+        with conn.cursor() as c:
+            for t in trades:
+                if isinstance(t, dict):
+                    c.execute(
+                        "INSERT INTO backtest_trade (backtest_id, ts_code, buy_date, sell_date, buy_price, sell_price, quantity, buy_amount, sell_amount, pnl, pnl_pct) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                        (backtest_id, t.get("symbol", ""), t.get("buy_date"), t.get("sell_date"),
+                         t.get("buy_price"), t.get("sell_price"), t.get("quantity", 0),
+                         t.get("buy_amount"), t.get("sell_amount"), t.get("pnl"), t.get("pnl_pct")))
+            conn.commit()
+    finally:
+        conn.close()
+
+
+def batch_insert_positions(backtest_id, positions):
+    conn = get_db_connection()
+    if not conn: return
+    try:
+        with conn.cursor() as c:
+            for p in positions:
+                if isinstance(p, dict):
+                    c.execute(
+                        "INSERT INTO backtest_position (backtest_id, trade_date, ts_code, quantity, market_value, weight, cost, current_price) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
+                        (backtest_id, p.get("date"), p.get("symbol"), p.get("quantity", 0),
+                         p.get("market_value", 0), p.get("weight", 0), p.get("cost", 0), p.get("current_price", 0)))
+            conn.commit()
+    finally:
+        conn.close()
+
+
+def batch_insert_daily_metrics(backtest_id, metrics):
+    conn = get_db_connection()
+    if not conn: return
+    try:
+        with conn.cursor() as c:
+            for m in metrics:
+                if isinstance(m, dict):
+                    c.execute(
+                        "INSERT INTO backtest_daily_metrics (backtest_id, trade_date, daily_return, cumulative_return, drawdown, portfolio_value, cash) VALUES (%s,%s,%s,%s,%s,%s,%s)",
+                        (backtest_id, m.get("date"), m.get("daily_return"), m.get("cumulative_return"),
+                         m.get("drawdown"), m.get("portfolio_value"), m.get("cash")))
+            conn.commit()
+    finally:
+        conn.close()
+
+
+def insert_risk_metrics(backtest_id, summary):
+    conn = get_db_connection()
+    if not conn: return
+    try:
+        with conn.cursor() as c:
+            c.execute(
+                "INSERT INTO backtest_risk_metrics (backtest_id, max_drawdown, annual_volatility) VALUES (%s,%s,%s)",
+                (backtest_id, summary.get("max_drawdown"), summary.get("annual_volatility")))
+            conn.commit()
+    finally:
+        conn.close()
+
+
+# === Result Queries ===
+
+def get_nav(backtest_id):
+    conn = get_db_connection()
+    if not conn: return None
+    try:
+        with conn.cursor() as c:
+            c.execute("SELECT trade_date, unit_net_value, benchmark_nav, excess_return FROM backtest_nav WHERE backtest_id=%s ORDER BY trade_date", (backtest_id,))
+            return list(c.fetchall())
+    finally:
+        conn.close()
+
+
+def get_trades(backtest_id, page=1, page_size=50):
+    conn = get_db_connection()
+    if not conn: return None
+    try:
+        with conn.cursor() as c:
+            c.execute("SELECT COUNT(*) as total FROM backtest_trade WHERE backtest_id=%s", (backtest_id,))
+            total = c.fetchone()["total"] or 0
+            off = (page - 1) * page_size
+            c.execute("SELECT * FROM backtest_trade WHERE backtest_id=%s ORDER BY buy_date LIMIT %s OFFSET %s", (backtest_id, page_size, off))
+            return {"items": list(c.fetchall()), "total": total, "page": page, "page_size": page_size}, None
+    finally:
+        conn.close()
+
+
+def get_positions(backtest_id, trade_date=None):
+    conn = get_db_connection()
+    if not conn: return None
+    try:
+        with conn.cursor() as c:
+            if trade_date:
+                c.execute("SELECT * FROM backtest_position WHERE backtest_id=%s AND trade_date=%s", (backtest_id, trade_date))
+            else:
+                c.execute("SELECT * FROM backtest_position WHERE backtest_id=%s ORDER BY trade_date, weight DESC LIMIT 500", (backtest_id,))
+            return list(c.fetchall())
+    finally:
+        conn.close()
+
+
+def get_daily_metrics(backtest_id):
+    conn = get_db_connection()
+    if not conn: return None
+    try:
+        with conn.cursor() as c:
+            c.execute("SELECT * FROM backtest_daily_metrics WHERE backtest_id=%s ORDER BY trade_date", (backtest_id,))
+            return list(c.fetchall())
+    finally:
+        conn.close()
+
+
+def get_risk_metrics(backtest_id):
+    conn = get_db_connection()
+    if not conn: return None
+    try:
+        with conn.cursor() as c:
+            c.execute("SELECT * FROM backtest_risk_metrics WHERE backtest_id=%s", (backtest_id,))
+            return c.fetchone()
     finally:
         conn.close()

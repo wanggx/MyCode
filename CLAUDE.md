@@ -128,6 +128,12 @@ api/ → services/ → repositories/
 - 后端入口：`python backend/run.py`
 - 导入前缀以 `backend/` 为根，如 `from app.core.config import settings`
 
+### 前端端口约束
+
+- **前端开发服务器固定使用端口 5100**
+- 启动命令：`cd frontend && npx vue-cli-service serve --port 5100`
+- 禁止使用其他端口启动前端
+
 ### Python 环境约束
 
 - **后端启动必须使用 `backend/.venv` 虚拟环境下的 Python 解释器**

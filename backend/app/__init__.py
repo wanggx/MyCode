@@ -41,10 +41,14 @@ def create_app():
     app.register_blueprint(data_quality_bp)
     app.register_blueprint(strategies_bp)
     app.register_blueprint(signals_bp)
-    app.register_blueprint(backtests_bp, url_prefix="/api/backtests")
+    app.register_blueprint(backtests_bp)
     app.register_blueprint(portfolio_bp, url_prefix="/api/portfolio")
     app.register_blueprint(watchlist_bp, url_prefix="/api/watchlist")
     app.register_blueprint(factors_bp, url_prefix="/api/factors")
+
+    # Phase 1: 数据中心
+    from app.api.data import data_bp
+    app.register_blueprint(data_bp)
 
     _init_all_tables()
 

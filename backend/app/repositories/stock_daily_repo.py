@@ -62,7 +62,7 @@ def query_stock_data_df(ts_code, start_date, end_date):
     else:
         sql = (
             "SELECT * FROM stock_daily WHERE ts_code IN ("
-            "SELECT ts_code FROM stock WHERE ts_code NOT LIKE '688%%' AND ts_code NOT LIKE '%%BJ' AND name NOT LIKE '%%ST%%')"
+            "SELECT ts_code FROM stock_basic WHERE ts_code NOT LIKE '688%%' AND ts_code NOT LIKE '%%BJ' AND name NOT LIKE '%%ST%%')"
         )
     if start_date and end_date:
         sql += f" AND trade_date >= '{start_date}' AND trade_date <= '{end_date}'"
@@ -80,7 +80,7 @@ def query_stock_week_data_df(ts_code, start_date, end_date):
     else:
         sql = (
             "SELECT * FROM stock_week WHERE ts_code IN ("
-            "SELECT ts_code FROM stock WHERE ts_code NOT LIKE '688%%' AND ts_code NOT LIKE '%%BJ' AND name NOT LIKE '%%ST%%')"
+            "SELECT ts_code FROM stock_basic WHERE ts_code NOT LIKE '688%%' AND ts_code NOT LIKE '%%BJ' AND name NOT LIKE '%%ST%%')"
         )
     if start_date and end_date:
         sql += f" AND trade_date >= '{start_date}' AND trade_date <= '{end_date}'"
@@ -170,3 +170,25 @@ def delete_month_data(start_date, end_date):
             {"start": start_date, "end": end_date},
         )
         conn.commit()
+
+
+def query_stock_data(ts_code, start_date, end_date):
+    """查询日线数据（用于API返回）"""
+    conn = get_db_connection()
+    if not conn:
+        return None, "数据库连接失败"
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT COUNT(*) as total FROM stock_daily WHERE ts_code=%s AND trade_date BETWEEN %s AND %s",
+                           (ts_code, start_date, end_date))
+            total = cursor.fetchone()["total"] or 0
+            cursor.execute(
+                "SELECT ts_code, trade_date, open, high, low, close, pre_close, change_pct, vol, amount "
+                "FROM stock_daily WHERE ts_code=%s AND trade_date BETWEEN %s AND %s ORDER BY trade_date ASC LIMIT 500",
+                (ts_code, start_date, end_date)
+            )
+            return {"items": list(cursor.fetchall()), "total": total}, None
+    except Exception as e:
+        return None, f"查询失败: {str(e)}"
+    finally:
+        conn.close()

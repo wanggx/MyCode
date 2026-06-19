@@ -35,6 +35,13 @@ class Settings:
     DB_POOL_RECYCLE: int = 3600
     DB_POOL_PRE_PING: bool = True
 
+    # 安全
+    PASSWORD_HASH: str = "bcrypt"  # bcrypt | md5
+
+    # 回测
+    LOG_DIR: str = "logs"
+    MAX_CONCURRENT_BACKTESTS: int = 3
+
     def __post_init__(self):
         # 支持从环境变量覆盖（.env 加载后自动注入环境变量）
         env_overrides = {
@@ -52,10 +59,15 @@ class Settings:
             "DB_POOL_TIMEOUT": os.environ.get("DB_POOL_TIMEOUT"),
             "DB_POOL_RECYCLE": os.environ.get("DB_POOL_RECYCLE"),
             "DB_POOL_PRE_PING": os.environ.get("DB_POOL_PRE_PING"),
+            "PASSWORD_HASH": os.environ.get("PASSWORD_HASH"),
+            "LOG_DIR": os.environ.get("LOG_DIR"),
+            "MAX_CONCURRENT_BACKTESTS": os.environ.get("MAX_CONCURRENT_BACKTESTS"),
         }
+        int_keys = ("DB_PORT", "JWT_EXPIRY_HOURS", "DB_POOL_SIZE", "DB_POOL_OVERFLOW",
+                    "DB_POOL_TIMEOUT", "DB_POOL_RECYCLE", "MAX_CONCURRENT_BACKTESTS")
         for key, value in env_overrides.items():
             if value is not None:
-                if key in ("DB_PORT", "JWT_EXPIRY_HOURS", "DB_POOL_SIZE", "DB_POOL_OVERFLOW", "DB_POOL_TIMEOUT", "DB_POOL_RECYCLE"):
+                if key in int_keys:
                     setattr(self, key, int(value))
                 elif key == "DB_POOL_PRE_PING":
                     setattr(self, key, value.lower() in ("true", "1", "yes"))
