@@ -11,15 +11,15 @@
           <div class="item-title">
             <span>{{ statusIcon(bt.status) }}</span>
             <span class="item-name">{{ bt.strategy_name || 'BT#'+bt.id }}</span>
-            <el-tag v-if="bt.strategy_version" size="small" :type="bt.status==='completed'?'success':bt.status==='running'?'warning':'info'">v{{ bt.strategy_version }}</el-tag>
+            <el-tag v-if="bt.strategy_version" size="small" :type="bt.status==='completed'?'success':bt.status==='running'?'warning':'info'" class="item-version">v{{ bt.strategy_version }}</el-tag>
           </div>
           <div class="item-meta">{{ bt.created_at?.slice(0,16) }}</div>
           <div class="item-stats" v-if="bt.status==='completed'">
-            <span :class="bt.total_return>0?'green':'red'">{{ bt.total_return ? (bt.total_return*100).toFixed(1)+'%' : '-' }}</span>
+            <span :class="(bt.total_return??0)>0?'green':'red'">{{ ((bt.total_return??0)*100).toFixed(1)+'%' }}</span>
             <span class="stat-div">·</span>
-            <span>夏普 {{ bt.sharpe_ratio?.toFixed(2) || '-' }}</span>
+            <span>夏普 {{ (bt.sharpe_ratio??0).toFixed(2) }}</span>
             <span class="stat-div">·</span>
-            <span class="red">{{ bt.max_drawdown ? (bt.max_drawdown*100).toFixed(1)+'%' : '-' }}</span>
+            <span class="red">{{ ((bt.max_drawdown??0)*100).toFixed(1)+'%' }}</span>
           </div>
           <div class="item-stats" v-else-if="bt.status==='running'">
             <span class="blue">{{ bt.progress?.toFixed(0) || 0 }}%</span>
@@ -116,6 +116,13 @@
           </div>
           <pre class="log-body">{{ logs?.lines?.join('') || '暂无日志' }}</pre>
         </div>
+        <div v-show="activeTab==='code'" class="code-panel">
+          <div class="code-header">
+            <span class="code-title">💻 {{ selected.strategy_name || '策略' }} v{{ selected.strategy_version }}</span>
+            <el-button size="small" @click="copyCode">📋 复制代码</el-button>
+          </div>
+          <pre class="code-body" v-text="sourceCode || '加载中...'"></pre>
+        </div>
       </div>
     </div>
     <div class="right-panel empty" v-else><el-empty description="选择一个回测查看详情" /></div>
@@ -143,6 +150,7 @@
 import * as echarts from 'echarts'
 import { mapState, mapActions } from 'vuex'
 import axios from '@/config/axios'
+import { fetchSource } from '@/api/backtest'
 
 export default {
   name: 'BacktestCenter',
@@ -150,7 +158,7 @@ export default {
     return {
       statusFilter: '', selected: null, activeTab: 'nav',
       trades: null, positions: null, risk: null, logs: null,
-      navData: null,
+      navData: null, sourceCode: null,
       newBtVisible: false, currentStrategy: null,
       btForm: { start_date:'2024-01-01', end_date:'2024-12-31', initial_capital:100000, benchmark:'', frequency:'1d', commission:0.0003 },
       tabs: [
@@ -159,7 +167,8 @@ export default {
         { key:'positions', icon:'📈', label:'持仓分析' },
         { key:'risk', icon:'📉', label:'风险分析' },
         { key:'distribution', icon:'📊', label:'收益分布' },
-        { key:'logs', icon:'📝', label:'日志' }
+        { key:'logs', icon:'📝', label:'日志' },
+        { key:'code', icon:'💻', label:'代码' }
       ]
     }
   },
@@ -169,24 +178,25 @@ export default {
     metricItems() {
       const s = this.selected
       if (!s) return []
+      const tr = s.total_return ?? 0
       return [
-        { label:'总收益率', val: s.total_return!=null ? (s.total_return*100).toFixed(2)+'%' : '-', cls: s.total_return>0?'green':s.total_return<0?'red':'' },
-        { label:'年化收益率', val: s.annualized_return!=null ? (s.annualized_return*100).toFixed(2)+'%' : '-', cls: s.annualized_return>0?'green':'' },
-        { label:'最大回撤', val: s.max_drawdown!=null ? (s.max_drawdown*100).toFixed(2)+'%' : '-', cls: 'red' },
-        { label:'夏普比率', val: s.sharpe_ratio?.toFixed(2) || '-' },
-        { label:'索提诺比率', val: s.sortino_ratio?.toFixed(2) || '-' },
-        { label:'胜率', val: s.win_rate!=null ? (s.win_rate*100).toFixed(1)+'%' : '-' },
-        { label:'盈亏比', val: s.profit_loss_ratio?.toFixed(2) || '-' },
-        { label:'年化波动率', val: s.annual_volatility!=null ? (s.annual_volatility*100).toFixed(1)+'%' : '-' },
-        { label:'Alpha', val: s.alpha!=null ? (s.alpha*100).toFixed(1)+'%' : '-' },
-        { label:'Beta', val: s.beta?.toFixed(2) || '-' },
-        { label:'最终资产', val: s.final_value ? '¥'+s.final_value.toLocaleString() : '-' },
+        { label:'总收益率', val: (tr*100).toFixed(2)+'%', cls: tr>0?'green':tr<0?'red':'' },
+        { label:'年化收益率', val: ((s.annualized_return??0)*100).toFixed(2)+'%', cls: (s.annualized_return??0)>0?'green':'' },
+        { label:'最大回撤', val: ((s.max_drawdown??0)*100).toFixed(2)+'%', cls: 'red' },
+        { label:'夏普比率', val: (s.sharpe_ratio??0).toFixed(2) },
+        { label:'索提诺比率', val: (s.sortino_ratio??0).toFixed(2) },
+        { label:'胜率', val: ((s.win_rate??0)*100).toFixed(1)+'%' },
+        { label:'盈亏比', val: (s.profit_loss_ratio??0).toFixed(2) },
+        { label:'年化波动率', val: ((s.annual_volatility??0)*100).toFixed(1)+'%' },
+        { label:'Alpha', val: ((s.alpha??0)*100).toFixed(1)+'%' },
+        { label:'Beta', val: (s.beta??0).toFixed(2) },
+        { label:'最终资产', val: '¥'+(s.final_value??0).toLocaleString() },
         { label:'总交易笔数', val: s.total_trades || 0 }
       ]
     },
     riskTable() {
       if (!this.risk) return []
-      return Object.entries(this.risk).filter(([k])=>!k.startsWith('_')&&!k.endsWith('_start')&&!k.endsWith('_end')&&!k.endsWith('_recovery')&&!k.endsWith('_days')).map(([k,v])=>({k,v:v!=null?(typeof v==='number'?v.toFixed(4):v):'-'}))
+      return Object.entries(this.risk).filter(([k])=>!k.startsWith('_')&&!k.endsWith('_start')&&!k.endsWith('_end')&&!k.endsWith('_recovery')&&!k.endsWith('_days')).map(([k,v])=>({k,v:v!=null?(typeof v==='number'?v.toFixed(4):v):'0'}))
     }
   },
   methods: {
@@ -204,7 +214,7 @@ export default {
       if (bt.config && typeof bt.config === 'string') {
         try { bt.config = JSON.parse(bt.config) } catch(e) { bt.config = {} }
       }
-      this.selected = bt; this.activeTab = 'nav'; this.trades = null; this.risk = null; this.logs = null; this.navData = null
+      this.selected = bt; this.activeTab = 'nav'; this.trades = null; this.risk = null; this.logs = null; this.navData = null; this.sourceCode = null
 
       // Always refresh detail from server (gets latest error_message, metrics, etc.)
       try {
@@ -242,6 +252,12 @@ export default {
       // Lazy-load logs when switching to logs tab
       if (key === 'logs' && !this.logs && this.selected) {
         this.loadLogs(this.selected.id).then(logs => { this.logs = logs }).catch(() => {})
+      }
+      // Lazy-load source code when switching to code tab
+      if (key === 'code' && !this.sourceCode && this.selected) {
+        fetchSource(this.selected.id).then(res => {
+          if (res.data?.success) this.sourceCode = res.data.data?.source_code
+        }).catch(() => {})
       }
     },
     renderAllCharts() {
@@ -377,6 +393,9 @@ export default {
     },
     copyLogs() {
       if (this.logs?.lines) { const text = this.logs.lines.join(''); navigator.clipboard?.writeText(text); this.$message.success('日志已复制') }
+    },
+    copyCode() {
+      if (this.sourceCode) { navigator.clipboard?.writeText(this.sourceCode); this.$message.success('代码已复制') }
     }
   },
   mounted() { this.loadListData() },
@@ -390,11 +409,12 @@ export default {
 .panel-header { padding: 12px 16px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; font-weight: 600; font-size: 14px; }
 .bt-filter { margin: 8px 12px; }
 .bt-list { flex: 1; overflow-y: auto; }
-.bt-item { padding: 12px 16px; border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: background .2s; }
+.bt-item { padding: 12px 16px; border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: background .2s; text-align: left; }
 .bt-item:hover { background: #fafafa; }
 .bt-item.active { background: #e6f7ff; border-left: 3px solid #1890ff; padding-left: 13px; }
 .item-title { display: flex; align-items: center; gap: 6px; font-weight: 500; font-size: 14px; }
-.item-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.item-version { margin-left: auto; flex-shrink: 0; }
 .item-meta { font-size: 12px; color: #999; margin-top: 4px; }
 .item-stats { margin-top: 4px; font-size: 13px; display: flex; gap: 6px; }
 .stat-div { color: #ddd; }
@@ -440,6 +460,11 @@ export default {
 .log-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #2d2d2d; border-radius: 6px 6px 0 0; }
 .log-path { color: #ccc; font-size: 12px; font-family: monospace; }
 .log-body { flex: 1; background: #1e1e1e; color: #d4d4d4; padding: 12px; font-size: 13px; line-height: 1.65; border-radius: 0 0 6px 6px; overflow: auto; white-space: pre; margin: 0; text-align: left; font-family: 'SF Mono','Fira Code','Menlo','Consolas',monospace; }
+
+.code-panel { display: flex; flex-direction: column; height: 100%; }
+.code-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; background: #2d2d2d; border-radius: 6px 6px 0 0; flex-shrink: 0; }
+.code-title { color: #ccc; font-size: 13px; font-family: monospace; }
+.code-body { flex: 1; background: #1e1e1e; color: #d4d4d4; padding: 14px; font-size: 13px; line-height: 1.6; border-radius: 0 0 6px 6px; overflow: auto; white-space: pre; margin: 0; text-align: left; font-family: 'SF Mono','Fira Code','Menlo','Consolas',monospace; tab-size: 4; }
 
 .bt-strategy-banner { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #fafafa; border: 1px solid #e8e8e8; border-radius: 8px; }
 .st-icon { width: 36px; height: 36px; border-radius: 6px; background: linear-gradient(135deg,#1890ff,#6f42c1); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }

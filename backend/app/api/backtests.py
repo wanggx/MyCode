@@ -126,3 +126,15 @@ def report_route(bid):
     data = get_backtest_report(bid)
     if not data: return error("回测不存在", code=40400)
     return success(data)
+
+
+@backtests_bp.route("/api/backtests/<int:bid>/source", methods=["GET"])
+@require_auth
+def source_route(bid):
+    from app.repositories.backtest_repo import get_job
+    from app.repositories.strategy_repo import get_version
+    job = get_job(bid)
+    if not job: return error("回测不存在", code=40400)
+    ver_row = get_version(job["strategy_id"], job.get("strategy_version"))
+    if not ver_row: return error("策略版本源码不存在", code=40400)
+    return success({"source_code": ver_row["source_code"]})

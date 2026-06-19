@@ -43,3 +43,7 @@ export function fetchLogs(id, params = {}) {
 export function fetchReport(id) {
   return axios.get(`/api/backtests/${id}/report`)
 }
+
+export function fetchSource(id) {
+  return axios.get(`/api/backtests/${id}/source`)
+}

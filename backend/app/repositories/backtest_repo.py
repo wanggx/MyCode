@@ -85,13 +85,26 @@ def update_job_status(backtest_id, status, error_message=None, start_time=False,
         conn.close()
 
 
-def update_job_progress(backtest_id, progress, current_date=None):
+def update_job_progress(backtest_id, progress, current_date=None, total_return=None, final_value=None):
     conn = get_db_connection()
     if not conn: return
     try:
+        import math
+        def safe(v):
+            if v is None: return None
+            if isinstance(v, float) and (math.isnan(v) or math.isinf(v)): return None
+            return v
         with conn.cursor() as c:
-            c.execute("UPDATE backtest_job SET progress = %s, `current_date` = %s WHERE id = %s",
-                      (progress, current_date, backtest_id))
+            extra = ""
+            params = [progress, current_date]
+            tr = safe(total_return)
+            fv = safe(final_value)
+            if tr is not None:
+                extra += ", total_return = %s"; params.append(tr)
+            if fv is not None:
+                extra += ", final_value = %s"; params.append(fv)
+            params.append(backtest_id)
+            c.execute(f"UPDATE backtest_job SET progress = %s, `current_date` = %s{extra} WHERE id = %s", params)
             conn.commit()
     finally:
         conn.close()
@@ -101,6 +114,12 @@ def update_job_result(backtest_id, summary):
     conn = get_db_connection()
     if not conn: return
     try:
+        import math
+        def safe(v):
+            """NaN / Inf → None，MySQL 不支持"""
+            if v is None: return None
+            if isinstance(v, float) and (math.isnan(v) or math.isinf(v)): return None
+            return v
         with conn.cursor() as c:
             c.execute("""
                 UPDATE backtest_job SET status='completed', progress=100,
@@ -112,14 +131,14 @@ def update_job_result(backtest_id, summary):
                     end_time=NOW(), duration_ms=%s
                 WHERE id=%s
             """, (
-                summary.get("total_return"), summary.get("annualized_return"),
-                summary.get("max_drawdown"), summary.get("sharpe_ratio"),
-                summary.get("sortino_ratio"), summary.get("win_rate"),
-                summary.get("profit_loss_ratio"), summary.get("annual_volatility"),
-                summary.get("alpha"), summary.get("beta"),
-                summary.get("final_value"), summary.get("total_trades", 0),
-                summary.get("benchmark_return"), summary.get("excess_return"),
-                summary.get("duration_ms"), backtest_id
+                safe(summary.get("total_return")), safe(summary.get("annualized_return")),
+                safe(summary.get("max_drawdown")), safe(summary.get("sharpe_ratio")),
+                safe(summary.get("sortino_ratio")), safe(summary.get("win_rate")),
+                safe(summary.get("profit_loss_ratio")), safe(summary.get("annual_volatility")),
+                safe(summary.get("alpha")), safe(summary.get("beta")),
+                safe(summary.get("final_value")), safe(summary.get("total_trades", 0)),
+                safe(summary.get("benchmark_return")), safe(summary.get("excess_return")),
+                safe(summary.get("duration_ms")), backtest_id
             ))
             conn.commit()
     finally:

@@ -10,8 +10,8 @@
       <div class="strategy-list">
         <div v-for="s in strategies" :key="s.id" class="strategy-item" :class="{ active: current?.id === s.id }" @click="selectStrategy(s)">
           <div class="item-title">
-            <span>{{ s.name }}</span>
-            <el-tag :type="s.status==='active'?'success':s.status==='draft'?'info':'warning'" size="small">{{ s.latest_version ? 'v'+s.latest_version : 'new' }}</el-tag>
+            <span class="item-name">{{ s.name }}</span>
+            <el-tag :type="s.status==='active'?'success':s.status==='draft'?'info':'warning'" size="small" class="item-version">{{ s.latest_version ? 'v'+s.latest_version : 'new' }}</el-tag>
           </div>
           <div class="item-meta">{{ s.strategy_type }} · {{ s.updated_at?.slice(0,10) }}</div>
           <div class="item-stats" v-if="s.last_backtest_return != null">
@@ -173,24 +173,25 @@ export default {
 
 <style scoped>
 .strategy-page { display: flex; height: calc(100vh - 96px); gap: 16px; }
-.left-panel { width: 300px; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.08); display: flex; flex-direction: column; overflow: hidden; }
-.panel-header { padding: 12px 16px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; font-weight: 600; }
+.left-panel { width: 340px; flex-shrink: 0; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.08); display: flex; flex-direction: column; overflow: hidden; }
+.panel-header { padding: 12px 16px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; font-weight: 600; font-size: 14px; }
 .search-input { margin: 8px 12px; width: auto; }
 .strategy-list { flex: 1; overflow-y: auto; }
-.strategy-item { padding: 12px 16px; border-bottom: 1px solid #f5f5f5; cursor: pointer; }
+.strategy-item { padding: 12px 16px; border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: background .2s; text-align: left; }
 .strategy-item:hover { background: #fafafa; }
 .strategy-item.active { background: #e6f7ff; border-left: 3px solid #1890ff; padding-left: 13px; }
-.item-title { display: flex; align-items: center; gap: 8px; font-weight: 500; margin-bottom: 4px; }
-.item-meta { font-size: 12px; color: #999; }
-.item-stats { margin-top: 4px; font-size: 13px; }
-.item-stats .green { color: #52c41a; font-weight: 600; } .item-stats .red { color: #ff4d4f; font-weight: 600; }
-.item-stats .label { font-size: 11px; color: #999; margin-left: 4px; }
-.right-panel { flex: 1; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.08); display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+.item-title { display: flex; align-items: center; gap: 6px; font-weight: 500; font-size: 14px; }
+.item-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.item-version { margin-left: auto; flex-shrink: 0; }
+.item-meta { font-size: 12px; color: #999; margin-top: 4px; }
+.item-stats { margin-top: 4px; font-size: 13px; display: flex; gap: 6px; }
+.green { color: #52c41a; font-weight: 600; } .red { color: #ff4d4f; font-weight: 600; }
+.right-panel { flex: 1; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.08); display: flex; flex-direction: column; overflow: hidden; }
 .right-panel.empty { align-items: center; justify-content: center; }
 .right-panel > :deep(.code-editor-wrap) { flex: 1; min-height: 0; }
-.detail-header { padding: 12px 16px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; }
-.detail-header h3 { margin: 0; font-size: 16px; }
+.detail-header { padding: 14px 20px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; }
+.detail-header h3 { margin: 0 0 4px 0; font-size: 15px; font-weight: 600; }
 .meta { font-size: 12px; color: #999; }
 .btn-group { display: flex; gap: 6px; }
-.bt-strategy-info { padding: 8px 12px; background: #fafafa; border-radius: 6px; font-size: 13px; }
+.bt-strategy-info { padding: 10px 14px; background: #fafafa; border: 1px solid #e8e8e8; border-radius: 8px; font-size: 13px; }
 </style>

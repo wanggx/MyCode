@@ -54,20 +54,29 @@ def run_backtest(backtest_id, bt_config, strategy_code, strategy_key, socketio=N
         # 2. Build rqalpha config（使用 rqalpha 自带数据包，不走平台数据源）
         rq_config = _build_rqalpha_config(bt_config, backtest_id, strategy_key)
 
-        # 3. Setup progress callback
+        # 3. Setup progress callback（含实时指标估算）
         total_bars = _count_trading_days(bt_config["start_date"], bt_config["end_date"])
         bar_counter = [0]
 
-        def progress_fn(current_date_str):
+        def progress_fn(current_date_str, portfolio=None):
             bar_counter[0] += 1
             pct = min(round(bar_counter[0] / total_bars * 100, 1), 99.9)
-            update_job_progress(backtest_id, pct, current_date_str)
+            # 实时 portfolio 指标
+            tr = fv = None
+            if portfolio:
+                try:
+                    tr = float(portfolio.total_returns)
+                    fv = float(portfolio.total_value)
+                except Exception:
+                    pass
+            update_job_progress(backtest_id, pct, current_date_str, total_return=tr, final_value=fv)
             if socketio:
                 try:
                     socketio.emit("backtest_progress", {
                         "backtest_id": backtest_id, "progress": pct,
                         "current_date": current_date_str,
                         "completed_bars": bar_counter[0], "total_bars": total_bars,
+                        "total_return": tr, "final_value": fv,
                     }, namespace="/ws/backtest")
                 except Exception:
                     pass
@@ -189,10 +198,11 @@ if _original_handle_bar:
     def handle_bar(context, bar_dict):
         _bar_count[0] += 1
         if _PROGRESS_FN_:
-            _PROGRESS_FN_(str(context.now))
+            _PROGRESS_FN_(str(context.now), context.portfolio)
         if _BT_LOGGER_ and _bar_count[0] % 50 == 0:
             pv = context.portfolio.total_value
-            _BT_LOGGER_.info(f"[{{context.now.date()}}] BAR #{{_bar_count[0]}} | portfolio_value: ¥{{pv:,.0f}}")
+            tr = context.portfolio.total_returns
+            _BT_LOGGER_.info(f"[{{context.now.date()}}] BAR #{{_bar_count[0]}} | portfolio_value: ¥{{pv:,.0f}} | total_returns: {{tr:+.2%}}")
         return _original_handle_bar(context, bar_dict)
 """
 
@@ -210,7 +220,11 @@ def _count_trading_days(start_date, end_date):
 
 
 def _extract_summary(run_result, bt_config, elapsed_ms):
-    """Extract performance metrics from rqalpha result"""
+    """从 rqalpha run_code() 返回结果中提取绩效指标
+
+    rqalpha 返回结构:
+      {'sys_analyser': {'summary': {...}, 'trades': DataFrame, 'portfolio': DataFrame}, 'sys_risk': ...}
+    """
     summary = {
         "total_return": None, "annualized_return": None, "max_drawdown": None,
         "sharpe_ratio": None, "sortino_ratio": None, "win_rate": None,
@@ -222,35 +236,52 @@ def _extract_summary(run_result, bt_config, elapsed_ms):
     }
 
     if run_result and isinstance(run_result, dict):
-        s = run_result.get("summary", {})
+        # rqalpha 主结果在 sys_analyser 模块中
+        analyser = run_result.get("sys_analyser", {})
+        s = analyser.get("summary", {})
         if s:
             summary.update({
                 "total_return": s.get("total_returns"),
                 "annualized_return": s.get("annualized_returns"),
                 "max_drawdown": s.get("max_drawdown"),
                 "sharpe_ratio": s.get("sharpe"),
-                "sortino_ratio": getattr(s, 'sortino', None),
+                "sortino_ratio": s.get("sortino"),
                 "win_rate": s.get("win_rate"),
-                "annual_volatility": s.get("annual_volatility"),
+                "annual_volatility": s.get("volatility"),
                 "alpha": s.get("alpha"), "beta": s.get("beta"),
                 "final_value": s.get("total_value"),
-                "total_trades": s.get("total_trades", 0),
+                "total_trades": len(analyser.get("trades", [])),
                 "benchmark_return": s.get("benchmark_total_returns"),
+                "profit_loss_ratio": s.get("profit_loss_rate"),
             })
             if summary["total_return"] is not None and summary["benchmark_return"] is not None:
                 summary["excess_return"] = summary["total_return"] - summary["benchmark_return"]
 
-        # Extract trades and nav
-        trades = run_result.get("trades", [])
-        if trades:
-            _save_backtest_details(bt_config.get("_backtest_id"), trades, run_result.get("daily_nav", {}),
-                                   run_result.get("positions", {}), summary, bt_config.get("_socketio"))
+        # 保存详细结果到数据库
+        trades_df = analyser.get("trades")
+        portfolio_df = analyser.get("portfolio")
+        if trades_df is not None and not (hasattr(trades_df, 'empty') and trades_df.empty):
+            _save_backtest_details(bt_config.get("_backtest_id"), trades_df, portfolio_df, summary)
 
+    # 清理 NaN / Inf，MySQL 不支持
+    summary = _clean_nan(summary)
     return summary
 
 
-def _save_backtest_details(backtest_id, trades, daily_nav, positions, summary, socketio):
-    """Write detailed backtest results to DB tables"""
+def _clean_nan(d):
+    """递归替换 dict 中的 NaN / Inf 为 None"""
+    import math
+    if isinstance(d, dict):
+        return {k: _clean_nan(v) for k, v in d.items()}
+    if isinstance(d, list):
+        return [_clean_nan(v) for v in d]
+    if isinstance(d, float) and (math.isnan(d) or math.isinf(d)):
+        return None
+    return d
+
+
+def _save_backtest_details(backtest_id, trades_df, portfolio_df, summary):
+    """将 rqalpha 结果写入 DB 表"""
     if not backtest_id:
         return
     try:
@@ -258,12 +289,41 @@ def _save_backtest_details(backtest_id, trades, daily_nav, positions, summary, s
             batch_insert_nav, batch_insert_trades, batch_insert_positions,
             batch_insert_daily_metrics, insert_risk_metrics
         )
-        if daily_nav:
-            batch_insert_nav(backtest_id, daily_nav)
-        if trades:
-            batch_insert_trades(backtest_id, trades)
-        if positions:
-            batch_insert_positions(backtest_id, positions)
+        # trades_df: rqalpha trades DataFrame → 转 list[dict]
+        if trades_df is not None and len(trades_df) > 0:
+            trade_records = []
+            for idx, row in trades_df.iterrows():
+                trade_records.append({
+                    "symbol": row.get("order_book_id", ""),
+                    "buy_date": str(idx.date()) if hasattr(idx, 'date') else str(idx),
+                    "sell_date": str(idx.date()) if hasattr(idx, 'date') else str(idx),
+                    "buy_price": row.get("last_price", 0),
+                    "sell_price": row.get("last_price", 0),
+                    "quantity": int(row.get("last_quantity", 0)),
+                    "buy_amount": float(row.get("last_price", 0) * row.get("last_quantity", 0)),
+                    "sell_amount": float(row.get("last_price", 0) * row.get("last_quantity", 0)),
+                    "pnl": float(row.get("trading_pnl", 0)),
+                    "pnl_pct": float(row.get("trading_pnl", 0) / (row.get("last_price", 1) * row.get("last_quantity", 1))) if row.get("last_quantity") else 0,
+                })
+            if trade_records:
+                batch_insert_trades(backtest_id, trade_records)
+
+        # portfolio_df: rqalpha portfolio DataFrame → 转 nav list[dict]
+        if portfolio_df is not None and len(portfolio_df) > 0:
+            nav_records = []
+            for idx, row in portfolio_df.iterrows():
+                record = {
+                    "date": str(idx.date()) if hasattr(idx, 'date') else str(idx),
+                    "nav": float(row.get("unit_net_value", 1.0)),
+                }
+                if "benchmark_unit_net_value" in row:
+                    record["benchmark_nav"] = float(row["benchmark_unit_net_value"])
+                if "arithmetic_excess_unit_net_value" in row:
+                    record["daily_return"] = float(row["arithmetic_excess_unit_net_value"])
+                nav_records.append(record)
+            if nav_records:
+                batch_insert_nav(backtest_id, nav_records)
+
         insert_risk_metrics(backtest_id, summary)
     except Exception as e:
         logger.warning(f"Failed to save backtest details for #{backtest_id}: {e}")
