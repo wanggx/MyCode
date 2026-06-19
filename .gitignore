@@ -26,3 +26,4 @@ logs/
 
 # Frontend
 node_modules
+.cursor/
