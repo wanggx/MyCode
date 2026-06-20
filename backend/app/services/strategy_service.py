@@ -39,6 +39,11 @@ def get_strategy_detail(strategy_id):
 
 
 def create_strategy_svc(name, description, strategy_type, user_id, default_config=None):
+    # 检查策略名称是否重复
+    from app.repositories.strategy_repo import find_strategy_by_name
+    existing = find_strategy_by_name(name, user_id)
+    if existing:
+        return None, f"策略名称「{name}」已存在，请更换名称"
     key = _generate_strategy_key(name)
     sid, err = create_strategy(name, description, strategy_type, user_id, key, default_config)
     if err: return None, err

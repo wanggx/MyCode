@@ -136,6 +136,7 @@ export default {
       if (!this.form.name) return this.$message.warning('请输入策略名称')
       const res = await this.create({ name: this.form.name, description: this.form.desc, strategy_type: this.form.type })
       if (res?.success) { this.createVisible = false; this.$message.success('策略已创建') }
+      else { this.$message.error(res?.message || res?.error || '创建失败') }
     },
     async handleDelete() {
       if (!this.current) return

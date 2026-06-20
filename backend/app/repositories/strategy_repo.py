@@ -66,6 +66,21 @@ def get_strategy(strategy_id):
         conn.close()
 
 
+def find_strategy_by_name(name, user_id=None):
+    """按名称查找策略，返回第一条匹配记录或 None"""
+    conn = get_db_connection()
+    if not conn: return None
+    try:
+        with conn.cursor() as c:
+            if user_id:
+                c.execute("SELECT id, name FROM strategy WHERE name = %s AND user_id = %s LIMIT 1", (name, user_id))
+            else:
+                c.execute("SELECT id, name FROM strategy WHERE name = %s LIMIT 1", (name,))
+            return c.fetchone()
+    finally:
+        conn.close()
+
+
 def create_strategy(name, description, strategy_type, user_id, strategy_key, default_config=None):
     conn = get_db_connection()
     if not conn: return None, "DB error"

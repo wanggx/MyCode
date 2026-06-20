@@ -34,10 +34,13 @@ export default {
       return res.data?.data
     },
     async create({ dispatch }, data) {
-      const res = await createBacktest(data)
-      const result = res.data
-      if (result?.success) await dispatch('loadList')
-      return result
+      try {
+        const res = await createBacktest(data)
+        if (res.data?.success) await dispatch('loadList')
+        return res.data
+      } catch (e) {
+        return e.response?.data || { success: false, error: e.message || '创建失败' }
+      }
     },
     async cancel({ dispatch }, id) {
       await cancelBacktest(id)

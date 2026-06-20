@@ -31,9 +31,13 @@ export default {
       return res.data?.data
     },
     async create({ dispatch }, data) {
-      const res = await createStrategy(data)
-      if (res.data?.success) await dispatch('loadList')
-      return res.data
+      try {
+        const res = await createStrategy(data)
+        if (res.data?.success) await dispatch('loadList')
+        return res.data
+      } catch (e) {
+        return e.response?.data || { success: false, error: e.message || '创建失败' }
+      }
     },
     async update({ dispatch }, { id, data }) {
       const res = await updateStrategy(id, data)
