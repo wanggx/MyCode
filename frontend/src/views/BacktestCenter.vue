@@ -3,7 +3,7 @@
     <!-- Left Panel -->
     <div class="left-panel">
       <div class="panel-header"><span>回测列表</span><el-button type="primary" size="small" @click="showCreateDialog">+ 新建回测</el-button></div>
-      <el-select v-model="statusFilter" placeholder="状态筛选" size="small" clearable class="bt-filter" @change="loadListData">
+      <el-select v-model="statusFilter" placeholder="状态筛选" size="small" clearable class="bt-filter" @change="onFilterChange">
         <el-option label="全部" value="" /><el-option label="运行中" value="running" /><el-option label="已完成" value="completed" /><el-option label="失败" value="failed" />
       </el-select>
       <el-tag
@@ -32,6 +32,13 @@
         </div>
         <el-empty v-if="backtests.length===0" description="暂无回测记录" :image-size="60" />
       </div>
+      <el-pagination
+        v-if="total > 0"
+        small layout="total, sizes, prev, pager, next"
+        :total="total" :page-sizes="[5,10,20]" :page-size="btPageSize" :current-page="btPage"
+        @size-change="onBtSizeChange" @current-change="onBtPageChange"
+        style="padding:8px;justify-content:center;display:flex;flex-shrink:0;border-top:1px solid #eee"
+      />
     </div>
 
     <!-- Right Panel -->
@@ -170,6 +177,7 @@ export default {
     return {
       statusFilter: '', selected: null, activeTab: 'nav',
       strategyFilterName: '',
+      btPage: 1, btPageSize: 20,
       tradePage: 1, tradePageSize: 20,
       trades: null, positions: null, risk: null, logs: null,
       navData: null, sourceCode: null,
@@ -187,7 +195,7 @@ export default {
     }
   },
   computed: {
-    ...mapState('backtest', ['list']),
+    ...mapState('backtest', ['list', 'total']),
     backtests() { return this.list },
     metricItems() {
       const s = this.selected
@@ -220,7 +228,7 @@ export default {
     safeNum(v) { return (v != null && isFinite(v)) ? Number(v) : 0 },
     async loadListData() {
       const strategyId = this.$route.query.strategy_id ? Number(this.$route.query.strategy_id) : null
-      await this.loadList({ status: this.statusFilter || undefined, strategy_id: strategyId || undefined })
+      await this.loadList({ status: this.statusFilter || undefined, strategy_id: strategyId || undefined, page: this.btPage, page_size: this.btPageSize })
       if (strategyId) {
         this.strategyFilterName = this.backtests[0]?.strategy_name || this.strategyFilterName || `策略 #${strategyId}`
       } else {
@@ -435,6 +443,9 @@ export default {
     copyCode() {
       if (this.sourceCode) { navigator.clipboard?.writeText(this.sourceCode); this.$message.success('代码已复制') }
     },
+    onFilterChange() { this.btPage = 1; this.loadListData() },
+    onBtSizeChange(s) { this.btPageSize = s; this.btPage = 1; this.loadListData() },
+    onBtPageChange(p) { this.btPage = p; this.loadListData() },
     async onTradeSizeChange(s) { this.tradePageSize = s; this.tradePage = 1; await this.reloadTrades() },
     async onTradePageChange(p) { this.tradePage = p; await this.reloadTrades() },
     async reloadTrades() {
@@ -458,6 +469,7 @@ export default {
     },
     clearStrategyFilter() {
       this.strategyFilterName = ''
+      this.btPage = 1
       this.$router.replace({ query: {} })
       this.loadListData()
     },
