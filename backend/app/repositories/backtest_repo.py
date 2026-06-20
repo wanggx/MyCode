@@ -85,26 +85,14 @@ def update_job_status(backtest_id, status, error_message=None, start_time=False,
         conn.close()
 
 
-def update_job_progress(backtest_id, progress, current_date=None, total_return=None, final_value=None):
+def update_job_progress(backtest_id, progress, current_date=None):
     conn = get_db_connection()
     if not conn: return
     try:
-        import math
-        def safe(v):
-            if v is None: return None
-            if isinstance(v, float) and (math.isnan(v) or math.isinf(v)): return None
-            return v
         with conn.cursor() as c:
-            extra = ""
-            params = [progress, current_date]
-            tr = safe(total_return)
-            fv = safe(final_value)
-            if tr is not None:
-                extra += ", total_return = %s"; params.append(tr)
-            if fv is not None:
-                extra += ", final_value = %s"; params.append(fv)
-            params.append(backtest_id)
-            c.execute(f"UPDATE backtest_job SET progress = %s, `current_date` = %s{extra} WHERE id = %s", params)
+            c.execute(
+                "UPDATE backtest_job SET progress = %s, `current_date` = %s WHERE id = %s",
+                (progress, current_date, backtest_id))
             conn.commit()
     finally:
         conn.close()
@@ -174,6 +162,20 @@ def clear_results(backtest_id):
 
 # === Result Tables Writes ===
 
+def insert_nav_row(backtest_id, trade_date, unit_net_value, benchmark_nav=None):
+    """逐行插入净值（回测运行中每根 Bar 调用）"""
+    conn = get_db_connection()
+    if not conn: return
+    try:
+        with conn.cursor() as c:
+            c.execute(
+                "INSERT INTO backtest_nav (backtest_id, trade_date, unit_net_value, benchmark_nav) VALUES (%s,%s,%s,%s)",
+                (backtest_id, trade_date, float(unit_net_value), float(benchmark_nav) if benchmark_nav else None))
+            conn.commit()
+    finally:
+        conn.close()
+
+
 def batch_insert_nav(backtest_id, daily_nav):
     conn = get_db_connection()
     if not conn: return
@@ -203,10 +205,14 @@ def batch_insert_trades(backtest_id, trades):
             for t in trades:
                 if isinstance(t, dict):
                     c.execute(
-                        "INSERT INTO backtest_trade (backtest_id, ts_code, buy_date, sell_date, buy_price, sell_price, quantity, buy_amount, sell_amount, pnl, pnl_pct) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
-                        (backtest_id, t.get("symbol", ""), t.get("buy_date"), t.get("sell_date"),
+                        "INSERT INTO backtest_trade (backtest_id, ts_code, buy_date, sell_date, buy_price, sell_price, quantity, buy_amount, sell_amount, pnl, pnl_pct, holding_days, sell_reason, order_type) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                        (backtest_id, t.get("ts_code", t.get("symbol", "")), t.get("buy_date"), t.get("sell_date"),
                          t.get("buy_price"), t.get("sell_price"), t.get("quantity", 0),
-                         t.get("buy_amount"), t.get("sell_amount"), t.get("pnl"), t.get("pnl_pct")))
+                         float(t.get("buy_price", 0)) * int(t.get("quantity", 0)),
+                         float(t.get("sell_price", 0)) * int(t.get("quantity", 0)),
+                         t.get("pnl", 0), t.get("pnl_pct", 0),
+                         t.get("holding_days", 0), t.get("sell_reason", ""),
+                         t.get("order_type", "市价")))
             conn.commit()
     finally:
         conn.close()

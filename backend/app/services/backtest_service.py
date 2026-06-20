@@ -100,6 +100,12 @@ def get_backtest_detail(backtest_id):
     for k in ["start_time", "end_time", "created_at", "updated_at"]:
         if row.get(k):
             row[k] = str(row[k])
+    # 运行中的回测：合并内存中的实时指标
+    if row.get("status") == "running":
+        from app.services.backtest_engine import get_live_metrics
+        live = get_live_metrics(backtest_id)
+        if live:
+            row.update(live)
     return row
 
 
@@ -182,11 +188,30 @@ def delete_backtest(backtest_id):
 
 
 def get_backtest_nav(backtest_id):
-    return get_nav(backtest_id)
+    rows = get_nav(backtest_id)
+    if not rows:
+        return None
+    # 转换为前端图表需要的格式 {dates: [], nav: [], benchmark_nav: []}
+    dates, nav, bench = [], [], []
+    for r in rows:
+        dates.append(str(r.get("trade_date", "")))
+        nav.append(float(r.get("unit_net_value", 1.0)))
+        bench.append(float(r.get("benchmark_nav")) if r.get("benchmark_nav") else None)
+    return {"dates": dates, "nav": nav, "benchmark_nav": bench}
 
 
 def get_backtest_trades(backtest_id, page=1, page_size=50):
-    return get_trades(backtest_id, page, page_size)
+    result, err = get_trades(backtest_id, page, page_size)
+    if result and result.get("items"):
+        from datetime import date
+        for item in result["items"]:
+            for k in ("buy_date", "sell_date"):
+                v = item.get(k)
+                if isinstance(v, date):
+                    item[k] = v.strftime("%Y-%m-%d %H:%M:%S")
+                elif isinstance(v, str) and len(v) > 10:
+                    item[k] = v[:19]
+    return result, err
 
 
 def get_backtest_positions(backtest_id, trade_date=None):

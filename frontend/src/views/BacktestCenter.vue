@@ -89,16 +89,23 @@
         <div v-show="activeTab==='nav'" ref="navChart" class="chart-box"></div>
         <div v-show="activeTab==='trades'">
           <div class="tab-header">共 {{ trades?.total || 0 }} 笔交易</div>
-          <el-table :data="trades?.items||[]" size="small" max-height="320" stripe>
-            <el-table-column prop="ts_code" label="股票" width="110" />
-            <el-table-column prop="buy_date" label="买入日" width="100" />
-            <el-table-column prop="sell_date" label="卖出日" width="100" />
-            <el-table-column prop="quantity" label="数量" width="80" />
-            <el-table-column label="盈亏" width="100"><template #default="{row}"><span :class="row.pnl>0?'green':'red'">{{ row.pnl ? '¥'+row.pnl.toLocaleString() : '-' }}</span></template></el-table-column>
-            <el-table-column label="收益率" width="80"><template #default="{row}"><span :class="row.pnl_pct>0?'green':'red'">{{ row.pnl_pct ? (row.pnl_pct*100).toFixed(1)+'%' : '-' }}</span></template></el-table-column>
-            <el-table-column prop="holding_days" label="持仓天" width="70" />
-            <el-table-column prop="sell_reason" label="原因" width="80" />
+          <el-table :data="trades?.items||[]" size="small" max-height="320" stripe style="width:100%">
+            <el-table-column prop="ts_code" label="股票" min-width="100" />
+            <el-table-column prop="buy_date" label="操作时间" min-width="150" />
+            <el-table-column prop="sell_reason" label="方向" width="60" />
+            <el-table-column prop="order_type" label="订单类型" width="75" />
+            <el-table-column prop="buy_price" label="价格" min-width="80" />
+            <el-table-column prop="quantity" label="数量" min-width="80" />
           </el-table>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0">
+            <el-button size="small" @click="exportTrades">📥 导出交易记录</el-button>
+            <el-pagination
+              v-if="trades?.total > 0"
+              small layout="total, sizes, prev, pager, next" :page-sizes="[5,10,20,100]"
+              :total="trades?.total||0" :page-size="tradePageSize" :current-page="tradePage"
+              @size-change="onTradeSizeChange" @current-change="onTradePageChange"
+            />
+          </div>
         </div>
         <div v-show="activeTab==='positions'" class="row-2">
           <div ref="pieChart" class="chart-sm"></div>
@@ -163,6 +170,7 @@ export default {
     return {
       statusFilter: '', selected: null, activeTab: 'nav',
       strategyFilterName: '',
+      tradePage: 1, tradePageSize: 20,
       trades: null, positions: null, risk: null, logs: null,
       navData: null, sourceCode: null,
       newBtVisible: false, currentStrategy: null,
@@ -209,6 +217,7 @@ export default {
     ...mapActions('backtest', ['loadList','loadDetail','cancel','loadTrades','loadPositions','loadRiskMetrics','loadLogs','loadNav']),
     statusIcon(s) { return s==='completed'?'✅':s==='running'?'⚡':s==='failed'?'❌':s==='cancelled'?'🚫':'⏳' },
     statusText(s) { return s==='completed'?'已完成':s==='running'?'运行中':s==='failed'?'失败':s==='cancelled'?'已取消':'等待中' },
+    safeNum(v) { return (v != null && isFinite(v)) ? Number(v) : 0 },
     async loadListData() {
       const strategyId = this.$route.query.strategy_id ? Number(this.$route.query.strategy_id) : null
       await this.loadList({ status: this.statusFilter || undefined, strategy_id: strategyId || undefined })
@@ -226,7 +235,7 @@ export default {
       if (bt.config && typeof bt.config === 'string') {
         try { bt.config = JSON.parse(bt.config) } catch(e) { bt.config = {} }
       }
-      this.selected = bt; this.activeTab = 'nav'; this.trades = null; this.risk = null; this.logs = null; this.navData = null; this.sourceCode = null
+      this.selected = bt; this.activeTab = 'nav'; this.tradePage = 1; this.trades = null; this.risk = null; this.logs = null; this.navData = null; this.sourceCode = null
 
       // Always refresh detail from server (gets latest error_message, metrics, etc.)
       try {
@@ -249,18 +258,31 @@ export default {
         try {
           const [nav, trades, risk] = await Promise.all([
             this.loadNav(bt.id),
-            this.loadTrades({ id: bt.id, pageSize: 200 }),
+            this.loadTrades({ id: bt.id, page: this.tradePage, pageSize: this.tradePageSize }),
             this.loadRiskMetrics(bt.id)
           ])
           this.trades = trades; this.risk = risk; this.navData = nav
           this.$nextTick(() => { this.renderAllCharts() })
         } catch(e) { console.error('loadDetailData failed:', e) }
       }
-      if (bt.status === 'running') { this.startPolling(bt.id) }
+      if (bt.status === 'running') {
+        try { this.navData = await this.loadNav(bt.id) } catch { /* ignore */ }
+        this.startPolling(bt.id)
+      }
     },
     switchTab(key) {
       this.activeTab = key
       this.$nextTick(() => { this.renderAllCharts() })
+      // Reload NAV when switching to nav tab (especially for running backtests)
+      if (key === 'nav' && this.selected) {
+        this.loadNav(this.selected.id).then(nav => {
+          if (nav) { this.navData = nav; this.$nextTick(() => this.renderNavChart()) }
+        }).catch(() => {})
+      }
+      // Trigger trades API on tab switch
+      if (key === 'trades' && this.selected) {
+        this.reloadTrades()
+      }
       // Lazy-load logs when switching to logs tab
       if (key === 'logs' && !this.logs && this.selected) {
         this.loadLogs(this.selected.id).then(logs => { this.logs = logs }).catch(() => {})
@@ -350,6 +372,11 @@ export default {
             const bt = r.data.data
             if (bt.config && typeof bt.config === 'string') { try { bt.config = JSON.parse(bt.config) } catch(e) { bt.config = {} } }
             this.selected = bt
+            // 动态加载净值曲线
+            try {
+              this.navData = await this.loadNav(btId)
+              if (this.activeTab === 'nav') this.$nextTick(() => this.renderNavChart())
+            } catch { /* ignore */ }
             if (bt.status !== 'running') { clearInterval(this._pollTimer); this.selectBacktest(bt) }
           }
         } catch { clearInterval(this._pollTimer) }
@@ -358,21 +385,20 @@ export default {
     async handleCancel() { if (this.selected) { await this.cancel(this.selected.id); clearInterval(this._pollTimer); this.$message.info('已取消'); this.loadListData() } },
     async handleRerun() {
       if (!this.selected) return
-      const btId = this.selected.id
+      const s = this.selected
       try {
-        const res = await axios.post(`/api/backtests/${btId}/rerun`)
-        if (res.data?.success) {
-          this.$message.success('回测已重新启动')
-          // Update local status immediately so polling works visually
-          this.selected.status = 'running'
-          this.selected.progress = 0
-          this.selected.error_message = null
-          await this.loadListData()
-          // Re-select this backtest
-          const bt = this.backtests.find(b => b.id === btId)
-          if (bt) this.selectBacktest(bt)
+        // 复用原配置，创建一条新回测记录
+        const cfg = { ...(s.config || {}), _backtest_id: undefined }
+        const res = await this.$store.dispatch('backtest/create', {
+          strategy_id: s.strategy_id,
+          version: s.strategy_version,
+          config: cfg
+        })
+        if (res?.success) {
+          this.$message.success('回测已创建')
+          this.loadListData()
         } else {
-          this.$message.error(res.data?.message || res.data?.error || '重新运行失败')
+          this.$message.error(res?.message || res?.error || '重新运行失败')
         }
       } catch (e) {
         this.$message.error(e.response?.data?.message || e.response?.data?.error || e.message || '重新运行失败')
@@ -408,6 +434,27 @@ export default {
     },
     copyCode() {
       if (this.sourceCode) { navigator.clipboard?.writeText(this.sourceCode); this.$message.success('代码已复制') }
+    },
+    async onTradeSizeChange(s) { this.tradePageSize = s; this.tradePage = 1; await this.reloadTrades() },
+    async onTradePageChange(p) { this.tradePage = p; await this.reloadTrades() },
+    async reloadTrades() {
+      if (!this.selected) return
+      try {
+        const trades = await this.loadTrades({ id: this.selected.id, page: this.tradePage, pageSize: this.tradePageSize })
+        if (trades) this.trades = trades
+      } catch { /* ignore */ }
+    },
+    exportTrades() {
+      if (!this.trades?.items?.length) return this.$message.warning('无交易记录')
+      const rows = this.trades.items
+      const csv = ['股票,操作时间,方向,价格,数量']
+      rows.forEach(r => {
+        csv.push([r.ts_code||'', r.buy_date||'', r.sell_reason||'', r.buy_price||'', r.quantity||''].join(','))
+      })
+      const blob = new Blob(['﻿' + csv.join('\n')], { type: 'text/csv;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a'); a.href = url; a.download = `trades_${this.selected?.id || 'export'}.csv`
+      a.click(); URL.revokeObjectURL(url); this.$message.success('已导出')
     },
     clearStrategyFilter() {
       this.strategyFilterName = ''

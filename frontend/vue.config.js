@@ -13,6 +13,7 @@ const getBackendUrl = () => {
 module.exports = defineConfig({
   devServer: {
     port: 5100,
+    client: { overlay: { errors: true, warnings: false, runtimeErrors: false } },
     proxy: {
       '/api': {
         target: getBackendUrl(),
