@@ -6,6 +6,11 @@
       <el-select v-model="statusFilter" placeholder="状态筛选" size="small" clearable class="bt-filter" @change="loadListData">
         <el-option label="全部" value="" /><el-option label="运行中" value="running" /><el-option label="已完成" value="completed" /><el-option label="失败" value="failed" />
       </el-select>
+      <el-tag
+        v-if="strategyFilterName"
+        closable size="small" type="info" class="bt-filter-tag"
+        @close="clearStrategyFilter"
+      >📝 {{ strategyFilterName }}</el-tag>
       <div class="bt-list">
         <div v-for="bt in backtests" :key="bt.id" class="bt-item" :class="{ active: selected?.id === bt.id }" @click="selectBacktest(bt)">
           <div class="item-title">
@@ -157,6 +162,7 @@ export default {
   data() {
     return {
       statusFilter: '', selected: null, activeTab: 'nav',
+      strategyFilterName: '',
       trades: null, positions: null, risk: null, logs: null,
       navData: null, sourceCode: null,
       newBtVisible: false, currentStrategy: null,
@@ -204,7 +210,13 @@ export default {
     statusIcon(s) { return s==='completed'?'✅':s==='running'?'⚡':s==='failed'?'❌':s==='cancelled'?'🚫':'⏳' },
     statusText(s) { return s==='completed'?'已完成':s==='running'?'运行中':s==='failed'?'失败':s==='cancelled'?'已取消':'等待中' },
     async loadListData() {
-      await this.loadList({ status: this.statusFilter || undefined })
+      const strategyId = this.$route.query.strategy_id ? Number(this.$route.query.strategy_id) : null
+      await this.loadList({ status: this.statusFilter || undefined, strategy_id: strategyId || undefined })
+      if (strategyId) {
+        this.strategyFilterName = this.backtests[0]?.strategy_name || this.strategyFilterName || `策略 #${strategyId}`
+      } else {
+        this.strategyFilterName = ''
+      }
       if (this.backtests.length > 0 && !this.selected) {
         this.selectBacktest(this.backtests[0])
       }
@@ -396,7 +408,12 @@ export default {
     },
     copyCode() {
       if (this.sourceCode) { navigator.clipboard?.writeText(this.sourceCode); this.$message.success('代码已复制') }
-    }
+    },
+    clearStrategyFilter() {
+      this.strategyFilterName = ''
+      this.$router.replace({ query: {} })
+      this.loadListData()
+    },
   },
   mounted() { this.loadListData() },
   beforeUnmount() { clearInterval(this._pollTimer) }
@@ -408,6 +425,7 @@ export default {
 .left-panel { width: 340px; flex-shrink: 0; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.08); display: flex; flex-direction: column; overflow: hidden; }
 .panel-header { padding: 12px 16px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; font-weight: 600; font-size: 14px; }
 .bt-filter { margin: 8px 12px; }
+.bt-filter-tag { margin: 0 12px 8px; }
 .bt-list { flex: 1; overflow-y: auto; }
 .bt-item { padding: 12px 16px; border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: background .2s; text-align: left; }
 .bt-item:hover { background: #fafafa; }

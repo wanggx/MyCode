@@ -1,26 +1,29 @@
 <template>
   <div class="code-editor-wrap">
     <div class="editor-toolbar">
-      <span class="dot red"></span>
-      <span class="dot yellow"></span>
-      <span class="dot green"></span>
       <span class="filename">{{ filename }}</span>
-      <span class="mode-badge">{{ readOnly ? '只读' : '编辑中' }}</span>
     </div>
-    <textarea
-      ref="textarea"
-      :value="modelValue"
-      :readonly="readOnly"
-      class="code-textarea"
-      :class="{ editable: !readOnly }"
-      spellcheck="false"
-      @input="$emit('update:modelValue', $event.target.value)"
-      @keydown.ctrl.s.prevent="$emit('save', $event.target.value)"
-      @keydown.meta.s.prevent="$emit('save', $event.target.value)"
-      placeholder="# 在此编写策略代码..."
-    ></textarea>
+    <div class="editor-body">
+      <div ref="lineNumbers" class="line-numbers" :style="{ minHeight: lineHeight }">
+        <div v-for="n in lineCount" :key="n">{{ n }}</div>
+      </div>
+      <textarea
+        ref="textarea"
+        :value="modelValue"
+        :readonly="readOnly"
+        class="code-textarea"
+        :class="{ editable: !readOnly }"
+        spellcheck="false"
+        @input="onInput"
+        @keydown.ctrl.s.prevent="$emit('save', modelValue)"
+        @keydown.meta.s.prevent="$emit('save', modelValue)"
+        @scroll="syncScroll"
+        placeholder="# 在此编写策略代码..."
+      ></textarea>
+    </div>
     <div class="editor-status">
       <span>Python</span><span>|</span><span>UTF-8</span><span>|</span>
+      <span>{{ lineCount }} 行</span><span>|</span>
       <span>{{ readOnly ? '只读' : '编辑中' }} · Ctrl+S 保存</span>
     </div>
   </div>
@@ -34,7 +37,28 @@ export default {
     readOnly: { type: Boolean, default: false },
     filename: { type: String, default: 'strategy.py' }
   },
-  emits: ['update:modelValue', 'save']
+  emits: ['update:modelValue', 'save'],
+  computed: {
+    lineCount() {
+      return (this.modelValue || '').split('\n').length
+    },
+    lineHeight() {
+      // 匹配 textarea 的行高: font-size 13px * line-height 1.65 = 21.45px
+      return (this.modelValue || '').split('\n').length * 21.45 + 32 + 'px'
+    }
+  },
+  methods: {
+    onInput(e) {
+      this.$emit('update:modelValue', e.target.value)
+    },
+    syncScroll() {
+      const textarea = this.$refs.textarea
+      const lineNums = this.$refs.lineNumbers
+      if (textarea && lineNums) {
+        lineNums.scrollTop = textarea.scrollTop
+      }
+    }
+  }
 }
 </script>
 
@@ -45,18 +69,31 @@ export default {
   border: 1px solid #e0e0e0;
 }
 .editor-toolbar {
-  display: flex; align-items: center; gap: 8px;
+  display: flex; align-items: center;
   padding: 6px 12px; background: #2d2d2d; flex-shrink: 0;
 }
-.dot { width: 10px; height: 10px; border-radius: 50%; }
-.dot.red { background: #ff5f56; } .dot.yellow { background: #ffbd2e; } .dot.green { background: #27c93f; }
-.filename { color: #ccc; font-size: 12px; margin-left: 8px; }
-.mode-badge { margin-left: auto; color: #999; font-size: 11px; padding: 2px 8px; background: #1e1e1e; border-radius: 3px; }
+.filename { color: #ccc; font-size: 12px; }
+.editor-body {
+  flex: 1; display: flex; overflow: hidden; min-height: 0;
+}
+.line-numbers {
+  width: 44px; flex-shrink: 0; overflow: hidden;
+  background: #1a1a1a; color: #6a737d;
+  font-family: 'SF Mono','Fira Code',Menlo,Consolas,monospace;
+  font-size: 13px; line-height: 1.65; text-align: right;
+  padding: 16px 0 16px 4px;
+  user-select: none; pointer-events: none;
+  border-right: 1px solid #333;
+}
+.line-numbers div {
+  height: 21.45px; /* font-size 13px * 1.65 line-height */
+}
 .code-textarea {
-  flex: 1; width: 100%; border: none; outline: none; resize: none;
-  padding: 16px; font-family: 'SF Mono','Fira Code',Menlo,Consolas,monospace;
+  flex: 1; border: none; outline: none; resize: none;
+  padding: 16px 16px 16px 6px; font-family: 'SF Mono','Fira Code',Menlo,Consolas,monospace;
   font-size: 13px; line-height: 1.65; tab-size: 4;
   background: #1e1e1e; color: #d4d4d4;
+  overflow-y: auto; white-space: pre; word-wrap: normal;
 }
 .code-textarea::placeholder { color: #666; }
 .code-textarea.editable { background: #1a1a1a; }

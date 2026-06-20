@@ -6,7 +6,7 @@
         <span>策略列表</span>
         <el-button type="primary" size="small" @click="showCreateDialog">+ 新建</el-button>
       </div>
-      <el-input v-model="keyword" placeholder="搜索策略..." size="small" clearable class="search-input" @input="loadList" />
+      <el-input v-model="keyword" placeholder="搜索策略..." size="small" clearable class="search-input" @input="onSearch" />
       <div class="strategy-list">
         <div v-for="s in strategies" :key="s.id" class="strategy-item" :class="{ active: current?.id === s.id }" @click="selectStrategy(s)">
           <div class="item-title">
@@ -20,6 +20,13 @@
           </div>
         </div>
       </div>
+      <el-pagination
+        v-if="total > 0"
+        small layout="total, sizes, prev, pager, next"
+        :total="total" :page-sizes="[5, 10, 20]" :page-size="pageSize" :current-page="page"
+        @size-change="onSizeChange" @current-change="onPageChange"
+        style="padding:8px;justify-content:center;display:flex;flex-shrink:0;border-top:1px solid #eee"
+      />
     </div>
 
     <!-- Right Panel -->
@@ -32,6 +39,7 @@
         <div class="btn-group">
           <el-button type="primary" size="small" @click="startEdit">✏️ 编辑代码</el-button>
           <el-button type="warning" size="small" @click="showBacktestDialog">⚡ 回测</el-button>
+          <el-button size="small" @click="goBacktestList">📋 回测列表</el-button>
           <el-button size="small" @click="showVersions">📋 版本历史</el-button>
           <el-button type="danger" size="small" @click="handleDelete">🗑 删除</el-button>
         </div>
@@ -93,18 +101,22 @@ export default {
       createVisible: false, versionVisible: false, btDialogVisible: false,
       form: { name: '', desc: '', type: 'stock' },
       btForm: { start_date: '2024-01-01', end_date: '2024-12-31', initial_capital: 100000, benchmark: '000300.XSHG' },
-      versions: []
+      versions: [],
+      page: 1, pageSize: 10
     }
   },
-  computed: { ...mapState('strategy', ['list', 'loading']), strategies() { return this.list } },
+  computed: { ...mapState('strategy', ['list', 'total', 'loading']), strategies() { return this.list } },
   methods: {
     ...mapActions('strategy', ['loadList', 'create', 'remove', 'loadVersions', 'saveVersion', 'loadVersionCode']),
     async loadListData() {
-      await this.loadList({ keyword: this.keyword })
+      await this.loadList({ keyword: this.keyword, page: this.page, page_size: this.pageSize })
       if (this.strategies.length > 0 && !this.current) {
         this.selectStrategy(this.strategies[0])
       }
     },
+    onSearch() { this.page = 1; this.loadListData() },
+    onSizeChange(s) { this.pageSize = s; this.page = 1; this.loadListData() },
+    onPageChange(p) { this.page = p; this.loadListData() },
     async selectStrategy(s) {
       this.current = s; this.editing = false
       const vers = await this.loadVersions(s.id)
@@ -146,6 +158,10 @@ export default {
       }
     },
     showBacktestDialog() { this.btDialogVisible = true },
+    goBacktestList() {
+      if (!this.current) return
+      this.$router.push({ path: '/backtest', query: { strategy_id: this.current.id } })
+    },
     async runBacktest() {
       if (!this.current) return
       try {
@@ -190,7 +206,7 @@ export default {
 .right-panel.empty { align-items: center; justify-content: center; }
 .right-panel > :deep(.code-editor-wrap) { flex: 1; min-height: 0; }
 .detail-header { padding: 14px 20px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; }
-.detail-header h3 { margin: 0 0 4px 0; font-size: 15px; font-weight: 600; }
+.detail-header h3 { margin: 0 0 4px 0; font-size: 15px; font-weight: 600; text-align: left; }
 .meta { font-size: 12px; color: #999; }
 .btn-group { display: flex; gap: 6px; }
 .bt-strategy-info { padding: 10px 14px; background: #fafafa; border: 1px solid #e8e8e8; border-radius: 8px; font-size: 13px; }
