@@ -18,7 +18,7 @@
             <span class="item-name">{{ bt.strategy_name || 'BT#'+bt.id }}</span>
             <el-tag v-if="bt.strategy_version" size="small" :type="bt.status==='completed'?'success':bt.status==='running'?'warning':'info'" class="item-version">v{{ bt.strategy_version }}</el-tag>
           </div>
-          <div class="item-meta">{{ bt.created_at?.slice(0,16) }}</div>
+          <div class="item-meta">{{ bt.created_at?.slice(0,19) }}<template v-if="bt.duration_ms"> · {{ (bt.duration_ms/1000).toFixed(1) }}秒</template></div>
           <div class="item-stats" v-if="bt.status==='completed'">
             <span :class="(bt.total_return??0)>0?'green':'red'">{{ ((bt.total_return??0)*100).toFixed(1)+'%' }}</span>
             <span class="stat-div">·</span>

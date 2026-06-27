@@ -3,15 +3,26 @@
 Flask 应用工厂
 """
 
+import datetime
 from flask import Flask, jsonify
 from flask_cors import CORS
+from flask.json.provider import DefaultJSONProvider
 
 from app.core.logger import setup_logger
+
+
+class CustomJSONProvider(DefaultJSONProvider):
+    """自定义 JSON 序列化：datetime → YYYY-MM-DD HH:MM:SS"""
+    def default(self, obj):
+        if isinstance(obj, (datetime.datetime, datetime.date)):
+            return obj.strftime("%Y-%m-%d %H:%M:%S")
+        return super().default(obj)
 
 
 def create_app():
     """创建并配置 Flask 应用"""
     app = Flask(__name__)
+    app.json = CustomJSONProvider(app)
     CORS(app)
 
     # 初始化日志
