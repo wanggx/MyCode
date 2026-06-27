@@ -2,7 +2,7 @@
   <div class="bt-page">
     <!-- Left Panel -->
     <div class="left-panel">
-      <div class="panel-header"><span>回测列表</span><el-button type="primary" size="small" @click="showCreateDialog">+ 新建回测</el-button></div>
+      <div class="panel-header"><span>回测列表</span><div style="display:flex;gap:6px;"><el-button size="small" @click="loadListData" :icon="Refresh">🔄</el-button><el-button type="primary" size="small" @click="showCreateDialog">+ 新建回测</el-button></div></div>
       <el-select v-model="statusFilter" placeholder="状态筛选" size="small" clearable class="bt-filter" @change="onFilterChange">
         <el-option label="全部" value="" /><el-option label="运行中" value="running" /><el-option label="已完成" value="completed" /><el-option label="失败" value="failed" />
       </el-select>
@@ -491,11 +491,12 @@ export default {
 
 <style scoped>
 .bt-page { display: flex; height: calc(100vh - 96px); gap: 16px; }
-.left-panel { width: 340px; flex-shrink: 0; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.08); display: flex; flex-direction: column; overflow: hidden; }
-.panel-header { padding: 12px 16px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; font-weight: 600; font-size: 14px; }
-.bt-filter { margin: 8px 12px; }
-.bt-filter-tag { margin: 0 12px 8px; }
-.bt-list { flex: 1; overflow-y: auto; }
+.left-panel { width: 340px; flex-shrink: 0; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.08); display: flex; flex-direction: column; overflow: visible; }
+.panel-header { padding: 12px 16px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; font-weight: 600; font-size: 14px; flex-shrink: 0; }
+.bt-filter { margin: 8px 12px; flex-shrink: 0; }
+.bt-filter-tag { margin: 0 12px 8px; flex-shrink: 0; }
+.bt-list { flex: 1; overflow-y: auto; min-height: 0; }
+.bt-list .el-pagination { flex-shrink: 0; }
 .bt-item { padding: 12px 16px; border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: background .2s; text-align: left; }
 .bt-item:hover { background: #fafafa; }
 .bt-item.active { background: #e6f7ff; border-left: 3px solid #1890ff; padding-left: 13px; }
