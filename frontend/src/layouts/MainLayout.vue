@@ -2,8 +2,13 @@
   <el-container class="main-layout">
     <el-aside width="180px" class="sidebar">
       <div class="sidebar-logo">
-        <img src="@/assets/logo.png" alt="Logo" class="logo-img" />
-        <span class="logo-title">量化平台</span>
+        <svg class="logo-svg" viewBox="0 0 40 40" width="28" height="28">
+          <rect width="40" height="40" rx="8" fill="url(#qGrad)"/>
+          <text x="20" y="28" text-anchor="middle" fill="#fff" font-size="22" font-weight="700" font-family="Arial">Q</text>
+          <polyline points="8,30 20,18 32,10" fill="none" stroke="#52c41a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <defs><linearGradient id="qGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1890ff"/><stop offset="100%" stop-color="#6f42c1"/></linearGradient></defs>
+        </svg>
+        <span class="logo-title">QTrader</span>
       </div>
       <el-menu :default-active="activeMenu" router class="sidebar-menu" :collapse="false" background-color="#001529" text-color="#ffffffb3" active-text-color="#ffffff">
         <el-menu-item v-for="item in menuItems" :key="item.path" :index="item.path">
