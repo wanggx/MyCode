@@ -81,6 +81,10 @@ export default {
         { path: '/workspace', title: '工作台', icon: '📊' },
         { path: '/strategies', title: '策略研究', icon: '📝' },
         { path: '/backtest', title: '回测中心', icon: '⚡' },
+        { path: '/paper-trading', title: '模拟交易', icon: '📝' },
+        { path: '/trading', title: '实盘交易', icon: '🔴' },
+        { path: '/factors', title: '因子研究', icon: '🔬' },
+        { path: '/tasks', title: '任务中心', icon: '⏰' },
         { path: '/data', title: '数据中心', icon: '📈' },
         { path: '/settings', title: '系统设置', icon: '⚙' }
       ],

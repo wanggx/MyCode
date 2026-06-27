@@ -14,6 +14,10 @@ const routes = [
       { path: 'strategies/:id', name: 'strategy-detail', component: () => import('../views/StrategyResearch.vue') },
       { path: 'backtest', name: 'backtest', component: () => import('../views/BacktestCenter.vue') },
       { path: 'backtest/:id', name: 'backtest-detail', component: () => import('../views/BacktestCenter.vue') },
+      { path: 'paper-trading', name: 'paper-trading', component: () => import('../views/PaperTrading.vue') },
+      { path: 'trading', name: 'trading', component: () => import('../views/TradingCenter.vue') },
+      { path: 'factors', name: 'factors', component: () => import('../views/FactorLabView.vue') },
+      { path: 'tasks', name: 'tasks', component: () => import('../views/TaskCenterView.vue') },
       { path: 'data', name: 'data', component: () => import('../views/DataCenter.vue') },
       { path: 'settings', name: 'settings', component: () => import('../views/SystemSettings.vue') }
     ]

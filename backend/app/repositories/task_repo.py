@@ -27,7 +27,7 @@ def init_tables():
                     task_type VARCHAR(50) NOT NULL COMMENT '任务类型',
                     status VARCHAR(20) NOT NULL DEFAULT 'pending' COMMENT 'pending/running/success/failed/canceled',
                     priority INT NOT NULL DEFAULT 0 COMMENT '优先级（越大越优先）',
-                    params_json JSON COMMENT '任务参数JSON',
+                    params JSON COMMENT '任务参数JSON',
                     progress INT DEFAULT 0 COMMENT '进度0-100',
                     message TEXT COMMENT '状态消息/错误信息',
                     created_by VARCHAR(50) DEFAULT 'system' COMMENT '创建者',
@@ -58,19 +58,20 @@ def init_tables():
         conn.close()
 
 
-def create_job(task_type, priority=0, params_json=None, created_by="system"):
+def create_job(task_type, priority=0, params=None, created_by="system"):
     """创建任务，返回 job_id"""
+    import json as _json
     conn = get_db_connection()
     if not conn:
         return None
     try:
         with conn.cursor() as cursor:
-            params_str = json.dumps(params_json, ensure_ascii=False) if params_json else None
+            params_val = _json.dumps(params, ensure_ascii=False) if isinstance(params, dict) else params
             sql = """
-                INSERT INTO task_job (task_type, status, priority, params_json, created_by)
-                VALUES (%s, 'pending', %s, %s, %s)
+                INSERT INTO task_job (task_type, status, priority, params)
+                VALUES (%s, 'pending', %s, %s)
             """
-            cursor.execute(sql, [task_type, priority, params_str, created_by])
+            cursor.execute(sql, [task_type, priority, params_val])
             job_id = cursor.lastrowid
         conn.commit()
         return job_id
@@ -126,7 +127,7 @@ def update_job_status(job_id, status, message=None, progress=None):
             params = [status]
 
             if message is not None:
-                sets.append("message = %s")
+                sets.append("error_msg = %s")
                 params.append(message)
             if progress is not None:
                 sets.append("progress = %s")
@@ -136,13 +137,31 @@ def update_job_status(job_id, status, message=None, progress=None):
             if status == "running":
                 sets.append("started_at = %s")
                 params.append(now)
-            elif status in ("success", "failed", "canceled"):
+            elif status in ("success", "failed", "canceled", "stopped", "deleted"):
                 sets.append("finished_at = %s")
                 params.append(now)
 
             params.append(job_id)
             sql = f"UPDATE task_job SET {', '.join(sets)} WHERE id = %s"
             cursor.execute(sql, params)
+            affected = cursor.rowcount
+        conn.commit()
+        return affected > 0
+    finally:
+        conn.close()
+
+
+def update_job_with_params(job_id, params_dict):
+    """更新任务 params JSON 和状态"""
+    import json as _json
+    conn = get_db_connection()
+    if not conn:
+        return False
+    try:
+        with conn.cursor() as cursor:
+            params_val = _json.dumps(params_dict, ensure_ascii=False)
+            sql = "UPDATE task_job SET params = %s, status = 'running' WHERE id = %s"
+            cursor.execute(sql, [params_val, job_id])
             affected = cursor.rowcount
         conn.commit()
         return affected > 0
@@ -186,10 +205,10 @@ def create_step(job_id, step_order, step_name):
     try:
         with conn.cursor() as cursor:
             sql = """
-                INSERT INTO task_step (job_id, step_order, step_name, status)
-                VALUES (%s, %s, %s, 'pending')
+                INSERT INTO task_step (job_id, step_name, status)
+                VALUES (%s, %s, 'pending')
             """
-            cursor.execute(sql, [job_id, step_order, step_name])
+            cursor.execute(sql, [job_id, step_name])
             step_id = cursor.lastrowid
         conn.commit()
         return step_id
@@ -216,7 +235,7 @@ def update_step_status(step_id, status, message=None):
                 params.append(now)
 
             if message is not None:
-                sets.append("message = %s")
+                sets.append("error_msg = %s")
                 params.append(message)
 
             params.append(step_id)

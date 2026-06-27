@@ -202,6 +202,29 @@ body { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetic
 .code-toolbar-spacer { flex: 1; }
 .code-editor-textarea { background: #1e1e1e; color: #d4d4d4; border: none; padding: 16px; font-family: 'SF Mono','Fira Code',Menlo,Consolas,monospace; font-size: 13px; line-height: 1.65; resize: none; outline: none; overflow-y: auto; }
 .code-editor-status { padding: 4px 16px; background: #007acc; color: #fff; font-size: 11px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+
+/* ========== V3: Paper Trading ========== */
+.paper-banner { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; background: linear-gradient(135deg, #e6f7ff, #f0f5ff); border: 1px solid #91d5ff; border-radius: var(--radius); margin-bottom: 20px; }
+.paper-banner .banner-left { display: flex; align-items: center; gap: 12px; }
+.paper-banner .banner-icon-text { font-size: 36px; }
+.paper-banner .paper-banner-title { font-size: 16px; font-weight: 700; }
+.paper-banner .paper-banner-desc { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+.paper-run-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.paper-run-card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 18px; transition: all var(--transition); border-left: 3px solid var(--accent); }
+.paper-run-card:hover { box-shadow: var(--shadow-lg); }
+.paper-run-card.stopped { border-left-color: #d9d9d9; opacity: 0.65; }
+.pr-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.pr-name { font-weight: 600; font-size: 14px; }
+.pr-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 8px; }
+.pr-m { text-align: center; }
+.pr-val { font-weight: 700; font-size: 15px; }
+.pr-lbl { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+.pr-meta { font-size: 11px; color: var(--text-muted); display: flex; gap: 12px; margin-bottom: 10px; }
+.pr-actions { display: flex; gap: 6px; padding-top: 10px; border-top: 1px solid var(--border); }
+
+.tag-paper { background: #e6f7ff; color: var(--accent); border: 1px solid #91d5ff; }
+
 /* ========== V3: Trading Center (Live Trading Monitor) ========== */
 .live-trade-item { padding: 14px 16px; border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: all var(--transition); }
 .live-trade-item:hover { background: #fafafa; }
@@ -378,8 +401,12 @@ body { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetic
         <span class="nav-icon">⚡</span> 回测中心
         <span class="badge">3</span>
       </div>
-      <div class="nav-item active" data-page="trading" onclick="switchPage('trading', this)">
-        <span class="nav-icon">💹</span> 交易中心
+<div class="nav-item active" data-page="papertrading" onclick="switchPage('papertrading', this)">
+        <span class="nav-icon">📝</span> 模拟交易
+        <span class="badge">2</span>
+      </div>
+      <div class="nav-item" data-page="trading" onclick="switchPage('trading', this)">
+        <span class="nav-icon">🔴</span> 实盘交易
         <span class="badge">3</span>
       </div>
       <div class="nav-divider">数据 & 研究</div>
@@ -404,7 +431,7 @@ body { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetic
   <!-- ====== Main Area ====== -->
   <div class="main-area">
     <header class="header">
-      <div class="header-left"><span class="page-title" id="pageTitle">💹 交易中心</span></div>
+      <div class="header-left"><span class="page-title" id="pageTitle">📝 模拟交易</span></div>
       <div class="header-right">
         <span class="header-date">📅 数据日期：2026-06-19</span>
         <span class="header-badge"><span class="dot"></span> 系统运行中</span>
@@ -566,11 +593,9 @@ def handle_bar(context, bar_dict):
       </div>
 
       <!-- ====================================================================== -->
-      <!-- PAGE: 交易中心 (V3 NEW — 核心模块)                                     -->
       
 
       <!-- ====================================================================== -->
-      <!-- PAGE: 模拟交易 (V3 NEW — 策略部署 & 运行管理)                       -->
       
 
       <!-- ====================================================================== -->
@@ -595,6 +620,96 @@ def handle_bar(context, bar_dict):
             <div class="tab-item" onclick="switchTradingCenterTab('risk', this)">🛡 风控概览</div>
           </div>
           <div class="tab-content" id="tradingCenterTabContent" style="padding:0;"></div>
+        </div>
+      </div>
+
+
+      <!-- ====================================================================== -->
+      <!-- PAGE: 模拟交易 (V3 — 策略部署到模拟盘运行)                            -->
+      <!-- ====================================================================== -->
+      <div class="page" id="page-papertrading">
+        <!-- Banner -->
+        <div class="paper-banner">
+          <div class="banner-left">
+            <span class="banner-icon-text">📝</span>
+            <div>
+              <div class="paper-banner-title">模拟交易</div>
+              <div class="paper-banner-desc">回测验证通过后，部署到模拟盘运行，零风险验证策略在真实市场环境的表现</div>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-lg" onclick="showDeployDialog()">🚀 部署策略</button>
+        </div>
+
+        <!-- Stats -->
+        <div class="stat-grid col4 mb-16">
+          <div class="stat-card blue"><div class="card-label">运行中</div><div class="card-value" id="paperRunningCount">2</div><div class="card-sub">模拟盘策略</div></div>
+          <div class="stat-card"><div class="card-label">已停止</div><div class="card-value" id="paperStoppedCount">1</div><div class="card-sub">可重新启动</div></div>
+          <div class="stat-card green"><div class="card-label">今日浮盈</div><div class="card-value" id="paperDailyPnL">+¥2,850</div><div class="card-sub">模拟盘累计</div></div>
+          <div class="stat-card purple"><div class="card-label">已升级实盘</div><div class="card-value">1</div><div class="card-sub">升级为实盘运行</div></div>
+        </div>
+
+        <!-- Paper Run Cards Grid -->
+        <div class="paper-run-grid" id="paperRunGrid">
+          <!-- Run #1: 双均线 (running) -->
+          <div class="paper-run-card running" id="pr-card-1">
+            <div class="pr-header">
+              <span class="pr-name">双均线趋势跟踪 <span class="tag tag-success">v3</span></span>
+              <span class="tag tag-paper">📝 模拟盘</span>
+            </div>
+            <div class="pr-metrics">
+              <div class="pr-m"><div class="pr-val text-success">+2.85%</div><div class="pr-lbl">累计收益</div></div>
+              <div class="pr-m"><div class="pr-val text-success">+¥2,850</div><div class="pr-lbl">累计盈亏</div></div>
+              <div class="pr-m"><div class="pr-val">2</div><div class="pr-lbl">持仓数</div></div>
+              <div class="pr-m"><div class="pr-val">58.3%</div><div class="pr-lbl">胜率</div></div>
+            </div>
+            <div class="pr-meta">
+              <span>模拟撮合引擎</span><span>初始 ¥100,000</span><span>2026-06-15 起</span>
+            </div>
+            <div class="pr-actions">
+              <button class="btn btn-default btn-sm" onclick="showPaperDetail(1)">📊 详情</button>
+              <button class="btn btn-warning btn-sm" onclick="showPromoteDialog('双均线趋势跟踪', 'v3', 1)">⬆ 升级实盘</button>
+              <button class="btn btn-default btn-sm" onclick="showToast('已停止', 'info')">⏸ 停止</button>
+            </div>
+          </div>
+
+          <!-- Run #2: RSI (stopped) -->
+          <div class="paper-run-card stopped" id="pr-card-2">
+            <div class="pr-header">
+              <span class="pr-name">RSI 超买超卖 <span class="tag tag-info">v2</span></span>
+              <span class="tag tag-paper">📝 模拟盘</span>
+            </div>
+            <div class="pr-metrics">
+              <div class="pr-m"><div class="pr-val text-danger">-1.20%</div><div class="pr-lbl">累计收益</div></div>
+              <div class="pr-m"><div class="pr-val text-danger">-¥1,200</div><div class="pr-lbl">累计盈亏</div></div>
+              <div class="pr-m"><div class="pr-val">0</div><div class="pr-lbl">持仓数</div></div>
+              <div class="pr-m"><div class="pr-val">42.1%</div><div class="pr-lbl">胜率</div></div>
+            </div>
+            <div class="pr-meta">
+              <span>模拟撮合引擎</span><span>初始 ¥100,000</span><span>2026-06-12 ~ 2026-06-18</span>
+            </div>
+            <div class="pr-actions">
+              <button class="btn btn-default btn-sm" onclick="showPaperDetail(2)">📊 详情</button>
+              <button class="btn btn-primary btn-sm" onclick="showToast('已重新启动', 'success')">▶ 重新启动</button>
+              <button class="btn btn-danger btn-sm" onclick="showToast('已删除', 'info')">🗑 删除</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detail + Paper Tabs -->
+        <div id="paperDetailArea" style="display:none;">
+          <div class="card" style="margin-bottom:0;">
+            <div class="card-header">
+              <span id="paperDetailTitle">📝 模拟盘详情 — 双均线趋势跟踪 v3</span>
+              <button class="btn btn-default btn-sm" onclick="document.getElementById('paperDetailArea').style.display='none'">✕ 关闭</button>
+            </div>
+            <div class="tabs" id="paperTradingTabs">
+              <div class="tab-item active" onclick="switchPaperTradingTab('overview', this)">📊 概览</div>
+              <div class="tab-item" onclick="switchPaperTradingTab('trades', this)">📋 交易记录</div>
+              <div class="tab-item" onclick="switchPaperTradingTab('logs', this)">📝 日志</div>
+              <div class="tab-item" onclick="switchPaperTradingTab('code', this)">💻 策略代码</div>
+            </div>
+            <div class="tab-content" id="paperTradingTabContent"></div>
+          </div>
         </div>
       </div>
 
@@ -656,12 +771,13 @@ function switchPage(page, el) {
   else { var ni = document.querySelector('.nav-item[data-page="'+page+'"]'); if (ni) ni.classList.add('active'); }
   var titles = {
     workspace:'📊 工作台', strategies:'📝 策略研究', backtest:'⚡ 回测中心',
-    trading:'💹 交易中心',
+    papertrading:'📝 模拟交易', trading:'🔴 实盘交易',
     data:'📈 数据中心', factors:'🔬 因子研究',
     tasks:'⏰ 任务中心', settings:'⚙️ 系统设置'
   };
   document.getElementById('pageTitle').textContent = titles[page] || '';
   if (page === 'workspace') setTimeout(initWorkspaceNavChart, 200);
+  if (page === 'papertrading') setTimeout(function() { switchPaperTradingTab('runs', document.querySelector('#paperTradingTabs .tab-item')); }, 200);
   if (page === 'trading') setTimeout(function() { switchTradingCenterTab('liveList', document.querySelector('#tradingCenterTabs .tab-item')); }, 200);
   if (page === 'backtest') setTimeout(function() { switchBtTab('nav', document.querySelector('#btTabs .tab-item')); }, 100);
 }
@@ -1242,6 +1358,63 @@ function initLiveDrawdownChart2(id) {
     yAxis: { type: 'value', axisLabel: { formatter: '{value}%' }, max: 0 },
     dataZoom: [{ type: 'inside' }],
     series: [{ type: 'line', data: dd, smooth: true, symbol: 'none', lineStyle: { color: '#ff4d4f', width: 1.5 }, areaStyle: { color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(255,77,79,0.3)'},{offset:1,color:'rgba(255,77,79,0.02)'}]) }, markLine: { silent: true, data: [{ yAxis: maxDD, label: { formatter: '最大回撤 ' + maxDD + '%' } }], lineStyle: { color: '#333', type: 'dashed' } } }]
+  });
+  chart.resize();
+}
+
+
+// ========== 模拟交易: Paper Trading ==========
+function showDeployDialog() { showToast('🚀 部署策略到模拟盘（原型演示）', 'info'); }
+function showPromoteDialog(name, ver, id) { showToast('⬆ 「' + name + ' ' + ver + '」升级为实盘交易（原型演示）', 'info'); }
+
+function showPaperDetail(id) {
+  document.getElementById('paperDetailArea').style.display = 'block';
+  var titles = { 1: '📝 模拟盘详情 — 双均线趋势跟踪 v3', 2: '📝 模拟盘详情 — RSI 超买超卖 v2' };
+  document.getElementById('paperDetailTitle').textContent = titles[id] || titles[1];
+  document.querySelectorAll('#paperTradingTabs .tab-item').forEach(function(t, i) { t.classList.toggle('active', i === 0); });
+  switchPaperTradingTab('overview', document.querySelector('#paperTradingTabs .tab-item'));
+}
+
+function switchPaperTradingTab(tab, el) {
+  document.querySelectorAll('#paperTradingTabs .tab-item').forEach(function(t) { t.classList.remove('active'); });
+  if (el) el.classList.add('active');
+  var c = document.getElementById('paperTradingTabContent');
+  if (tab === 'overview') {
+    c.innerHTML = '<div style="padding:16px;"><div class="metrics-grid col4" style="margin-bottom:16px;"><div class="metric-item green"><div class="metric-val">+2.85%</div><div class="metric-label">累计收益</div></div><div class="metric-item green"><div class="metric-val">+¥2,850</div><div class="metric-label">累计盈亏</div></div><div class="metric-item red"><div class="metric-val">-8.30%</div><div class="metric-label">最大回撤</div></div><div class="metric-item blue"><div class="metric-val">1.85</div><div class="metric-label">夏普比率</div></div></div><div class="chart-box" id="chart-paper-nav" style="height:340px;"></div></div>';
+    setTimeout(initPaperNavChart, 100);
+  } else if (tab === 'trades') {
+    c.innerHTML = '<div style="padding:16px;"><table class="data-table"><thead><tr><th>成交时间</th><th>股票</th><th>方向</th><th>价格</th><th>数量</th><th>盈亏</th><th>原因</th></tr></thead><tbody><tr><td>2026-06-19 14:32</td><td>600036 招商银行</td><td><span class="text-success">卖出</span></td><td>¥42.80</td><td>500</td><td class="text-success">+¥1,250</td><td>金叉信号</td></tr><tr><td>2026-06-19 14:25</td><td>000001 平安银行</td><td><span class="text-danger">买入</span></td><td>¥11.80</td><td>2,000</td><td>—</td><td>死叉信号</td></tr><tr><td>2026-06-18 10:15</td><td>600519 贵州茅台</td><td><span class="text-success">卖出</span></td><td>¥1,720</td><td>10</td><td class="text-success">+¥1,850</td><td>止盈</td></tr></tbody></table></div>';
+  } else if (tab === 'logs') {
+    c.innerHTML = '<div style="padding:16px;"><div class="log-viewer"><div class="log-viewer-header"><span style="color:#999;font-size:11px;">📄 logs/paper/double_ma/run_1.log</span></div><div class="log-viewer-body" style="padding:10px 14px;max-height:350px;overflow-y:auto;color:#d4d4d4;font-family:monospace;font-size:12px;line-height:1.7;"><div><span style="color:#6a9955;">14:35:22</span> <span style="color:#4fc3f7;">[INFO]</span> 金叉信号触发 → BUY 000001 @12.50</div><div><span style="color:#6a9955;">14:35:22</span> <span style="color:#4fc3f7;">[INFO]</span> 模拟撮合成交 BUY 000001 1000@12.50</div><div><span style="color:#6a9955;">14:32:10</span> <span style="color:#4fc3f7;">[INFO]</span> 死叉信号触发 → SELL 600036 @42.80</div><div><span style="color:#6a9955;">14:32:10</span> <span style="color:#4fc3f7;">[INFO]</span> 模拟撮合成交 SELL 600036 500@42.80 · PnL=+¥1,250</div></div></div></div>';
+  } else if (tab === 'code') {
+    c.innerHTML = '<div style="padding:0;"><div class="code-editor-toolbar" style="border-radius:0;"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span><div class="code-tab"><span>double_ma_strategy.py</span></div><span class="code-toolbar-spacer"></span><span style="color:#999;font-size:11px;">模拟盘运行中 · 只读</span></div><textarea class="code-editor-textarea" readonly style="height:380px;background:#1e1e1e;color:#d4d4d4;border:none;padding:16px;font-family:monospace;font-size:13px;line-height:1.65;resize:none;outline:none;width:100%;"># 双均线趋势跟踪策略 v3\n# 模拟盘运行中\n\ndef init(context):\n    context.fast_period = 5\n    context.slow_period = 20\n    context.stock_pool = [\"000001.XSHE\", \"600036.XSHG\"]\n    context.stop_loss = 0.05\n\ndef handle_bar(context, bar_dict):\n    for stock in context.stock_pool:\n        bar = bar_dict[stock]\n        fast_ma = ma(stock, context.fast_period)\n        slow_ma = ma(stock, context.slow_period)\n        pos = context.portfolio.positions[stock]\n        if pos.quantity == 0:\n            if cross_above(fast_ma, slow_ma):\n                order_target_percent(stock, 0.95 / 2)\n        else:\n            pnl_pct = (bar.close - context.entry_price[stock]) / context.entry_price[stock]\n            if cross_below(fast_ma, slow_ma) or pnl_pct <= -context.stop_loss:\n                order_target_percent(stock, 0)</textarea></div>';
+  }
+}
+
+function initPaperNavChart() {
+  var el = document.getElementById('chart-paper-nav');
+  if (!el) return;
+  var chart = echarts.getInstanceByDom(el) || echarts.init(el);
+  var dates = [], nav = [], bench = [], sd = new Date('2026-06-01'), n = 100000, b = 100000;
+  for (var i = 0; i < 15; i++) {
+    var d = new Date(sd); d.setDate(d.getDate() + i);
+    if (d.getDay() === 0 || d.getDay() === 6) continue;
+    dates.push(d.toISOString().split('T')[0]);
+    n *= (1 + (Math.random() - 0.45) * 0.012);
+    b *= (1 + (Math.random() - 0.48) * 0.010);
+    nav.push((n / 1000).toFixed(2));
+    bench.push((b / 1000).toFixed(2));
+  }
+  chart.setOption({
+    tooltip: { trigger: 'axis' }, legend: { data: ['策略权益', '沪深300'], top: 5 },
+    grid: { left: 55, right: 15, top: 35, bottom: 45 },
+    xAxis: { type: 'category', data: dates, boundaryGap: false, axisLabel: { formatter: function(v) { return v.slice(5); } } },
+    yAxis: { type: 'value', axisLabel: { formatter: '¥{value}k' } },
+    dataZoom: [{ type: 'inside' }],
+    series: [
+      { name: '策略权益', type: 'line', data: nav, smooth: true, lineStyle: { color: '#1890ff', width: 2 }, areaStyle: { color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(24,144,255,0.25)'},{offset:1,color:'rgba(24,144,255,0.02)'}]) }, symbol: 'none' },
+      { name: '沪深300', type: 'line', data: bench, smooth: true, lineStyle: { color: '#faad14', width: 1.5, type: 'dashed' }, symbol: 'none' }
+    ]
   });
   chart.resize();
 }

@@ -31,6 +31,7 @@ def create_app():
     from app.api.portfolio import portfolio_bp
     from app.api.watchlist import watchlist_bp
     from app.api.factors import factors_bp
+    from app.api.trading import trading_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(stocks_bp)
@@ -45,6 +46,7 @@ def create_app():
     app.register_blueprint(portfolio_bp, url_prefix="/api/portfolio")
     app.register_blueprint(watchlist_bp, url_prefix="/api/watchlist")
     app.register_blueprint(factors_bp, url_prefix="/api/factors")
+    app.register_blueprint(trading_bp)
 
     # Phase 1: 数据中心
     from app.api.data import data_bp
