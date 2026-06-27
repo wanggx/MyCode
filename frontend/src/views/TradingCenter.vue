@@ -198,9 +198,12 @@ export default {
 </script>
 
 <style scoped>
-.trading-center { padding: 0; }
-.tc-card { border-radius: 0; margin: 0; }
-.tc-card :deep(.el-card__body) { padding: 0; }
+.trading-center { padding: 0; height: 100%; display: flex; flex-direction: column; }
+.tc-card { border-radius: 0; margin: 0; flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.tc-card :deep(.el-card__body) { padding: 0; flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.tc-card :deep(.el-tabs) { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.tc-card :deep(.el-tabs__content) { flex: 1; min-height: 0; }
+.tc-card :deep(.el-tab-pane) { height: 100%; }
 
 .ticker-bar { display: flex; gap: 24px; padding: 8px 20px; background: #fff; border-bottom: 1px solid #e8e8e8; overflow-x: auto; font-size: 12px; flex-shrink: 0; }
 .ticker-item { display: flex; align-items: center; gap: 6px; white-space: nowrap; cursor: pointer; padding: 2px 6px; border-radius: 3px; }
@@ -209,7 +212,7 @@ export default {
 .ticker-price { font-weight: 600; }
 .ticker-change { font-weight: 500; }
 
-.runs-layout { display: flex; height: calc(100vh - 200px); }
+.runs-layout { display: flex; flex: 1; min-height: 0; }
 .run-list-panel { width: 360px; border-right: 1px solid #e8e8e8; display: flex; flex-direction: column; flex-shrink: 0; }
 .panel-header { padding: 12px 16px; border-bottom: 1px solid #e8e8e8; font-weight: 600; font-size: 14px; display: flex; justify-content: space-between; }
 .run-items { flex: 1; overflow-y: auto; }
