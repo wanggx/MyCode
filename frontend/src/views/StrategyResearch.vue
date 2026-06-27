@@ -83,6 +83,7 @@
       <el-form :model="btForm" label-width="80px" style="margin-top:12px">
         <el-row :gutter="12"><el-col :span="12"><el-form-item label="起始日期"><el-date-picker v-model="btForm.start_date" type="date" value-format="YYYY-MM-DD" style="width:100%" /></el-form-item></el-col><el-col :span="12"><el-form-item label="结束日期"><el-date-picker v-model="btForm.end_date" type="date" value-format="YYYY-MM-DD" style="width:100%" /></el-form-item></el-col></el-row>
         <el-row :gutter="12"><el-col :span="12"><el-form-item label="起始资金"><el-input-number v-model="btForm.initial_capital" :min="10000" style="width:100%" /></el-form-item></el-col><el-col :span="12"><el-form-item label="基准"><el-select v-model="btForm.benchmark" style="width:100%"><el-option label="无" value="" /><el-option label="沪深300" value="000300.XSHG" /><el-option label="中证500" value="000905.XSHG" /></el-select></el-form-item></el-col></el-row>
+        <el-row :gutter="12"><el-col :span="12"><el-form-item label="Debug日志"><el-switch v-model="btDebug" active-text="开启" inactive-text="INFO" inline-prompt size="small" style="--el-switch-on-color:#6f42c1;" /></el-form-item></el-col></el-row>
       </el-form>
       <template #footer><el-button @click="btDialogVisible=false">取消</el-button><el-button type="primary" @click="runBacktest">⚡ 开始回测</el-button></template>
     </el-dialog>
@@ -101,6 +102,7 @@ export default {
       createVisible: false, versionVisible: false, btDialogVisible: false,
       form: { name: '', desc: '', type: 'stock' },
       btForm: { start_date: '2024-01-01', end_date: '2024-12-31', initial_capital: 100000, benchmark: '000300.XSHG' },
+      btDebug: false,
       versions: [],
       page: 1, pageSize: 10
     }
@@ -158,7 +160,7 @@ export default {
         this.versionVisible = false
       }
     },
-    showBacktestDialog() { this.btDialogVisible = true },
+    showBacktestDialog() { this.btDebug = false; this.btDialogVisible = true },
     goBacktestList() {
       if (!this.current) return
       this.$router.push({ path: '/backtest', query: { strategy_id: this.current.id } })
@@ -169,7 +171,7 @@ export default {
         const res = await this.$store.dispatch('backtest/create', {
           strategy_id: this.current.id,
           version: this.current.latest_version,
-          config: this.btForm
+          config: { ...this.btForm, debug: this.btDebug }
         })
         if (res?.success) {
           this.btDialogVisible = false

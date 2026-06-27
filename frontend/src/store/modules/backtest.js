@@ -70,8 +70,8 @@ export default {
       if (res.data?.success) commit('SET_RISK', res.data.data)
       return res.data?.data
     },
-    async loadLogs({ commit }, id) {
-      const res = await fetchLogs(id)
+    async loadLogs({ commit }, { id, debug }) {
+      const res = await fetchLogs(id, { debug: debug ? 'true' : 'false' })
       if (res.data?.success) commit('SET_LOGS', res.data.data)
       return res.data?.data
     }

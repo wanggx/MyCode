@@ -115,7 +115,8 @@ def risk_metrics_route(bid):
 def logs_route(bid):
     mode = request.args.get("mode", "full")
     lines = request.args.get("lines", 100, type=int)
-    result, err = get_backtest_logs(bid, mode, lines)
+    debug = request.args.get("debug", "false").lower() == "true"
+    result, err = get_backtest_logs(bid, mode, lines, debug)
     if err: return error(err, code=40400)
     return success(result)
 

@@ -67,6 +67,7 @@
             </el-tooltip>
           </div>
           <div class="summary-actions">
+            <el-switch v-model="debugEnabled" active-text="Debug" inline-prompt size="small" style="--el-switch-on-color:#6f42c1;margin-right:8px;" />
             <el-button v-if="selected.status==='completed' || selected.status==='failed'" size="small" type="primary" @click="handleRerun">🔄 重新运行</el-button>
             <el-button v-if="selected.status==='completed'" size="small" @click="handleExport">📥 导出报告</el-button>
             <el-button v-if="selected.status!=='running'" size="small" type="danger" @click="handleDelete">🗑 删除</el-button>
@@ -176,7 +177,7 @@ export default {
   data() {
     return {
       statusFilter: '', selected: null, activeTab: 'nav',
-      strategyFilterName: '',
+      debugEnabled: false, strategyFilterName: '',
       btPage: 1, btPageSize: 20,
       tradePage: 1, tradePageSize: 20,
       trades: null, positions: null, risk: null, logs: null,
@@ -244,6 +245,8 @@ export default {
         try { bt.config = JSON.parse(bt.config) } catch(e) { bt.config = {} }
       }
       this.selected = bt; this.activeTab = 'nav'; this.tradePage = 1; this.trades = null; this.risk = null; this.logs = null; this.navData = null; this.sourceCode = null
+      // Read debug flag from config (per-backtest-instance)
+      this.debugEnabled = !!(bt.config && bt.config.debug)
 
       // Always refresh detail from server (gets latest error_message, metrics, etc.)
       try {
@@ -256,9 +259,9 @@ export default {
         }
       } catch(e) { console.error('loadDetail failed:', e) }
 
-      // Load logs for ALL statuses (useful for debugging)
+      // Load logs for ALL statuses (useful for debugging) — pass debug flag
       try {
-        this.logs = await this.loadLogs(bt.id)
+        this.logs = await this.loadLogs({ id: bt.id, debug: this.debugEnabled })
       } catch(e) { console.error('loadLogs failed:', e) }
 
       // Load detail data for completed/failed backtests
@@ -395,8 +398,8 @@ export default {
       if (!this.selected) return
       const s = this.selected
       try {
-        // 复用原配置，创建一条新回测记录
-        const cfg = { ...(s.config || {}), _backtest_id: undefined }
+        // 复用原配置，创建一条新回测记录（携带当前 debug 开关状态）
+        const cfg = { ...(s.config || {}), _backtest_id: undefined, debug: this.debugEnabled }
         const res = await this.$store.dispatch('backtest/create', {
           strategy_id: s.strategy_id,
           version: s.strategy_version,
@@ -472,6 +475,13 @@ export default {
       this.btPage = 1
       this.$router.replace({ query: {} })
       this.loadListData()
+    },
+  },
+  watch: {
+    async debugEnabled(v) {
+      if (!this.selected) return
+      // 切换 Debug 开关时重新加载日志
+      try { this.logs = await this.loadLogs({ id: this.selected.id, debug: v }) } catch(e) { console.error(e) }
     },
   },
   mounted() { this.loadListData() },

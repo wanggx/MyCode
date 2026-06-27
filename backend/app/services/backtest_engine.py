@@ -49,11 +49,15 @@ def run_backtest(backtest_id, bt_config, strategy_code, strategy_key, socketio=N
     file_handler.setFormatter(logging.Formatter("%(asctime)s │ [%(levelname)-5s] %(message)s", datefmt="%H:%M:%S"))
     bt_logger = logging.getLogger(f"backtest.{backtest_id}")
     bt_logger.addHandler(file_handler)
-    bt_logger.setLevel(logging.INFO)
+    debug_enabled = bool(bt_config.get("debug", False))
+    bt_logger.setLevel(logging.DEBUG if debug_enabled else logging.INFO)
 
     bt_logger.info("=" * 40)
     bt_logger.info(f"QT Backtest Engine Starting - Backtest #{backtest_id}")
     bt_logger.info(f"Strategy: {strategy_key}, Config: {json.dumps(bt_config)}")
+    bt_logger.debug(f"[DEBUG] 回测参数详情: start_date={bt_config.get('start_date')}, end_date={bt_config.get('end_date')}, "
+                    f"capital={bt_config.get('initial_capital')}, benchmark={bt_config.get('benchmark')}, "
+                    f"commission={bt_config.get('commission')}, slippage={bt_config.get('slippage')}, freq={bt_config.get('frequency')}")
 
     update_job_status(backtest_id, "running", start_time=True, log_path=log_path)
     start_ts = time.time()
@@ -102,17 +106,21 @@ def run_backtest(backtest_id, bt_config, strategy_code, strategy_key, socketio=N
         # 4. Setup rqalpha 默认数据包路径
         rq_config["base"]["data_bundle_path"] = os.path.expanduser("~/.rqalpha/bundle")
         bt_logger.info(f"Using rqalpha bundle: {rq_config['base']['data_bundle_path']}")
+        bt_logger.debug(f"[DEBUG] rqalpha config: {json.dumps(rq_config, default=str)[:500]}")
 
         # 5. Build strategy wrapper code
         wrapped_code = _wrap_strategy_code(strategy_code)
+        bt_logger.debug(f"[DEBUG] Strategy code compiled ({len(strategy_code)} chars), wrapped ({len(wrapped_code)} chars)")
 
         # 6. Run rqalpha（走 rqalpha 默认流程，自动使用 bundle 数据源）
         bt_logger.info("Starting rqalpha main loop...")
+        bt_logger.debug(f"[DEBUG] Trading days estimated: {total_bars}, start={bt_config['start_date']}, end={bt_config['end_date']}")
         result = rqalpha.run_code(code=wrapped_code, config=rq_config)
 
         # 7. Extract results
         elapsed = (time.time() - start_ts) * 1000
         bt_logger.info(f"Main loop completed in {elapsed:.0f}ms")
+        bt_logger.debug(f"[DEBUG] rqalpha result dict keys: {list(result.keys()) if result else 'None'}")
 
         summary = _extract_summary(result, bt_config, elapsed)
 
@@ -349,11 +357,14 @@ def _extract_summary(run_result, bt_config, elapsed_ms):
         trades_df = analyser.get("trades")
         portfolio_df = analyser.get("portfolio")
         bt_logger = logging.getLogger(f"backtest.{bt_config.get('_backtest_id')}")
+        bt_logger.debug(f"[DEBUG] analyser keys: {list(analyser.keys()) if analyser else 'None'}")
         if trades_df is not None and len(trades_df) > 0:
             bt_logger.info(f"Saving {len(trades_df)} trades to DB...")
+            bt_logger.debug(f"[DEBUG] Trade columns: {list(trades_df.columns)}, first trade: {trades_df.iloc[0].to_dict() if len(trades_df) > 0 else 'N/A'}")
             _save_backtest_details(bt_config.get("_backtest_id"), trades_df, portfolio_df, summary)
         else:
             bt_logger.info(f"No trades to save (df={trades_df is not None}, len={len(trades_df) if trades_df is not None else 0})")
+            bt_logger.debug(f"[DEBUG] trades_df type={type(trades_df)}, portfolio_df type={type(portfolio_df)}")
 
     # 清理 NaN / Inf，MySQL 不支持
     summary = _clean_nan(summary)

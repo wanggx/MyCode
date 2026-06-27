@@ -226,14 +226,14 @@ def get_backtest_risk_metrics(backtest_id):
     return get_risk_metrics(backtest_id)
 
 
-def get_backtest_logs(backtest_id, mode="full", lines=100):
+def get_backtest_logs(backtest_id, mode="full", lines=100, debug=False):
     """读取回测日志"""
     # 1. 先查 job 记录，按 strategy_key 定位日志
     job = get_job(backtest_id)
     if job and job.get("strategy_key"):
         log_path = os.path.join(settings.LOG_DIR, job["strategy_key"], f"{backtest_id}.log")
         if os.path.isfile(log_path):
-            return _read_log_file(log_path, mode, lines)
+            return _read_log_file(log_path, mode, lines, debug)
 
     # 2. Fallback: glob 通配搜索
     pattern = os.path.join(settings.LOG_DIR, f"*/{backtest_id}.log")
@@ -241,21 +241,24 @@ def get_backtest_logs(backtest_id, mode="full", lines=100):
         import glob
         matches = glob.glob(pattern)
         if matches:
-            return _read_log_file(matches[0], mode, lines)
+            return _read_log_file(matches[0], mode, lines, debug)
     except Exception as e:
         return None, f"读取日志失败: {str(e)}"
 
     return None, f"日志文件不存在: {pattern}"
 
 
-def _read_log_file(log_path, mode, lines):
+def _read_log_file(log_path, mode, lines, debug=False):
     """读取日志文件内容"""
     try:
         with open(log_path, "r", encoding="utf-8", errors="replace") as f:
             all_lines = f.readlines()
+        # 非 debug 模式：过滤掉 DEBUG 行
+        if not debug:
+            all_lines = [l for l in all_lines if "[DEBUG" not in l]
         if mode == "tail":
             all_lines = all_lines[-lines:]
-        return {"log_path": log_path, "lines": all_lines, "size_bytes": len("".join(all_lines))}, None
+        return {"log_path": log_path, "lines": all_lines, "size_bytes": len("".join(all_lines)), "debug_mode": debug}, None
     except Exception as e:
         return None, f"读取日志失败: {str(e)}"
 
