@@ -3,7 +3,7 @@
     <!-- Left Panel -->
     <div class="left-panel">
       <div class="panel-header"><span>回测列表</span><div style="display:flex;gap:6px;"><el-button size="small" @click="loadListData" :icon="Refresh">🔄</el-button><el-button type="primary" size="small" @click="showCreateDialog">+ 新建回测</el-button></div></div>
-      <el-select v-model="statusFilter" placeholder="状态筛选" size="small" clearable class="bt-filter" @change="onFilterChange">
+      <el-select v-model="statusFilter" placeholder="状态筛选" size="small" clearable class="bt-filter" @change="onFilterChange" :popper-options="{ placement: 'bottom-start' }">
         <el-option label="全部" value="" /><el-option label="运行中" value="running" /><el-option label="已完成" value="completed" /><el-option label="失败" value="failed" />
       </el-select>
       <el-tag
@@ -490,12 +490,12 @@ export default {
 </script>
 
 <style scoped>
-.bt-page { display: flex; height: calc(100vh - 96px); gap: 16px; }
+.bt-page { display: flex; height: 100%; gap: 16px; padding: 16px; box-sizing: border-box; }
 .left-panel { width: 340px; flex-shrink: 0; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.08); display: flex; flex-direction: column; overflow: visible; }
 .panel-header { padding: 12px 16px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; font-weight: 600; font-size: 14px; flex-shrink: 0; }
-.bt-filter { margin: 8px 12px; flex-shrink: 0; }
+.bt-filter { margin: 8px 16px; flex-shrink: 0; width: auto; }
 .bt-filter-tag { margin: 0 12px 8px; flex-shrink: 0; }
-.bt-list { flex: 1; overflow-y: auto; min-height: 0; }
+.bt-list { flex: 1; overflow-y: auto; min-height: 0; padding-right: 4px; }
 .bt-list .el-pagination { flex-shrink: 0; }
 .bt-item { padding: 12px 16px; border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: background .2s; text-align: left; }
 .bt-item:hover { background: #fafafa; }

@@ -191,11 +191,11 @@ export default {
 </script>
 
 <style scoped>
-.strategy-page { display: flex; height: calc(100vh - 96px); gap: 16px; }
-.left-panel { width: 340px; flex-shrink: 0; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.08); display: flex; flex-direction: column; overflow: hidden; }
-.panel-header { padding: 12px 16px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; font-weight: 600; font-size: 14px; }
-.search-input { margin: 8px 12px; width: auto; }
-.strategy-list { flex: 1; overflow-y: auto; }
+.strategy-page { display: flex; height: 100%; gap: 16px; padding: 16px; box-sizing: border-box; }
+.left-panel { width: 340px; flex-shrink: 0; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.08); display: flex; flex-direction: column; }
+.panel-header { padding: 12px 16px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; font-weight: 600; font-size: 14px; flex-shrink: 0; }
+.search-input { margin: 8px 12px; width: auto; flex-shrink: 0; }
+.strategy-list { flex: 1; overflow-y: auto; min-height: 0; }
 .strategy-item { padding: 12px 16px; border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: background .2s; text-align: left; }
 .strategy-item:hover { background: #fafafa; }
 .strategy-item.active { background: #e6f7ff; border-left: 3px solid #1890ff; padding-left: 13px; }
@@ -205,10 +205,10 @@ export default {
 .item-meta { font-size: 12px; color: #999; margin-top: 4px; }
 .item-stats { margin-top: 4px; font-size: 13px; display: flex; gap: 6px; }
 .green { color: #52c41a; font-weight: 600; } .red { color: #ff4d4f; font-weight: 600; }
-.right-panel { flex: 1; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.08); display: flex; flex-direction: column; overflow: hidden; }
+.right-panel { flex: 1; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.08); display: flex; flex-direction: column; }
 .right-panel.empty { align-items: center; justify-content: center; }
 .right-panel > :deep(.code-editor-wrap) { flex: 1; min-height: 0; }
-.detail-header { padding: 14px 20px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; }
+.detail-header { padding: 14px 20px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
 .detail-header h3 { margin: 0 0 4px 0; font-size: 15px; font-weight: 600; text-align: left; }
 .meta { font-size: 12px; color: #999; }
 .btn-group { display: flex; gap: 6px; }
