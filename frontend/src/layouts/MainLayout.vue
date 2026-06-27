@@ -20,6 +20,8 @@
     <el-container class="main-right">
       <el-header class="top-header" height="40px">
         <div class="header-left">
+          <span class="page-name">{{ pageTitle }}</span>
+          <span class="header-sep">|</span>
           <span class="data-date">数据日期: {{ dataDate }}</span>
         </div>
         <div class="header-right">
@@ -118,6 +120,10 @@ export default {
     activeMenu() {
       return this.$route.path
     },
+    pageTitle() {
+      const item = this.menuItems.find(m => this.$route.path.startsWith(m.path))
+      return item ? item.title : ''
+    },
     dataDate() {
       const d = new Date()
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -175,7 +181,7 @@ export default {
 .main-layout { height: 100vh; }
 .sidebar { background: #001529; overflow-y: auto; overflow-x: hidden; }
 .sidebar-logo { display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid #ffffff1a; }
-.logo-img { width: 24px; height: 24px; margin-right: 8px; }
+.logo-svg { margin-right: 10px; flex-shrink: 0; }
 .logo-title { font-size: 16px; font-weight: 700; color: #fff; letter-spacing: 1px; }
 .sidebar-menu { border-right: none; }
 .sidebar-menu .el-menu-item { height: 44px; line-height: 44px; }
@@ -185,7 +191,9 @@ export default {
 .sidebar-menu .el-menu-item:hover { background-color: #ffffff1a !important; }
 .main-right { display: flex; flex-direction: column; overflow: hidden; }
 .top-header { display: flex; align-items: center; justify-content: space-between; background: #fff; border-bottom: 1px solid #e4e7ed; padding: 0 20px; }
-.header-left { display: flex; align-items: center; }
+.header-left { display: flex; align-items: center; gap: 8px; }
+.page-name { font-size: 14px; font-weight: 600; color: #303133; }
+.header-sep { color: #dcdfe6; font-size: 14px; }
 .data-date { font-size: 13px; color: #909399; }
 .header-right { display: flex; align-items: center; gap: 8px; }
 .tushare-link { font-size: 13px; color: #007f7a; text-decoration: none; }
