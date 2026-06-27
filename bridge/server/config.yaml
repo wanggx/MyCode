@@ -1,0 +1,22 @@
+# QuantBridge Server 配置文件
+# 复制为 config.local.yaml 并修改实际值
+
+server:
+  host: "0.0.0.0"
+  port: 5101
+
+mock:
+  enabled: false  # 开发模式（非 Windows 环境自动启用）
+  push_interval: 5  # WebSocket 模拟推送间隔（秒）
+
+miniqmt:
+  path: "C:\\国金证券QMT交易端"  # miniQMT 安装路径
+  account: ""  # 资金账号
+
+default_symbols:
+  - "000001.SZ"   # 平安银行
+  - "600036.SH"   # 招商银行
+  - "000300.SH"   # 沪深300
+
+logging:
+  level: "INFO"

@@ -92,3 +92,34 @@ def list_sync_logs():
 def data_overview():
     result = get_data_overview()
     return success(result)
+
+
+# ========== 分钟线 ==========
+
+@data_bp.route("/api/data/stocks/<ts_code>/minute", methods=["GET"])
+@require_auth
+def stock_minute_data(ts_code):
+    """获取分钟线数据"""
+    trade_date = request.args.get("trade_date", "")
+    page = request.args.get("page", 1, type=int)
+    page_size = request.args.get("page_size", 240, type=int)
+
+    from app.services.minute_data_service import minute_data_service
+    result = minute_data_service.get_bars(ts_code, trade_date or None, page, page_size)
+    return success(result)
+
+
+@data_bp.route("/api/data/stocks/<ts_code>/minute/latest", methods=["GET"])
+@require_auth
+def stock_minute_latest(ts_code):
+    """获取最新一条分钟线"""
+    from app.services.minute_data_service import minute_data_service
+    row = minute_data_service.get_latest(ts_code)
+    if not row:
+        return success(None, message="暂无数据")
+    return success({
+        "ts_code": row["ts_code"], "trade_time": str(row["trade_time"]),
+        "open": float(row["open"]), "high": float(row["high"]),
+        "low": float(row["low"]), "close": float(row["close"]),
+        "volume": int(row["volume"]), "amount": float(row["amount"]),
+    })

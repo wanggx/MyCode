@@ -85,6 +85,7 @@ def _init_all_tables():
         ("数据质量", "app.repositories.data_quality_repo"),
         ("组合风控", "app.repositories.portfolio_repo"),
         ("回测", "app.repositories.backtest_repo"),
+        ("分钟线", "app.repositories.minute_repo"),
     ]
     for name, repo_path in repos:
         try:
